@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://frost_camp/scenes/region_view.gd" id="1_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rock"]
+albedo_color = Color(0.48, 0.52, 0.58, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rock"]
+size = Vector3(1, 1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ice"]
+transparency = 1
+albedo_color = Color(0.6, 0.88, 1, 0.75)
+metallic = 0.2
+roughness = 0.1
+
+[sub_resource type="BoxMesh" id="BoxMesh_ice"]
+material = SubResource("StandardMaterial3D_ice")
+size = Vector3(3, 2, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ice"]
+size = Vector3(3, 2, 0.8)
+
+[node name="Region" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Templates" type="Node3D" parent="."]
+
+[node name="Rock" type="MeshInstance3D" parent="Templates"]
+visible = false
+material_override = SubResource("StandardMaterial3D_rock")
+mesh = SubResource("BoxMesh_rock")
+
+[node name="Ice" type="StaticBody3D" parent="Templates"]
+visible = false
+
+[node name="Mesh" type="MeshInstance3D" parent="Templates/Ice"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("BoxMesh_ice")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Templates/Ice"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_ice")
