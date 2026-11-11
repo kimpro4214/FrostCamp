@@ -23,6 +23,10 @@ func step(delta: float) -> void:
 	var to_target: Vector2 = target.pos - agent.pos
 	if to_target.length() > STOP_DIST[target.kind]:
 		agent.pos += to_target.limit_length(sim.agent_speed(agent) * delta)
+	# 일꾼은 worker_brain이 정한 목표로 직선 이동한다(게임에서는 길찾기).
+	for worker in sim.workers:
+		if worker.pos.distance_to(worker.target.pos) > worker.target.stop:
+			worker.pos = worker.pos.move_toward(worker.target.pos, sim.agent_speed(worker) * delta)
 	sim.tick(delta)
 	time += delta
 
