@@ -32,10 +32,13 @@ func setup(frost_sim: FrostSim, name_in_sim: String) -> void:
 	var templates := $Templates
 	remove_child(templates)
 	templates.queue_free()
+	sim.zone_purchased.connect(_on_zone_purchased)
 
 
-func _process(_delta: float) -> void:
+## 구매 즉시 얼음벽을 떼어 내야 메인 씬이 다시 굽는 길찾기 메시에 입구가 열린다.
+func _on_zone_purchased(_id: String, _level: int) -> void:
 	if _ice and sim.unlocked.has(region_name):
+		remove_child(_ice)
 		_ice.queue_free()
 		_ice = null
 
