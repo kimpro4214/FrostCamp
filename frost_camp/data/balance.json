@@ -1,0 +1,21 @@
+{
+	"player": {
+		"move_speed": 5.0,
+		"stack_capacity": 10
+	},
+	"tree": {
+		"hits_to_fell": 3,
+		"hit_interval": 0.4,
+		"logs_dropped": 3,
+		"respawn_time": 8.0
+	},
+	"items": {
+		"log": { "price": 5 }
+	},
+	"stall": {
+		"unload_interval": 0.1,
+		"customer_interval": 3.0,
+		"customer_patience": 20.0,
+		"queue_max": 4
+	}
+}
