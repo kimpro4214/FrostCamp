@@ -2,10 +2,17 @@
 	"player": {
 		"move_speed": 5.0,
 		"stack_capacity": 10,
-		"axe_damage": 1
+		"axe_damage": 1,
+		"harpoon_damage": 2,
+		"harpoon_interval": 0.5,
+		"hp": 10,
+		"hp_regen": 2.0,
+		"dazed_time": 3.0,
+		"dazed_speed_mult": 0.5
 	},
 	"interact": {
 		"tree_radius": 1.6,
+		"bear_radius": 1.8,
 		"stall_radius": 1.8,
 		"cash_radius": 1.2
 	},
@@ -15,8 +22,18 @@
 		"logs_dropped": 2,
 		"respawn_time": 8.0
 	},
+	"bear": {
+		"hp": 10,
+		"wander_speed": 1.5,
+		"respawn_time": 15.0,
+		"attack_interval": 1.0,
+		"damage": 2,
+		"meat_dropped": 2,
+		"wall_margin": 1.5
+	},
 	"items": {
-		"log": { "price": 5 }
+		"log": { "price": 5 },
+		"meat": { "price": 15 }
 	},
 	"stall": {
 		"unload_interval": 0.1,
@@ -44,6 +61,21 @@
 			"costs": [40, 150],
 			"effect": { "stat": "axe_damage", "add": 1 },
 			"requires": ["backpack"]
+		},
+		"habitat": {
+			"costs": [80],
+			"effect": { "unlock": "habitat" },
+			"requires": ["backpack"]
+		},
+		"meat_stall": {
+			"costs": [60],
+			"effect": { "unlock": "meat_stall" },
+			"requires": ["habitat"]
+		},
+		"harpoon": {
+			"costs": [100, 250],
+			"effect": { "stat": "harpoon_damage", "add": 1 },
+			"requires": ["habitat"]
 		}
 	}
 }

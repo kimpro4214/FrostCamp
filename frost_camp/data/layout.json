@@ -1,12 +1,20 @@
 {
 	"player_start": [0, 0],
 	"trees": [[-8, -5], [-11, -3], [-7, -9], [-12, -8], [-4, -11]],
+	"regions": {
+		"habitat": { "rect": [-3, -26, 16, 12], "gate": [5, -14] }
+	},
+	"bears": [[2, -20], [8, -22], [5, -18]],
 	"stalls": [
-		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6] }
+		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6] },
+		{ "item": "meat", "pos": [5, -5], "cash_pos": [5, -7.4], "unlock": "meat_stall" }
 	],
 	"zones": {
 		"backpack": [-1.5, 3.5],
 		"boots": [1.5, 3.5],
-		"axe": [-4, -1]
+		"axe": [-4, -1],
+		"habitat": [5, -12],
+		"meat_stall": [5, -5],
+		"harpoon": [9, -11]
 	}
 }

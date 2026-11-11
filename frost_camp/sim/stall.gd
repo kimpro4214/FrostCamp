@@ -3,6 +3,8 @@ extends RefCounted
 ## 판매대 하나. 재고, 손님 줄(손님마다 남은 인내심), 아직 줍지 않은 돈을 가진다.
 
 var item: String
+## 비어 있지 않으면 이 이름이 해금되어야 판매대가 열린다.
+var unlock := ""
 var pos: Vector2
 var cash_pos: Vector2
 var price: int
