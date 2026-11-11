@@ -1,2 +1,6 @@
 # Normalize EOL for all files that Git considers text files.
 * text=auto eol=lf
+
+# Exclude bundled agent skills from GitHub language stats.
+.agents/** linguist-vendored
+.claude/** linguist-vendored
