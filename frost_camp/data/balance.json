@@ -14,6 +14,7 @@
 		"tree_radius": 1.6,
 		"bear_radius": 1.8,
 		"stall_radius": 1.8,
+		"pile_radius": 1.5,
 		"cash_radius": 1.2
 	},
 	"tree": {
@@ -30,6 +31,11 @@
 		"damage": 2,
 		"meat_dropped": 2,
 		"wall_margin": 1.5
+	},
+	"workers": {
+		"lumberjack": { "speed": 3.5, "capacity": 6, "damage": 1 },
+		"porter": { "speed": 4.0, "capacity": 8 },
+		"cashier": { "speed": 4.0 }
 	},
 	"items": {
 		"log": { "price": 5 },
@@ -76,6 +82,21 @@
 			"costs": [100, 250],
 			"effect": { "stat": "harpoon_damage", "add": 1 },
 			"requires": ["habitat"]
+		},
+		"lumberjack": {
+			"costs": [100, 250],
+			"effect": { "hire": "lumberjack" },
+			"requires": ["backpack"]
+		},
+		"porter": {
+			"costs": [150, 350],
+			"effect": { "hire": "porter" },
+			"requires": ["lumberjack"]
+		},
+		"cashier": {
+			"costs": [200],
+			"effect": { "hire": "cashier" },
+			"requires": ["meat_stall"]
 		}
 	}
 }

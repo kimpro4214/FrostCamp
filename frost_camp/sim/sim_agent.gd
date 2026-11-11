@@ -6,6 +6,7 @@ var pos: Vector2
 var stack: BackStack
 var chop_timer := 0.0
 var unload_timer := 0.0
+var pickup_timer := 0.0
 var attack_timer := 0.0
 var max_hp: float
 var hp: float

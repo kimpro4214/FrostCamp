@@ -8,6 +8,7 @@ signal tree_felled(index: int)
 signal bear_hit(index: int)
 signal bear_killed(index: int)
 signal zone_purchased(id: String, level: int)
+signal worker_hired(index: int)
 
 var balance: Dictionary
 var money := 0
@@ -17,6 +18,11 @@ var trees: Array[HarvestTree] = []
 var bears: Array[HarvestBear] = []
 var stalls: Array[Stall] = []
 var zones: Array[PurchaseZone] = []
+var workers: Array[Worker] = []
+## 벌목꾼이 쌓아 두고 운반꾼이 가져가는 원목 적치장
+var woodpile := 0
+var woodpile_pos: Vector2
+var worker_spawn: Vector2
 ## 구매로 열린 것들(지역, 판매대). 이름 → true
 var unlocked := {}
 ## 지역 이름 → {"rect": Rect2, "gate": Vector2}
@@ -32,6 +38,8 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 	rng.seed = seed_value
 	player = SimAgent.new(
 		_vec(layout.player_start), int(balance.player.stack_capacity), float(balance.player.hp))
+	woodpile_pos = _vec(layout.woodpile)
+	worker_spawn = _vec(layout.worker_spawn)
 	for p in layout.trees:
 		trees.append(HarvestTree.new(_vec(p), balance.tree))
 	for region_name in layout.regions:
@@ -54,6 +62,8 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 
 
 func agent_speed(agent: SimAgent) -> float:
+	if agent is Worker:
+		return agent.speed
 	if agent.dazed_left > 0.0:
 		return stats.move_speed * float(balance.player.dazed_speed_mult)
 	return stats.move_speed
@@ -87,12 +97,23 @@ func tick(delta: float) -> void:
 		if is_stall_open(stall):
 			stall.tick(delta)
 	_tick_unload(player, delta)
-	_tick_chop(player, delta)
+	_tick_chop(player, delta, stats.axe_damage)
 	_tick_fight(player, delta)
 	for i in bears.size():
 		bears[i].tick(delta, i == _fighting_bear, rng)
 	_tick_collect_cash(player)
 	_tick_purchase(player, delta)
+	for worker in workers:
+		worker.target = WorkerBrain.choose(self, worker)
+		match worker.role:
+			"lumberjack":
+				_tick_chop(worker, delta, worker.damage)
+				_tick_pile_drop(worker, delta)
+			"porter":
+				_tick_pile_take(worker, delta)
+				_tick_unload(worker, delta)
+			"cashier":
+				_tick_collect_cash(worker)
 
 
 func _tick_unload(agent: SimAgent, delta: float) -> void:
@@ -108,7 +129,7 @@ func _tick_unload(agent: SimAgent, delta: float) -> void:
 	agent.unload_timer = 0.0
 
 
-func _tick_chop(agent: SimAgent, delta: float) -> void:
+func _tick_chop(agent: SimAgent, delta: float, damage: int) -> void:
 	var config: Dictionary = balance.tree
 	var index := _nearest_standing_tree(agent.pos)
 	if index == -1 or agent.stack.free_space() < int(config.logs_dropped):
@@ -119,10 +140,34 @@ func _tick_chop(agent: SimAgent, delta: float) -> void:
 		return
 	agent.chop_timer = 0.0
 	tree_hit.emit(index)
-	if trees[index].hit(stats.axe_damage):
+	if trees[index].hit(damage):
 		for i in int(config.logs_dropped):
 			agent.stack.push("log")
 		tree_felled.emit(index)
+
+
+## 적치장 근처에서 원목을 하나씩 내려놓는다(벌목꾼).
+func _tick_pile_drop(agent: SimAgent, delta: float) -> void:
+	if agent.pos.distance_to(woodpile_pos) > float(balance.interact.pile_radius) or not agent.stack.items.has("log"):
+		agent.unload_timer = 0.0
+		return
+	agent.unload_timer += delta
+	if agent.unload_timer >= float(balance.stall.unload_interval):
+		agent.unload_timer = 0.0
+		agent.stack.take("log")
+		woodpile += 1
+
+
+## 적치장 근처에서 원목을 하나씩 집어 든다(운반꾼).
+func _tick_pile_take(agent: SimAgent, delta: float) -> void:
+	if agent.pos.distance_to(woodpile_pos) > float(balance.interact.pile_radius) or woodpile == 0 or agent.stack.free_space() == 0:
+		agent.pickup_timer = 0.0
+		return
+	agent.pickup_timer += delta
+	if agent.pickup_timer >= float(balance.stall.unload_interval):
+		agent.pickup_timer = 0.0
+		woodpile -= 1
+		agent.stack.push("log")
 
 
 ## 곰 근처에 가면 자동으로 싸운다. 곰도 반격하고, 체력이 0이 되면 잠시 멍해진다(죽지 않는다).
@@ -187,6 +232,10 @@ func _tick_purchase(agent: SimAgent, delta: float) -> void:
 func _apply_effect(effect: Dictionary) -> void:
 	if effect.has("unlock"):
 		unlocked[effect.unlock] = true
+		return
+	if effect.has("hire"):
+		workers.append(Worker.new(effect.hire, worker_spawn, balance.workers[effect.hire]))
+		worker_hired.emit(workers.size() - 1)
 		return
 	match effect.get("stat", ""):
 		"stack_capacity":
