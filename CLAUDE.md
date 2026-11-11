@@ -6,9 +6,8 @@ Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-s
 
 This is a Godot 4.7 portfolio project. Use the standard GDScript build of Godot, the `gl_compatibility` renderer, and keep the games ready for web export.
 
-The project contains two game prototypes:
-- **100초 군단 (`legion/`):** a survivors-like where the build you grow in each 100-second round returns as an enemy in later rounds.
-- **포획 덱 (`capture_deck/`):** a roguelite deckbuilder where defeated enemies can be captured as cards with drawbacks.
+The project contains one game prototype:
+- **얼음 위의 작은 상점 (Frost Camp, `frost_camp/`):** a 3D arcade idle game where a survivor hunts polar bears, chops trees, sells to customers, automates the camp with workers, and escapes by completing an icebreaker. Design doc: `docs/frost_camp_design.md`.
 
 Project rules:
 - Keep game rules in `sim/`, separate from scenes and UI, so the game and bots run the same rules.
