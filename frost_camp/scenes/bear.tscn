@@ -1,0 +1,84 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://frost_camp/scenes/bear_view.gd" id="1_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fur"]
+albedo_color = Color(0.96, 0.9, 0.74, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_body"]
+material = SubResource("StandardMaterial3D_fur")
+size = Vector3(1.1, 0.9, 1.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_head"]
+material = SubResource("StandardMaterial3D_fur")
+size = Vector3(0.7, 0.65, 0.7)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nose"]
+albedo_color = Color(0.1, 0.1, 0.12, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nose"]
+material = SubResource("StandardMaterial3D_nose")
+size = Vector3(0.2, 0.15, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_leg"]
+material = SubResource("StandardMaterial3D_fur")
+size = Vector3(0.3, 0.5, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bar_back"]
+shading_mode = 0
+albedo_color = Color(0.15, 0.15, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bar_back"]
+material = SubResource("StandardMaterial3D_bar_back")
+size = Vector3(1.2, 0.12, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bar_fill"]
+shading_mode = 0
+albedo_color = Color(0.9, 0.25, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bar_fill"]
+material = SubResource("StandardMaterial3D_bar_fill")
+size = Vector3(1.2, 0.12, 0.06)
+
+[node name="Bear" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Body" type="Node3D" parent="."]
+
+[node name="Torso" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("BoxMesh_body")
+
+[node name="Head" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, -1.1)
+mesh = SubResource("BoxMesh_head")
+
+[node name="Nose" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -1.48)
+mesh = SubResource("BoxMesh_nose")
+
+[node name="LegFL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.25, -0.6)
+mesh = SubResource("BoxMesh_leg")
+
+[node name="LegFR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.25, -0.6)
+mesh = SubResource("BoxMesh_leg")
+
+[node name="LegBL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.25, 0.6)
+mesh = SubResource("BoxMesh_leg")
+
+[node name="LegBR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.25, 0.6)
+mesh = SubResource("BoxMesh_leg")
+
+[node name="HpBar" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+visible = false
+
+[node name="Back" type="MeshInstance3D" parent="HpBar"]
+mesh = SubResource("BoxMesh_bar_back")
+
+[node name="Fill" type="MeshInstance3D" parent="HpBar"]
+mesh = SubResource("BoxMesh_bar_fill")
