@@ -4,6 +4,8 @@ extends Node3D
 const TreeScene := preload("res://frost_camp/scenes/tree.tscn")
 const StallScene := preload("res://frost_camp/scenes/stall.tscn")
 const ZoneScene := preload("res://frost_camp/scenes/zone.tscn")
+const BearScene := preload("res://frost_camp/scenes/bear.tscn")
+const RegionScene := preload("res://frost_camp/scenes/region.tscn")
 
 var sim: FrostSim
 
@@ -28,6 +30,14 @@ func _ready() -> void:
 		var zone := ZoneScene.instantiate()
 		$Zones.add_child(zone)
 		zone.setup(sim, i)
+	for i in sim.bears.size():
+		var bear := BearScene.instantiate()
+		$Bears.add_child(bear)
+		bear.setup(sim, i)
+	for region_name in sim.regions:
+		var region := RegionScene.instantiate()
+		$Regions.add_child(region)
+		region.setup(sim, region_name)
 	_camera.target = _player
 	_camera.snap()
 
