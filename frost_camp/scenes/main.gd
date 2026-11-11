@@ -3,6 +3,7 @@ extends Node3D
 
 const TreeScene := preload("res://frost_camp/scenes/tree.tscn")
 const StallScene := preload("res://frost_camp/scenes/stall.tscn")
+const ZoneScene := preload("res://frost_camp/scenes/zone.tscn")
 
 var sim: FrostSim
 
@@ -23,6 +24,10 @@ func _ready() -> void:
 		var stall := StallScene.instantiate()
 		$Stalls.add_child(stall)
 		stall.setup(sim, i)
+	for i in sim.zones.size():
+		var zone := ZoneScene.instantiate()
+		$Zones.add_child(zone)
+		zone.setup(sim, i)
 	_camera.target = _player
 	_camera.snap()
 
