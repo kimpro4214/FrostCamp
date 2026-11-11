@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://frost_camp/scenes/player.gd" id="1_script"]
+[ext_resource type="Script" path="res://frost_camp/scenes/stack_view.gd" id="2_stack"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -19,6 +20,7 @@ material = SubResource("StandardMaterial3D_body")
 size = Vector3(0.2, 0.2, 0.3)
 
 [node name="Player" type="CharacterBody3D"]
+collision_layer = 2
 motion_mode = 1
 script = ExtResource("1_script")
 
@@ -38,3 +40,4 @@ mesh = SubResource("BoxMesh_nose")
 
 [node name="StackAnchor" type="Node3D" parent="Pivot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.6)
+script = ExtResource("2_stack")
