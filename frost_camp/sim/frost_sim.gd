@@ -5,12 +5,16 @@ extends RefCounted
 
 signal tree_hit(index: int)
 signal tree_felled(index: int)
+signal zone_purchased(id: String, level: int)
 
 var balance: Dictionary
 var money := 0
 var player: SimAgent
 var trees: Array[HarvestTree] = []
 var stalls: Array[Stall] = []
+var zones: Array[PurchaseZone] = []
+## 업그레이드로 바뀌는 플레이어 능력치. 적재량은 player.stack.capacity에 있다.
+var stats := {}
 
 
 func _init(balance_data: Dictionary, layout: Dictionary) -> void:
@@ -20,10 +24,33 @@ func _init(balance_data: Dictionary, layout: Dictionary) -> void:
 		trees.append(HarvestTree.new(_vec(p), balance.tree))
 	for s in layout.stalls:
 		stalls.append(Stall.new(s.item, _vec(s.pos), _vec(s.cash_pos), balance))
+	for id in layout.zones:
+		zones.append(PurchaseZone.new(id, _vec(layout.zones[id]), balance.zones[id]))
+	stats = {
+		"move_speed": float(balance.player.move_speed),
+		"axe_damage": int(balance.player.axe_damage),
+	}
 
 
 func agent_speed(_agent: SimAgent) -> float:
-	return float(balance.player.move_speed)
+	return stats.move_speed
+
+
+## 선행 조건을 모두 샀고 아직 최대 레벨이 아니면 살 수 있다.
+func is_zone_available(zone: PurchaseZone) -> bool:
+	if zone.is_maxed():
+		return false
+	for required in zone.requires:
+		if find_zone(required).level == 0:
+			return false
+	return true
+
+
+func find_zone(id: String) -> PurchaseZone:
+	for zone in zones:
+		if zone.id == id:
+			return zone
+	return null
 
 
 func tick(delta: float) -> void:
@@ -34,6 +61,7 @@ func tick(delta: float) -> void:
 	_tick_unload(player, delta)
 	_tick_chop(player, delta)
 	_tick_collect_cash(player)
+	_tick_purchase(player, delta)
 
 
 func _tick_unload(agent: SimAgent, delta: float) -> void:
@@ -60,7 +88,7 @@ func _tick_chop(agent: SimAgent, delta: float) -> void:
 		return
 	agent.chop_timer = 0.0
 	tree_hit.emit(index)
-	if trees[index].hit():
+	if trees[index].hit(stats.axe_damage):
 		for i in int(config.logs_dropped):
 			agent.stack.push("log")
 		tree_felled.emit(index)
@@ -72,6 +100,27 @@ func _tick_collect_cash(agent: SimAgent) -> void:
 		if stall.cash > 0 and agent.pos.distance_to(stall.cash_pos) <= radius:
 			money += stall.cash
 			stall.cash = 0
+
+
+func _tick_purchase(agent: SimAgent, delta: float) -> void:
+	var config: Dictionary = balance.purchase
+	for zone in zones:
+		if not is_zone_available(zone) or agent.pos.distance_to(zone.pos) > float(config.zone_radius):
+			continue
+		var rate := maxf(zone.cost() / float(config.fill_time), float(config.min_rate))
+		money -= zone.pay(money, rate, delta)
+		if zone.try_complete():
+			_apply_effect(zone.effect)
+			zone_purchased.emit(zone.id, zone.level)
+		return
+
+
+func _apply_effect(effect: Dictionary) -> void:
+	match effect.get("stat", ""):
+		"stack_capacity":
+			player.stack.capacity += int(effect.add)
+		"move_speed", "axe_damage":
+			stats[effect.stat] += effect.add
 
 
 func _nearest_standing_tree(pos: Vector2) -> int:

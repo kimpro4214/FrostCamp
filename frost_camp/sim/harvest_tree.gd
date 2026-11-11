@@ -19,9 +19,9 @@ func is_standing() -> bool:
 	return respawn_left <= 0.0
 
 
-## 한 번 친다. 이번 타격으로 쓰러지면 true.
-func hit() -> bool:
-	hits += 1
+## damage만큼 친다. 이번 타격으로 쓰러지면 true.
+func hit(damage: int = 1) -> bool:
+	hits += damage
 	if hits < hits_to_fell:
 		return false
 	hits = 0
