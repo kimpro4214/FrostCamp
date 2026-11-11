@@ -15,7 +15,14 @@ static func balance() -> Dictionary:
 			"dazed_time": 3.0,
 			"dazed_speed_mult": 0.5,
 		},
-		"interact": {"tree_radius": 1.5, "bear_radius": 1.5, "stall_radius": 1.5, "cash_radius": 1.0},
+		"interact": {
+			"tree_radius": 1.5, "bear_radius": 1.5, "stall_radius": 1.5, "pile_radius": 1.0, "cash_radius": 1.0,
+		},
+		"workers": {
+			"lumberjack": {"speed": 4.0, "capacity": 4, "damage": 1},
+			"porter": {"speed": 4.0, "capacity": 4},
+			"cashier": {"speed": 4.0},
+		},
 		"tree": {"hits_to_fell": 3, "hit_interval": 0.5, "logs_dropped": 2, "respawn_time": 8.0},
 		"bear": {
 			"hp": 10,
@@ -46,6 +53,9 @@ static func balance() -> Dictionary:
 			"habitat": {"costs": [10], "effect": {"unlock": "habitat"}},
 			"meat_stall": {"costs": [10], "effect": {"unlock": "meat_stall"}},
 			"harpoon": {"costs": [10], "effect": {"stat": "harpoon_damage", "add": 3}},
+			"lumberjack": {"costs": [10], "effect": {"hire": "lumberjack"}},
+			"porter": {"costs": [10], "effect": {"hire": "porter"}},
+			"cashier": {"costs": [10], "effect": {"hire": "cashier"}},
 		},
 	}
 
@@ -54,6 +64,8 @@ static func balance() -> Dictionary:
 static func layout() -> Dictionary:
 	return {
 		"player_start": [0, 0],
+		"worker_spawn": [0, -2],
+		"woodpile": [-6, 0],
 		"trees": [[-10, 0]],
 		"regions": {"habitat": {"rect": [-10, -30, 20, 10], "gate": [0, -20]}},
 		"bears": [[0, -25]],
@@ -68,8 +80,20 @@ static func layout() -> Dictionary:
 			"habitat": [0, -17],
 			"meat_stall": [6, 5],
 			"harpoon": [9, 5],
+			"lumberjack": [-6, 5],
+			"porter": [-9, 5],
+			"cashier": [12, 5],
 		},
 	}
+
+
+## 일꾼을 각자 목표로 직선 이동시키며 sim을 seconds만큼 돌린다.
+static func run_with_workers(sim: FrostSim, seconds: float, step: float = 0.05) -> void:
+	for i in roundi(seconds / step):
+		for worker in sim.workers:
+			if worker.pos.distance_to(worker.target.pos) > worker.target.stop:
+				worker.pos = worker.pos.move_toward(worker.target.pos, worker.speed * step)
+		sim.tick(step)
 
 
 ## 고정 간격으로 sim을 seconds만큼 돌린다.
