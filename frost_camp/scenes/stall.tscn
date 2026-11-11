@@ -1,0 +1,101 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://frost_camp/scenes/stall_view.gd" id="1_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_counter"]
+albedo_color = Color(0.62, 0.45, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_counter"]
+material = SubResource("StandardMaterial3D_counter")
+size = Vector3(1, 1, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_counter"]
+size = Vector3(1, 1, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_zone"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.3, 0.6, 1, 0.3)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_zone"]
+material = SubResource("StandardMaterial3D_zone")
+top_radius = 1.0
+bottom_radius = 1.0
+height = 0.02
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cash_zone"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.85, 0.2, 0.35)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_cash_zone"]
+material = SubResource("StandardMaterial3D_cash_zone")
+top_radius = 1.0
+bottom_radius = 1.0
+height = 0.02
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_log"]
+albedo_color = Color(0.55, 0.33, 0.18, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_log"]
+material = SubResource("StandardMaterial3D_log")
+size = Vector3(0.5, 0.2, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_coin"]
+albedo_color = Color(1, 0.8, 0.15, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_coin"]
+material = SubResource("StandardMaterial3D_coin")
+size = Vector3(0.5, 0.1, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_customer"]
+albedo_color = Color(0.35, 0.55, 0.85, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_customer"]
+material = SubResource("StandardMaterial3D_customer")
+radius = 0.35
+height = 1.5
+
+[node name="Stall" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="UnloadZone" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("CylinderMesh_zone")
+
+[node name="Counter" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("BoxMesh_counter")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_counter")
+
+[node name="Stock" type="Node3D" parent="."]
+
+[node name="Cash" type="Node3D" parent="."]
+
+[node name="CashZone" type="MeshInstance3D" parent="Cash"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("CylinderMesh_cash_zone")
+
+[node name="Queue" type="Node3D" parent="."]
+
+[node name="Templates" type="Node3D" parent="."]
+
+[node name="Log" type="MeshInstance3D" parent="Templates"]
+visible = false
+mesh = SubResource("BoxMesh_log")
+
+[node name="Coin" type="MeshInstance3D" parent="Templates"]
+visible = false
+mesh = SubResource("BoxMesh_coin")
+
+[node name="Customer" type="MeshInstance3D" parent="Templates"]
+visible = false
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("CapsuleMesh_customer")
