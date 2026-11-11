@@ -1,6 +1,7 @@
 extends SceneTree
 ## 탐욕 봇을 실제 데이터로 돌리고 결과를 playtest/에 남긴다.
-## 실행: godot --headless -s res://frost_camp/bot/run_bot.gd
+## 실행: godot --headless -s res://frost_camp/bot/run_bot.gd [-- 라벨]
+## 결과 파일 이름은 날짜(와 라벨)로 정한다. 같은 이름이면 덮어쓴다.
 
 const STEP := 0.05
 const MAX_TIME := 45.0 * 60.0
@@ -21,6 +22,9 @@ func _initialize() -> void:
 	samples.append([bot.time, sim.money, _total_spent(sim)])
 
 	var stamp := Time.get_date_string_from_system()
+	var label := OS.get_cmdline_user_args()
+	if not label.is_empty():
+		stamp += "_" + label[0]
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
 	_write_csv(OUT_DIR + "%s_greedy_money.csv" % stamp, samples)
 	_write_report(OUT_DIR + "%s_greedy.md" % stamp, bot, sim, samples)
@@ -60,7 +64,7 @@ func _write_report(path: String, bot: GreedyBot, sim: FrostSim, samples: Array) 
 	lines.append("판매대별 손님: " + ", ".join(sim.stalls.map(
 		func(s: Stall) -> String: return "%s 판매 %d / 화내고 떠남 %d" % [s.item, s.served, s.left_angry])))
 	lines.append("")
-	lines.append("돈 곡선은 같은 날짜의 `_greedy_money.csv`에 있다.")
+	lines.append("돈 곡선은 같은 이름의 `_greedy_money.csv`에 있다.")
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	file.store_string("\n".join(lines) + "\n")
 
