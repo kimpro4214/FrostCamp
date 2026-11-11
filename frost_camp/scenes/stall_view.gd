@@ -15,6 +15,7 @@ var _shown := Vector3i(-1, -1, -1)  # 재고, 돈 더미 개수, 줄 길이
 @onready var _queue_root: Node3D = $Queue
 @onready var _unload_zone: MeshInstance3D = $UnloadZone
 @onready var _cash_zone: MeshInstance3D = $Cash/CashZone
+@onready var _collision: CollisionShape3D = $StaticBody3D/CollisionShape3D
 
 
 func setup(frost_sim: FrostSim, stall_index: int) -> void:
@@ -30,6 +31,9 @@ func setup(frost_sim: FrostSim, stall_index: int) -> void:
 
 func _process(_delta: float) -> void:
 	var stall := sim.stalls[index]
+	var open := sim.is_stall_open(stall)
+	visible = open
+	_collision.disabled = not open
 	var state := Vector3i(
 		mini(stall.stock, MAX_SHOWN_STOCK),
 		mini(ceili(float(stall.cash) / stall.price), MAX_SHOWN_CASH),
@@ -38,7 +42,7 @@ func _process(_delta: float) -> void:
 		return
 	_shown = state
 	_rebuild(_stock_root, state.x, func(i: int) -> Vector3:
-		return Vector3(0.0, 1.1 + (i / 4) * 0.22, -0.6 + (i % 4) * 0.4), $Templates/Log)
+		return Vector3(0.0, 1.1 + (i / 4) * 0.22, -0.6 + (i % 4) * 0.4), $Templates.get_node(stall.item.capitalize()))
 	_rebuild(_cash_root, state.y, func(i: int) -> Vector3:
 		return Vector3(0.0, 0.08 + i * 0.12, 0.0), $Templates/Coin)
 	_rebuild(_queue_root, state.z, func(i: int) -> Vector3:

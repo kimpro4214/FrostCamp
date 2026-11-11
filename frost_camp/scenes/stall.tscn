@@ -41,6 +41,13 @@ albedo_color = Color(0.55, 0.33, 0.18, 1)
 material = SubResource("StandardMaterial3D_log")
 size = Vector3(0.5, 0.2, 0.3)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_meat"]
+albedo_color = Color(0.85, 0.3, 0.32, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_meat"]
+material = SubResource("StandardMaterial3D_meat")
+size = Vector3(0.45, 0.2, 0.35)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_coin"]
 albedo_color = Color(1, 0.8, 0.15, 1)
 metallic = 0.6
@@ -90,6 +97,10 @@ mesh = SubResource("CylinderMesh_cash_zone")
 [node name="Log" type="MeshInstance3D" parent="Templates"]
 visible = false
 mesh = SubResource("BoxMesh_log")
+
+[node name="Meat" type="MeshInstance3D" parent="Templates"]
+visible = false
+mesh = SubResource("BoxMesh_meat")
 
 [node name="Coin" type="MeshInstance3D" parent="Templates"]
 visible = false

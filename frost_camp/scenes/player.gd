@@ -1,7 +1,7 @@
 extends CharacterBody3D
 ## 플레이어 몸. 입력으로 움직이고, 위치를 sim에 넘기고, 등 뒤 스택을 그린다.
 
-const ITEM_COLORS := {"log": Color(0.55, 0.33, 0.18)}
+const ITEM_COLORS := {"log": Color(0.55, 0.33, 0.18), "meat": Color(0.85, 0.3, 0.32)}
 const ITEM_SIZE := Vector3(0.5, 0.2, 0.3)
 
 var sim: FrostSim
