@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://frost_camp/scenes/follow_camera.gd" id="2_camera"]
 [ext_resource type="PackedScene" path="res://frost_camp/scenes/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://frost_camp/ui/hud.tscn" id="4_hud"]
+[ext_resource type="PackedScene" path="res://frost_camp/scenes/woodpile.tscn" id="5_woodpile"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
@@ -19,6 +20,20 @@ albedo_color = Color(0.6, 0.66, 0.76, 1)
 material = SubResource("StandardMaterial3D_snow")
 size = Vector2(200, 200)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(200, 0.2, 200)
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_camp"]
+geometry_parsed_geometry_type = 1
+geometry_source_geometry_mode = 1
+geometry_source_group_name = &"nav_source"
+cell_size = 0.25
+cell_height = 0.25
+agent_height = 1.5
+agent_radius = 0.5
+agent_max_climb = 0.25
+filter_baking_aabb = AABB(-30, -2, -32, 60, 6, 48)
+
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
 
@@ -30,23 +45,36 @@ transform = Transform3D(0.866025, 0.383022, -0.321394, 0, 0.642788, 0.766044, 0.
 light_energy = 0.8
 shadow_enabled = true
 
-[node name="Ground" type="MeshInstance3D" parent="."]
+[node name="Ground" type="MeshInstance3D" parent="." groups=["nav_source"]]
 mesh = SubResource("PlaneMesh_ground")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Ground"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("BoxShape3D_ground")
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavigationMesh_camp")
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 13, 13)
 fov = 50.0
 script = ExtResource("2_camera")
 
-[node name="Trees" type="Node3D" parent="."]
+[node name="Trees" type="Node3D" parent="." groups=["nav_source"]]
 
-[node name="Stalls" type="Node3D" parent="."]
+[node name="Stalls" type="Node3D" parent="." groups=["nav_source"]]
 
 [node name="Zones" type="Node3D" parent="."]
 
 [node name="Bears" type="Node3D" parent="."]
 
-[node name="Regions" type="Node3D" parent="."]
+[node name="Regions" type="Node3D" parent="." groups=["nav_source"]]
+
+[node name="Woodpile" parent="." instance=ExtResource("5_woodpile")]
+
+[node name="Workers" type="Node3D" parent="."]
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
 

@@ -28,8 +28,10 @@ func setup(frost_sim: FrostSim, name_in_sim: String) -> void:
 	var along_x := is_equal_approx(gate.y, rect.position.y) or is_equal_approx(gate.y, rect.end.y)
 	_ice.position = Vector3(gate.x, 0.0, gate.y)
 	_ice.rotation.y = 0.0 if along_x else PI / 2.0
-	# 템플릿의 얼음벽 충돌체가 원점에 남지 않게 지운다.
-	$Templates.queue_free()
+	# 템플릿의 얼음벽 충돌체가 원점에 남지 않게(길찾기 메시에도 잡히지 않게) 바로 떼어 낸다.
+	var templates := $Templates
+	remove_child(templates)
+	templates.queue_free()
 
 
 func _process(_delta: float) -> void:
