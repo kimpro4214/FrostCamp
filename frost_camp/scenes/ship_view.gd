@@ -2,6 +2,7 @@ extends Node3D
 ## 부두의 쇄빙선. 아직 사지 않은 부품은 반투명 윤곽으로 보여서 목표가 눈에 들어온다.
 
 const GhostMaterial := preload("res://frost_camp/scenes/ghost_material.tres")
+const Juice := preload("res://frost_camp/scenes/juice.gd")
 
 var sim: FrostSim
 ## 해금 이름 → 그 부품의 메시들
@@ -19,6 +20,8 @@ func _process(_delta: float) -> void:
 	for unlock in _parts:
 		var material: Material = null if sim.unlocked.has(unlock) else GhostMaterial
 		for mesh in _parts[unlock]:
+			if mesh.material_override == GhostMaterial and material == null:
+				Juice.pop(mesh, Vector3(1.3, 0.6, 1.3), 0.35)
 			mesh.material_override = material
 
 

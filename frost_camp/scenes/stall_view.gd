@@ -1,6 +1,7 @@
 extends Node3D
 ## 판매대 하나의 겉모습. sim의 재고·손님 줄·돈 더미를 매 프레임 따라 그린다.
 
+const Juice := preload("res://frost_camp/scenes/juice.gd")
 const MAX_SHOWN_STOCK := 12
 const MAX_SHOWN_CASH := 20
 const QUEUE_START := 1.5
@@ -32,6 +33,8 @@ func setup(frost_sim: FrostSim, stall_index: int) -> void:
 func _process(_delta: float) -> void:
 	var stall := sim.stalls[index]
 	var open := sim.is_stall_open(stall)
+	if open and not visible:
+		Juice.pop(self, Vector3(0.3, 1.6, 0.3), 0.4)
 	visible = open
 	_collision.disabled = not open
 	var state := Vector3i(

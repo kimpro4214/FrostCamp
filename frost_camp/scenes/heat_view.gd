@@ -1,6 +1,8 @@
 extends Node3D
 ## 열원(모닥불, 난로)의 겉모습. 따뜻한 범위를 바닥 원판으로 보여 주고, 켜지기 전에는 숨는다.
 
+const Juice := preload("res://frost_camp/scenes/juice.gd")
+
 var sim: FrostSim
 var index: int
 
@@ -25,6 +27,9 @@ func setup(frost_sim: FrostSim, source_index: int) -> void:
 
 func _process(_delta: float) -> void:
 	var source := sim.heat_sources[index]
-	visible = sim.is_heat_active(source)
+	var active := sim.is_heat_active(source)
+	if active and not visible:
+		Juice.pop(self, Vector3(0.3, 1.6, 0.3), 0.4)
+	visible = active
 	if source.id == "stove":
 		$Stove/CollisionShape3D.disabled = not visible
