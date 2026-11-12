@@ -25,4 +25,4 @@ func _process(_delta: float) -> void:
 	var progress := float(zone.paid) / zone.cost()
 	_fill.scale = Vector3(progress, 1.0, progress)
 	_fill.visible = progress > 0.0
-	_label.text = "%s Lv%d\n$ %d" % [zone.id.to_upper(), zone.level + 1, zone.remaining()]
+	_label.text = "%s Lv%d\n$ %d" % [zone.id.to_upper().replace("_", " "), zone.level + 1, zone.remaining()]
