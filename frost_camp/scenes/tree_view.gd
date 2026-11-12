@@ -2,12 +2,19 @@ extends Node3D
 ## 나무 한 그루의 겉모습. 맞으면 흔들리고, 쓰러지면 넘어간 뒤 그루터기만 남고, 다시 자라면 솟아오른다.
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
+const MODELS := [
+	preload("res://frost_camp/assets/models/nature/tree_pineDefaultA.glb"),
+	preload("res://frost_camp/assets/models/nature/tree_pineRoundA.glb"),
+	preload("res://frost_camp/assets/models/nature/tree_pineDefaultB.glb"),
+]
+const MODEL_SCALE := 2.6
 
 var sim: FrostSim
 var index: int
 var _standing := true
 
 @onready var _crown: Node3D = $Crown
+@onready var _stump: Node3D = $Stump
 
 
 func setup(frost_sim: FrostSim, tree_index: int) -> void:
@@ -15,6 +22,9 @@ func setup(frost_sim: FrostSim, tree_index: int) -> void:
 	index = tree_index
 	var tree := sim.trees[index]
 	position = Vector3(tree.pos.x, 0.0, tree.pos.y)
+	var model: Node3D = MODELS[index % MODELS.size()].instantiate()
+	model.scale = Vector3.ONE * MODEL_SCALE
+	_crown.add_child(model)
 	sim.tree_hit.connect(_on_tree_hit)
 	sim.tree_felled.connect(_on_tree_felled)
 
@@ -26,6 +36,7 @@ func _process(_delta: float) -> void:
 		_crown.visible = true
 		Juice.pop(_crown, Vector3(0.3, 0.3, 0.3), 0.4)
 	_standing = standing
+	_stump.visible = not standing
 
 
 func _on_tree_hit(hit_index: int) -> void:
