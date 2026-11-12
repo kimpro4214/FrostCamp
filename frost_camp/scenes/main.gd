@@ -12,6 +12,7 @@ const HeatScene := preload("res://frost_camp/scenes/heat.tscn")
 const StructureView := preload("res://frost_camp/scenes/structure_view.gd")
 const TowerView := preload("res://frost_camp/scenes/tower_view.gd")
 const WoodpileScene := preload("res://frost_camp/scenes/woodpile.tscn")
+const WallView := preload("res://frost_camp/scenes/wall_view.gd")
 const ConveyorView := preload("res://frost_camp/scenes/conveyor_view.gd")
 ## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
 const ARROW_RADIUS := 2.4
@@ -95,6 +96,10 @@ func _ready() -> void:
 		bear.setup(sim, sim.bears[i], false)
 		Juice.pop(bear, Vector3(0.3, 1.6, 0.3), 0.4))
 	_raid_arrow = _make_arrow()
+	var walls := WallView.new()
+	walls.name = "Walls"
+	add_child(walls)
+	walls.setup(sim, GameData.load_json(GameData.LAYOUT_PATH).base.walls)
 	_place_structures(zone_names.get("repair", "repair"))
 	$Ship.setup(sim)
 	sim.worker_hired.connect(_on_worker_hired)
@@ -127,12 +132,14 @@ func _place_structures(repair_name: String) -> void:
 		for j in sim.towers.size():
 			if sim.towers[j].structure == structure:
 				target = $Towers.get_child(j).model
+		if structure.kind == "wall":
+			target = $Walls.models[i]
 		var view := StructureView.new()
 		$Structures.add_child(view)
 		view.setup(sim, i, target)
 		var zone := ZoneScene.instantiate()
 		$Zones.add_child(zone)
-		zone.setup(sim, structure.repair, repair_name, structure.is_broken)
+		zone.setup(sim, structure.repair, repair_name, func() -> bool: return structure.is_broken() and sim.is_structure_active(i))
 
 
 ## sim 이벤트마다 효과음을 붙인다.
