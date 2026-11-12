@@ -1,5 +1,5 @@
 extends SceneTree
-## 탐욕 봇을 실제 데이터로 돌리고 결과를 playtest/에 남긴다.
+## 탐욕 봇을 실제 데이터로 엔딩까지 돌리고 결과를 playtest/에 남긴다.
 ## 실행: godot --headless -s res://frost_camp/bot/run_bot.gd [-- 라벨]
 ## 결과 파일 이름은 날짜(와 라벨)로 정한다. 같은 이름이면 덮어쓴다.
 
@@ -14,7 +14,7 @@ func _initialize() -> void:
 	var bot := GreedyBot.new(sim)
 	var samples: Array = []
 	var next_sample := 0.0
-	while bot.time < MAX_TIME and not bot.is_done():
+	while bot.time < MAX_TIME and not sim.won and not bot.is_done():
 		if bot.time >= next_sample:
 			samples.append([bot.time, sim.money, _total_spent(sim)])
 			next_sample += SAMPLE_EVERY
@@ -27,8 +27,8 @@ func _initialize() -> void:
 		stamp += "_" + label[0]
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
 	_write_csv(OUT_DIR + "%s_greedy_money.csv" % stamp, samples)
-	_write_report(OUT_DIR + "%s_greedy.md" % stamp, bot, sim, samples)
-	print("봇 종료: %s, %.1f분" % ["모든 존 구매" if bot.is_done() else "시간 초과", bot.time / 60.0])
+	_write_report(OUT_DIR + "%s_greedy.md" % stamp, bot, sim)
+	print("봇 종료: %s, %.1f분" % [_outcome(bot, sim), bot.time / 60.0])
 	quit(0)
 
 
@@ -48,13 +48,13 @@ func _write_csv(path: String, samples: Array) -> void:
 		file.store_line("%.1f,%d,%d,%d" % [s[0], s[1], s[2], s[1] + s[2]])
 
 
-func _write_report(path: String, bot: GreedyBot, sim: FrostSim, samples: Array) -> void:
+func _write_report(path: String, bot: GreedyBot, sim: FrostSim) -> void:
 	var lines: PackedStringArray = []
 	lines.append("# 탐욕 봇 결과 (%s)" % Time.get_datetime_string_from_system(false, true))
 	lines.append("")
 	lines.append("- 규칙: 살 수 있는 존 중 남은 금액이 가장 싼 것을 산다. 직선 이동, 충돌 무시.")
-	lines.append("- 결과: %s, 시뮬레이션 %.1f분" % ["모든 존 구매" if bot.is_done() else "시간 초과", bot.time / 60.0])
-	lines.append("- 번 돈 합계: $%d" % (samples[-1][1] + samples[-1][2]))
+	lines.append("- 결과: %s, 시뮬레이션 %.1f분" % [_outcome(bot, sim), bot.time / 60.0])
+	lines.append("- 번 돈 $%d, 잡은 곰 %d, 일꾼 %d" % [sim.total_earned, sim.bears_killed, sim.workers.size()])
 	lines.append("")
 	lines.append("| 시각 | 구매 | 레벨 |")
 	lines.append("|---|---|---|")
@@ -67,6 +67,12 @@ func _write_report(path: String, bot: GreedyBot, sim: FrostSim, samples: Array) 
 	lines.append("돈 곡선은 같은 이름의 `_greedy_money.csv`에 있다.")
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	file.store_string("\n".join(lines) + "\n")
+
+
+func _outcome(bot: GreedyBot, sim: FrostSim) -> String:
+	if sim.won:
+		return "엔딩 도달"
+	return "살 것이 없음" if bot.is_done() else "시간 초과"
 
 
 func _clock(seconds: float) -> String:
