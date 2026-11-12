@@ -13,6 +13,12 @@ signal cash_collected(stall_index: int, amount: int, agent: SimAgent)
 signal structure_hit(index: int, damage: int)
 signal structure_broken(index: int)
 signal structure_repaired(index: int)
+signal raid_warning(wave: int, spawn_pos: Vector2)
+signal raid_started(wave: int)
+signal raid_cleared(wave: int)
+signal raider_hit(index: int, agent: SimAgent)
+signal raider_killed(index: int, agent: SimAgent)
+signal tower_fired(tower_index: int, raider_index: int)
 signal game_won
 
 var balance: Dictionary
@@ -46,7 +52,12 @@ var heat_sources: Array[Dictionary] = []
 ## 업그레이드로 바뀌는 플레이어 능력치. 적재량은 player.stack.capacity에 있다.
 var stats := {}
 var rng := RandomNumberGenerator.new()
+## 습격 웨이브와 습격 곰들
+var raid: Raid
+## 포탑 목록. {"id": String, "pos": Vector2, "level": int, "timer": float, "structure": Structure}
+var towers: Array[Dictionary] = []
 var _fighting_bear := -1
+var _fighting_raider := -1
 
 
 func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) -> void:
@@ -69,8 +80,18 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		var stall := Stall.new(s.item, _vec(s.pos), _vec(s.cash_pos), balance)
 		stall.unlock = s.get("unlock", "")
 		stall.structure = _add_structure("stall", stall.pos, _vec(s.repair_pos))
+		stall.structure.unlock = stall.unlock
+		stall.structure.raid_target = s.get("raid_target", true)
 		stalls.append(stall)
 	woodpile_structure = _add_structure("woodpile", woodpile_pos, _vec(layout.woodpile_repair))
+	for t in layout.towers:
+		var tower_structure := _add_structure("tower", _vec(t.pos), _vec(t.repair_pos))
+		tower_structure.unlock = t.id
+		towers.append({"id": t.id, "pos": _vec(t.pos), "level": 0, "timer": 0.0, "structure": tower_structure})
+	var spawns: Array[Vector2] = []
+	for p in layout.raid_spawns:
+		spawns.append(_vec(p))
+	raid = Raid.new(balance.raid, spawns)
 	for id in layout.zones:
 		zones.append(PurchaseZone.new(id, _vec(layout.zones[id]), balance.zones[id]))
 	for id in layout.heat:
@@ -118,6 +139,12 @@ func is_stall_working(stall: Stall) -> bool:
 	return is_stall_open(stall) and not stall.structure.is_broken()
 
 
+## 열려 있고(해금된) 부서지지 않은 시설이면 true.
+func is_structure_standing(index: int) -> bool:
+	var structure := structures[index]
+	return not structure.is_broken() and (structure.unlock == "" or unlocked.has(structure.unlock))
+
+
 ## 시설 하나에 피해를 준다. 부서지면 structure_broken이 나온다.
 func damage_structure(index: int, damage: int) -> void:
 	var structure := structures[index]
@@ -161,6 +188,8 @@ func tick(delta: float) -> void:
 	_tick_fight(player, delta)
 	for i in bears.size():
 		bears[i].tick(delta, i == _fighting_bear, rng)
+	_tick_raid(delta)
+	_tick_towers(delta)
 	_tick_collect_cash(player)
 	_tick_purchase(player, delta)
 	_tick_cold(player, delta, stats.cold_drain)
@@ -232,42 +261,113 @@ func _tick_pile_take(agent: SimAgent, delta: float) -> void:
 		agent.stack.push("log")
 
 
-## 곰 근처에 가면 자동으로 싸운다. 곰도 반격하고, 체력이 0이 되면 잠시 멍해진다(죽지 않는다).
+## 곰(서식지 곰이나 습격 곰) 근처에 가면 가까운 쪽과 자동으로 싸운다.
+## 곰도 반격하고, 체력이 0이 되면 잠시 멍해진다(죽지 않는다).
+## 서식지 곰은 고기를 담을 자리가 있어야 싸우지만, 습격 곰은 자리가 없어도 막는다.
 func _tick_fight(agent: SimAgent, delta: float) -> void:
 	var config: Dictionary = balance.bear
 	_fighting_bear = -1
+	_fighting_raider = -1
 	if agent.dazed_left > 0.0:
 		agent.dazed_left -= delta
 		if agent.dazed_left <= 0.0:
 			agent.dazed_left = 0.0
 			agent.hp = agent.max_hp
 		return
-	var index := _nearest_living_bear(agent.pos)
-	if index == -1 or agent.stack.free_space() < int(config.meat_dropped):
+	var bear_index := _nearest_living_bear(agent.pos)
+	if agent.stack.free_space() < int(config.meat_dropped):
+		bear_index = -1
+	var raider_index := _nearest_raider(agent.pos)
+	if raider_index != -1 and bear_index != -1:
+		if agent.pos.distance_to(raid.bears[raider_index].pos) <= agent.pos.distance_to(bears[bear_index].pos):
+			bear_index = -1
+		else:
+			raider_index = -1
+	if bear_index == -1 and raider_index == -1:
 		agent.attack_timer = 0.0
 		agent.hp = minf(agent.hp + float(balance.player.hp_regen) * delta, agent.max_hp)
 		return
-	_fighting_bear = index
-	var bear := bears[index]
+	var enemy = raid.bears[raider_index] if raider_index != -1 else bears[bear_index]
+	_fighting_bear = bear_index
+	_fighting_raider = raider_index
 	agent.attack_timer += delta
 	if agent.attack_timer >= float(balance.player.harpoon_interval):
 		agent.attack_timer = 0.0
-		bear_hit.emit(index, agent)
-		if bear.take_hit(stats.harpoon_damage):
-			for i in int(config.meat_dropped):
+		if raider_index != -1:
+			raider_hit.emit(raider_index, agent)
+		else:
+			bear_hit.emit(bear_index, agent)
+		if enemy.take_hit(stats.harpoon_damage):
+			var meat := int(balance.raid.meat_dropped) if raider_index != -1 else int(config.meat_dropped)
+			for i in mini(meat, agent.stack.free_space()):
 				agent.stack.push("meat")
 			bears_killed += 1
-			bear_killed.emit(index, agent)
+			if raider_index != -1:
+				raider_killed.emit(raider_index, agent)
+			else:
+				bear_killed.emit(bear_index, agent)
 			_fighting_bear = -1
+			_fighting_raider = -1
 			return
-	bear.attack_timer += delta
-	if bear.attack_timer >= float(config.attack_interval):
-		bear.attack_timer = 0.0
+	enemy.attack_timer += delta
+	if enemy.attack_timer >= float(config.attack_interval):
+		enemy.attack_timer = 0.0
 		agent.hp -= float(config.damage)
 		if agent.hp <= 0.0:
 			agent.hp = 0.0
 			agent.dazed_left = float(balance.player.dazed_time)
 			agent.attack_timer = 0.0
+
+
+## 습격 진행. 경고·습격·방어 성공 이벤트를 내고, 습격 곰을 가장 가까운 멀쩡한 시설로 몰아 부수게 한다.
+func _tick_raid(delta: float) -> void:
+	match raid.tick(delta, rng):
+		"warning":
+			raid_warning.emit(raid.wave + 1, raid.spawn_pos)
+		"attack":
+			raid_started.emit(raid.wave)
+		"cleared":
+			raid_cleared.emit(raid.wave)
+	var config: Dictionary = balance.raid
+	for i in raid.bears.size():
+		var bear := raid.bears[i]
+		if not bear.is_alive() or i == _fighting_raider:
+			continue
+		if bear.target == -1 or not is_structure_standing(bear.target):
+			bear.target = _nearest_standing_structure(bear.pos)
+			bear.attack_timer = 0.0
+		if bear.target == -1:
+			continue
+		var goal := structures[bear.target].pos
+		if bear.pos.distance_to(goal) > float(config.attack_radius):
+			bear.pos = bear.pos.move_toward(goal, bear.speed * delta)
+			continue
+		bear.attack_timer += delta
+		if bear.attack_timer >= float(config.attack_interval):
+			bear.attack_timer = 0.0
+			damage_structure(bear.target, int(config.damage))
+
+
+## 산 포탑은 사거리 안의 가장 가까운 습격 곰을 일정 간격으로 쏜다. 부서진 포탑은 쏘지 않는다.
+func _tick_towers(delta: float) -> void:
+	var config: Dictionary = balance.tower
+	for t in towers.size():
+		var tower: Dictionary = towers[t]
+		if tower.level == 0 or tower.structure.is_broken():
+			continue
+		tower.timer = minf(tower.timer + delta, float(config.interval))
+		if tower.timer < float(config.interval):
+			continue
+		var target := _nearest_raider(tower.pos, float(config.range))
+		if target == -1:
+			continue
+		tower.timer = 0.0
+		tower_fired.emit(t, target)
+		raider_hit.emit(target, null)
+		var damage: int = int(config.damage) + int(config.damage_add) * (int(tower.level) - 1)
+		if raid.bears[target].take_hit(damage):
+			bears_killed += 1
+			raider_killed.emit(target, null)
 
 
 ## 열원 안에서는 온기가 차고, 밖에서는 drain만큼 준다.
@@ -330,7 +430,17 @@ func _pay_into(agent: SimAgent, zone: PurchaseZone, delta: float) -> bool:
 func _apply_effect(effect: Dictionary) -> void:
 	if effect.has("unlock"):
 		unlocked[effect.unlock] = true
+		if effect.unlock == balance.raid.start_after:
+			raid.activate()
 		_check_ending()
+		return
+	if effect.has("tower"):
+		unlocked[effect.tower] = true
+		for tower in towers:
+			if tower.id == effect.tower:
+				if tower.level == 0:
+					tower.timer = float(balance.tower.interval)  # 세우자마자 쏠 수 있다.
+				tower.level += 1
 		return
 	if effect.has("hire"):
 		var worker := Worker.new(effect.hire, worker_spawn, balance.workers[effect.hire])
@@ -367,6 +477,30 @@ func _nearest_standing_tree(pos: Vector2) -> int:
 	for i in trees.size():
 		var dist := pos.distance_to(trees[i].pos)
 		if trees[i].is_standing() and dist <= best_dist:
+			best = i
+			best_dist = dist
+	return best
+
+
+## 사거리 안에서 가장 가까운 살아 있는 습격 곰. 사거리를 안 주면 근접 전투 거리다.
+func _nearest_raider(pos: Vector2, max_dist: float = -1.0) -> int:
+	var best := -1
+	var best_dist := max_dist if max_dist > 0.0 else float(balance.interact.bear_radius)
+	for i in raid.bears.size():
+		var dist := pos.distance_to(raid.bears[i].pos)
+		if raid.bears[i].is_alive() and dist <= best_dist:
+			best = i
+			best_dist = dist
+	return best
+
+
+## 습격 곰이 노릴 가장 가까운 시설.
+func _nearest_standing_structure(pos: Vector2) -> int:
+	var best := -1
+	var best_dist := INF
+	for i in structures.size():
+		var dist := pos.distance_to(structures[i].pos)
+		if structures[i].raid_target and is_structure_standing(i) and dist < best_dist:
 			best = i
 			best_dist = dist
 	return best

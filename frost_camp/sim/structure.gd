@@ -7,6 +7,10 @@ var kind: String
 var pos: Vector2
 var max_hp: int
 var hp: int
+## 비어 있지 않으면 이 이름이 해금되어야 시설이 서 있는 것으로 친다(닫힌 판매대, 안 산 포탑).
+var unlock := ""
+## false면 습격 곰이 노리지 않는다. 첫 원목 판매대처럼 기본 수입원이 부서져 돈을 못 벌고 수리도 못 하는 일을 막는다.
+var raid_target := true
 ## 수리 존. 부서져 있을 때만 쓴다. 넣은 돈은 존을 떠나도 남는다.
 var repair: PurchaseZone
 
