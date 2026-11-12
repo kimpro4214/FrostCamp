@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="white"
+config/name="얼음 위의 작은 상점"
 run/main_scene="res://frost_camp/scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
