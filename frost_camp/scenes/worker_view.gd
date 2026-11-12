@@ -7,9 +7,12 @@ const ROLE_COLORS := {
 	"cashier": Color(0.6, 0.4, 0.85),
 }
 
+const FrozenMaterial := preload("res://frost_camp/scenes/frozen_material.tres")
+
 var sim: FrostSim
 var index: int
 var _goal := Vector2.INF
+var _role_material: StandardMaterial3D
 
 @onready var _agent: NavigationAgent3D = $NavigationAgent3D
 @onready var _pivot: Node3D = $Pivot
@@ -21,9 +24,9 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	var worker := sim.workers[index]
 	position = Vector3(worker.pos.x, 0.0, worker.pos.y)
 	$Pivot/StackAnchor.setup(worker.stack)
-	var material := StandardMaterial3D.new()
-	material.albedo_color = ROLE_COLORS[worker.role]
-	$Pivot/Body.material_override = material
+	_role_material = StandardMaterial3D.new()
+	_role_material.albedo_color = ROLE_COLORS[worker.role]
+	$Pivot/Body.material_override = _role_material
 
 
 func _physics_process(_delta: float) -> void:
@@ -42,3 +45,4 @@ func _physics_process(_delta: float) -> void:
 			_pivot.rotation.y = atan2(-direction.x, -direction.z)
 	move_and_slide()
 	worker.pos = Vector2(position.x, position.z)
+	$Pivot/Body.material_override = FrozenMaterial if worker.warmth <= 0.0 else _role_material
