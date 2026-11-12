@@ -11,6 +11,7 @@ const WorkerScene := preload("res://frost_camp/scenes/worker.tscn")
 const HeatScene := preload("res://frost_camp/scenes/heat.tscn")
 const StructureView := preload("res://frost_camp/scenes/structure_view.gd")
 const TowerView := preload("res://frost_camp/scenes/tower_view.gd")
+const ConveyorView := preload("res://frost_camp/scenes/conveyor_view.gd")
 ## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
 const ARROW_RADIUS := 2.4
 const ARROW_HIDE_DIST := 8.0
@@ -78,6 +79,10 @@ func _ready() -> void:
 		var tower := TowerView.new()
 		$Towers.add_child(tower)
 		tower.setup(sim, i)
+	var conveyor := ConveyorView.new()
+	conveyor.name = "Conveyor"
+	add_child(conveyor)
+	conveyor.setup(sim)
 	sim.raid_started.connect(_on_raid_started)
 	_raid_arrow = _make_arrow()
 	_place_structures(zone_names.get("repair", "repair"))
@@ -105,6 +110,8 @@ func _place_structures(repair_name: String) -> void:
 		for j in sim.stalls.size():
 			if sim.stalls[j].structure == structure:
 				target = $Stalls.get_child(j).get_node("Counter")
+		if structure == sim.conveyor.structure:
+			target = $Conveyor.model
 		for j in sim.towers.size():
 			if sim.towers[j].structure == structure:
 				target = $Towers.get_child(j).model
