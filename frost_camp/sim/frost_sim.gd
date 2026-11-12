@@ -9,6 +9,7 @@ signal bear_hit(index: int)
 signal bear_killed(index: int)
 signal zone_purchased(id: String, level: int)
 signal worker_hired(index: int)
+signal cash_collected(stall_index: int, amount: int, agent: SimAgent)
 signal game_won
 
 var balance: Dictionary
@@ -259,11 +260,14 @@ func _fill_warmth(agent: SimAgent) -> void:
 
 func _tick_collect_cash(agent: SimAgent) -> void:
 	var radius := float(balance.interact.cash_radius)
-	for stall in stalls:
+	for i in stalls.size():
+		var stall := stalls[i]
 		if stall.cash > 0 and agent.pos.distance_to(stall.cash_pos) <= radius:
-			money += stall.cash
-			total_earned += stall.cash
+			var amount := stall.cash
+			money += amount
+			total_earned += amount
 			stall.cash = 0
+			cash_collected.emit(i, amount, agent)
 
 
 ## 존 위에 pay_delay만큼 서 있어야 돈이 들어가기 시작한다. 지나가다 밟으면 쓰지 않는다.
