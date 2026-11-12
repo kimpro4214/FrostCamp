@@ -3,6 +3,8 @@
 	"worker_spawn": [0, -2],
 	"woodpile": [-3, -6],
 	"woodpile_repair": [-3, -8.4],
+	"meat_pile": [3.6, -11.8],
+	"meat_pile_repair": [1.4, -12.8],
 	"ship": [35, -3],
 	"heat": {
 		"campfire": [0, -1],
@@ -42,6 +44,7 @@
 		"meat_stall": [5, -5],
 		"harpoon": [9, -11],
 		"bear_den": [11.5, -12],
+		"hunter": [6.6, -11.4],
 		"lumberjack": [-7, 0],
 		"porter": [1.5, -3],
 		"cashier": [7.4, 2.0],

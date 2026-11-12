@@ -45,6 +45,7 @@
 	"structures": {
 		"stall": { "hp": 30, "repair_cost": 60 },
 		"woodpile": { "hp": 20, "repair_cost": 40 },
+		"meat_pile": { "hp": 20, "repair_cost": 40 },
 		"tower": { "hp": 25, "repair_cost": 50 },
 		"conveyor": { "hp": 30, "repair_cost": 60 }
 	},
@@ -79,7 +80,8 @@
 	"workers": {
 		"lumberjack": { "speed": 3.5, "capacity": 6, "damage": 1 },
 		"porter": { "speed": 4.0, "capacity": 8 },
-		"cashier": { "speed": 4.0 }
+		"cashier": { "speed": 4.0 },
+		"hunter": { "speed": 3.8, "capacity": 6, "damage": 2, "hp": 10 }
 	},
 	"items": {
 		"log": { "price": 5 },
@@ -121,6 +123,11 @@
 			"costs": [150],
 			"effect": { "unlock": "meat_stall" },
 			"requires": ["habitat"]
+		},
+		"hunter": {
+			"costs": [250, 450],
+			"effect": { "hire": "hunter" },
+			"requires": ["meat_stall"]
 		},
 		"bear_den": {
 			"costs": [200, 400],
