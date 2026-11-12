@@ -1,13 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://frost_camp/scenes/stall_view.gd" id="1_script"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_counter"]
-albedo_color = Color(0.62, 0.45, 0.3, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_counter"]
-material = SubResource("StandardMaterial3D_counter")
-size = Vector3(1, 1, 2)
+[ext_resource type="PackedScene" path="res://frost_camp/assets/models/survival/box-large.glb" id="2_counter"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_counter"]
 size = Vector3(1, 1, 2)
@@ -57,14 +51,6 @@ roughness = 0.4
 material = SubResource("StandardMaterial3D_coin")
 size = Vector3(0.5, 0.1, 0.3)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_customer"]
-albedo_color = Color(0.35, 0.55, 0.85, 1)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_customer"]
-material = SubResource("StandardMaterial3D_customer")
-radius = 0.35
-height = 1.5
-
 [node name="Stall" type="Node3D"]
 script = ExtResource("1_script")
 
@@ -72,9 +58,8 @@ script = ExtResource("1_script")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
 mesh = SubResource("CylinderMesh_zone")
 
-[node name="Counter" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-mesh = SubResource("BoxMesh_counter")
+[node name="Counter" parent="." instance=ExtResource("2_counter")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0)
 
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
 
@@ -105,8 +90,3 @@ mesh = SubResource("BoxMesh_meat")
 [node name="Coin" type="MeshInstance3D" parent="Templates"]
 visible = false
 mesh = SubResource("BoxMesh_coin")
-
-[node name="Customer" type="MeshInstance3D" parent="Templates"]
-visible = false
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
-mesh = SubResource("CapsuleMesh_customer")

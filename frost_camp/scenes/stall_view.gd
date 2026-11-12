@@ -6,6 +6,12 @@ const MAX_SHOWN_STOCK := 12
 const MAX_SHOWN_CASH := 20
 const QUEUE_START := 1.5
 const QUEUE_GAP := 1.1
+const CUSTOMER_MODELS := [
+	preload("res://frost_camp/assets/models/characters/character-female-a.glb"),
+	preload("res://frost_camp/assets/models/characters/character-male-e.glb"),
+	preload("res://frost_camp/assets/models/characters/character-female-d.glb"),
+]
+const CUSTOMER_SCALE := 2.3
 
 var sim: FrostSim
 var index: int
@@ -44,23 +50,35 @@ func _process(_delta: float) -> void:
 	if state == _shown:
 		return
 	_shown = state
+	var item_template: Node3D = $Templates.get_node(stall.item.capitalize())
 	_rebuild(_stock_root, state.x, func(i: int) -> Vector3:
-		return Vector3(0.0, 1.1 + (i / 4) * 0.22, -0.6 + (i % 4) * 0.4), $Templates.get_node(stall.item.capitalize()))
+		return Vector3(0.0, 1.1 + (i / 4) * 0.22, -0.6 + (i % 4) * 0.4), func(_i: int) -> Node3D: return item_template.duplicate())
 	_rebuild(_cash_root, state.y, func(i: int) -> Vector3:
-		return Vector3(0.0, 0.08 + i * 0.12, 0.0), $Templates/Coin)
+		return Vector3(0.0, 0.08 + i * 0.12, 0.0), func(_i: int) -> Node3D: return $Templates/Coin.duplicate())
 	_rebuild(_queue_root, state.z, func(i: int) -> Vector3:
-		return Vector3(QUEUE_START + i * QUEUE_GAP, 0.75, 0.0), $Templates/Customer)
+		return Vector3(QUEUE_START + i * QUEUE_GAP, 0.0, 0.0), _make_customer)
 
 
-func _rebuild(root: Node3D, count: int, place: Callable, template: Node3D) -> void:
+func _rebuild(root: Node3D, count: int, place: Callable, make: Callable) -> void:
 	for child in root.get_children():
 		if child != _cash_zone:
 			child.queue_free()
 	for i in count:
-		var copy: Node3D = template.duplicate()
-		copy.visible = true
-		copy.position = place.call(i)
-		root.add_child(copy)
+		var node: Node3D = make.call(i)
+		node.visible = true
+		node.position = place.call(i)
+		root.add_child(node)
+
+
+## 줄 선 손님. 판매대(-X 쪽)를 바라보고 서 있는다. 자리마다 모델이 정해져 있다.
+func _make_customer(slot: int) -> Node3D:
+	var customer: Node3D = CUSTOMER_MODELS[slot % CUSTOMER_MODELS.size()].instantiate()
+	customer.scale = Vector3.ONE * CUSTOMER_SCALE
+	customer.rotation.y = -PI / 2.0
+	var anim: AnimationPlayer = customer.find_children("*", "AnimationPlayer", true, false)[0]
+	anim.get_animation("idle").loop_mode = Animation.LOOP_LINEAR
+	anim.play("idle")
+	return customer
 
 
 func _set_disc_radius(disc: MeshInstance3D, radius: float) -> void:
