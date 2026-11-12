@@ -12,6 +12,7 @@ var sim: FrostSim
 
 func setup(frost_sim: FrostSim) -> void:
 	sim = frost_sim
+	sim.cash_collected.connect(func(_stall: int, _amount: int, _agent: SimAgent) -> void: _punch(_money_label))
 
 
 func _process(_delta: float) -> void:
@@ -29,3 +30,11 @@ func _process(_delta: float) -> void:
 		_warmth_label.text = "FROZEN"
 	else:
 		_warmth_label.text = "WARM %d%%" % ceili(player.warmth / player.max_warmth * 100.0)
+
+
+## 돈이 들어오면 숫자가 툭 커졌다가 돌아온다.
+func _punch(label: Control) -> void:
+	label.pivot_offset = label.size / 2.0
+	label.scale = Vector2(1.35, 1.35)
+	label.create_tween().tween_property(label, "scale", Vector2.ONE, 0.25) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
