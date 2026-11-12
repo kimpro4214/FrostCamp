@@ -132,6 +132,7 @@ func tick(delta: float) -> void:
 		if is_stall_open(stall):
 			stall.tick(delta)
 	_tick_unload(player, delta)
+	_tick_pile_take(player, delta)
 	_tick_chop(player, delta, stats.axe_damage)
 	_tick_fight(player, delta)
 	for i in bears.size():
@@ -195,7 +196,7 @@ func _tick_pile_drop(agent: SimAgent, delta: float) -> void:
 		woodpile += 1
 
 
-## 적치장 근처에서 원목을 하나씩 집어 든다(운반꾼).
+## 적치장 근처에서 원목을 하나씩 집어 든다(운반꾼, 플레이어).
 func _tick_pile_take(agent: SimAgent, delta: float) -> void:
 	if agent.pos.distance_to(woodpile_pos) > float(balance.interact.pile_radius) or woodpile == 0 or agent.stack.free_space() == 0:
 		agent.pickup_timer = 0.0

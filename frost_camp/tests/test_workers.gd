@@ -46,6 +46,15 @@ func test_porter_carries_woodpile_to_log_stall() -> void:
 	check_eq(sim.stalls[0].stock + sim.stalls[0].served, 4, "원목 4개가 판매대로 간다")
 
 
+func test_player_picks_up_from_woodpile() -> void:
+	var sim := _make_sim()
+	sim.woodpile = 3
+	sim.player.pos = sim.woodpile_pos
+	Fixtures.run(sim, 1.0)
+	check_eq(sim.woodpile, 0, "플레이어도 적치장 원목을 집는다")
+	check_eq(sim.player.stack.items.size(), 3, "집은 원목이 등에 쌓인다")
+
+
 func test_cashier_collects_cash_into_wallet() -> void:
 	var sim := _make_sim()
 	sim.stalls[0].cash = 30
