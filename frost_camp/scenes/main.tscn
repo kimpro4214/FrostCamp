@@ -31,6 +31,15 @@ roughness = 0.15
 material = SubResource("StandardMaterial3D_water")
 size = Vector2(100, 200)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_coin"]
+albedo_color = Color(1, 0.8, 0.15, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_coin"]
+material = SubResource("StandardMaterial3D_coin")
+size = Vector3(0.35, 0.08, 0.25)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
 size = Vector3(200, 0.2, 200)
 
@@ -94,6 +103,12 @@ script = ExtResource("2_camera")
 [node name="Workers" type="Node3D" parent="."]
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
+
+[node name="Coins" type="Node3D" parent="."]
+
+[node name="Template" type="MeshInstance3D" parent="Coins"]
+visible = false
+mesh = SubResource("BoxMesh_coin")
 
 [node name="Ship" parent="." instance=ExtResource("6_ship")]
 
