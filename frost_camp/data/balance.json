@@ -149,8 +149,18 @@
 		},
 		"cashier": {
 			"costs": [320],
-			"effect": { "hire": "cashier" },
+			"effect": { "hire": "cashier", "stall": 0 },
 			"requires": ["meat_stall"]
+		},
+		"cashier_meat": {
+			"costs": [300],
+			"effect": { "hire": "cashier", "stall": 1 },
+			"requires": ["cashier"]
+		},
+		"cashier_market": {
+			"costs": [350],
+			"effect": { "hire": "cashier", "stall": 2 },
+			"requires": ["expand_2"]
 		},
 		"stove": {
 			"costs": [250],
