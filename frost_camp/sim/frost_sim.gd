@@ -41,6 +41,10 @@ var woodpile_pos: Vector2
 ## 기지 시설들의 체력(판매대, 적치장). 판매대는 stall.structure로도 닿는다.
 var structures: Array[Structure] = []
 var woodpile_structure: Structure
+## 사냥꾼이 쌓아 두고 운반꾼·플레이어가 가져가는 고기 적치장. 서식지를 열어야 쓴다.
+var meat_pile := 0
+var meat_pile_pos: Vector2
+var meat_pile_structure: Structure
 var worker_spawn: Vector2
 ## 쇄빙선이 정박한 곳(연출용)
 var ship_pos: Vector2
@@ -63,8 +67,9 @@ var towers: Array[Dictionary] = []
 ## 곰 늘리기 구매로 서식지에 더 나올 곰 자리. 앞에서부터 쓴다.
 var extra_bear_spots: Array[Vector2] = []
 var _bear_area: Rect2
-var _fighting_bear := -1
-var _fighting_raider := -1
+## 이번 프레임에 누군가와 싸운 곰들(번호 → true). 싸우는 곰은 배회하거나 걸어가지 않는다.
+var _fighting_bears := {}
+var _fighting_raiders := {}
 
 
 func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) -> void:
@@ -73,6 +78,7 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 	player = SimAgent.new(
 		_vec(layout.player_start), int(balance.player.stack_capacity), float(balance.player.hp))
 	woodpile_pos = _vec(layout.woodpile)
+	meat_pile_pos = _vec(layout.meat_pile)
 	worker_spawn = _vec(layout.worker_spawn)
 	ship_pos = _vec(layout.ship)
 	for p in layout.trees:
@@ -110,6 +116,8 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 	conveyor = Conveyor.new(belt_points, balance.conveyor)
 	conveyor.structure = _add_structure("conveyor", _vec(layout.conveyor.pos), _vec(layout.conveyor.repair_pos))
 	conveyor.structure.unlock = "conveyor"
+	meat_pile_structure = _add_structure("meat_pile", meat_pile_pos, _vec(layout.meat_pile_repair))
+	meat_pile_structure.unlock = "habitat"
 	var spawns: Array[Vector2] = []
 	for p in layout.raid_spawns:
 		spawns.append(_vec(p))
@@ -204,6 +212,8 @@ func tick(delta: float) -> void:
 	if won:
 		return
 	time += delta
+	_fighting_bears.clear()
+	_fighting_raiders.clear()
 	for tree in trees:
 		tree.tick(delta)
 	for stall in stalls:
@@ -211,13 +221,10 @@ func tick(delta: float) -> void:
 			stall.tick(delta)
 	_tick_conveyor(delta)
 	_tick_unload(player, delta)
-	_tick_pile_take(player, delta)
+	_tick_pile_take(player, delta, "log")
+	_tick_pile_take(player, delta, "meat")
 	_tick_chop(player, delta, stats.axe_damage)
 	_tick_fight(player, delta)
-	for i in bears.size():
-		bears[i].tick(delta, i == _fighting_bear, rng)
-	_tick_raid(delta)
-	_tick_towers(delta)
 	_tick_collect_cash(player)
 	_tick_purchase(player, delta)
 	_tick_cold(player, delta, stats.cold_drain)
@@ -227,12 +234,20 @@ func tick(delta: float) -> void:
 		match worker.role:
 			"lumberjack":
 				_tick_chop(worker, delta, worker.damage)
-				_tick_pile_drop(worker, delta)
+				_tick_pile_drop(worker, delta, "log")
+			"hunter":
+				_tick_fight(worker, delta)
+				_tick_pile_drop(worker, delta, "meat")
 			"porter":
-				_tick_pile_take(worker, delta)
+				_tick_pile_take(worker, delta, worker.carry_item)
 				_tick_unload(worker, delta)
 			"cashier":
 				_tick_collect_cash(worker)
+	# 싸우는 곰은 이번 프레임에 싸운 모든 사람(플레이어, 사냥꾼)을 본 뒤에 움직인다.
+	for i in bears.size():
+		bears[i].tick(delta, _fighting_bears.has(i), rng)
+	_tick_raid(delta)
+	_tick_towers(delta)
 
 
 func _tick_unload(agent: SimAgent, delta: float) -> void:
@@ -265,37 +280,62 @@ func _tick_chop(agent: SimAgent, delta: float, damage: int) -> void:
 		tree_felled.emit(index, agent)
 
 
-## 적치장 근처에서 원목을 하나씩 내려놓는다(벌목꾼).
-func _tick_pile_drop(agent: SimAgent, delta: float) -> void:
-	if woodpile_structure.is_broken() or agent.pos.distance_to(woodpile_pos) > float(balance.interact.pile_radius) or not agent.stack.items.has("log"):
+## 적치장 개수. item은 "log"(원목 적치장) 또는 "meat"(고기 적치장).
+func pile_count(item: String) -> int:
+	return woodpile if item == "log" else meat_pile
+
+
+func pile_pos(item: String) -> Vector2:
+	return woodpile_pos if item == "log" else meat_pile_pos
+
+
+func pile_structure(item: String) -> Structure:
+	return woodpile_structure if item == "log" else meat_pile_structure
+
+
+## 쓸 수 있는 적치장인가(부서지지 않았고 열려 있다).
+func is_pile_open(item: String) -> bool:
+	var structure := pile_structure(item)
+	return not structure.is_broken() and (structure.unlock == "" or unlocked.has(structure.unlock))
+
+
+func _change_pile(item: String, amount: int) -> void:
+	if item == "log":
+		woodpile += amount
+	else:
+		meat_pile += amount
+
+
+## 적치장 근처에서 그 품목을 하나씩 내려놓는다(벌목꾼은 원목, 사냥꾼은 고기).
+func _tick_pile_drop(agent: SimAgent, delta: float, item: String) -> void:
+	if not is_pile_open(item) or agent.pos.distance_to(pile_pos(item)) > float(balance.interact.pile_radius) or not agent.stack.items.has(item):
 		agent.unload_timer = 0.0
 		return
 	agent.unload_timer += delta
 	if agent.unload_timer >= float(balance.stall.unload_interval):
 		agent.unload_timer = 0.0
-		agent.stack.take("log")
-		woodpile += 1
+		agent.stack.take(item)
+		_change_pile(item, 1)
 
 
-## 적치장 근처에서 원목을 하나씩 집어 든다(운반꾼, 플레이어).
-func _tick_pile_take(agent: SimAgent, delta: float) -> void:
-	if woodpile_structure.is_broken() or agent.pos.distance_to(woodpile_pos) > float(balance.interact.pile_radius) or woodpile == 0 or agent.stack.free_space() == 0:
-		agent.pickup_timer = 0.0
+## 적치장 근처에서 그 품목을 하나씩 집어 든다(운반꾼, 플레이어).
+func _tick_pile_take(agent: SimAgent, delta: float, item: String) -> void:
+	if not is_pile_open(item) or agent.pos.distance_to(pile_pos(item)) > float(balance.interact.pile_radius) or pile_count(item) == 0 or agent.stack.free_space() == 0:
+		if agent.pos.distance_to(pile_pos(item)) <= float(balance.interact.pile_radius):
+			agent.pickup_timer = 0.0
 		return
 	agent.pickup_timer += delta
 	if agent.pickup_timer >= float(balance.stall.unload_interval):
 		agent.pickup_timer = 0.0
-		woodpile -= 1
-		agent.stack.push("log")
+		_change_pile(item, -1)
+		agent.stack.push(item)
 
 
-## 곰(서식지 곰이나 습격 곰) 근처에 가면 가까운 쪽과 자동으로 싸운다.
+## 곰(서식지 곰이나 습격 곰) 근처에 가면 가까운 쪽과 자동으로 싸운다. 플레이어와 사냥꾼이 같은 규칙을 쓴다.
 ## 곰도 반격하고, 체력이 0이 되면 잠시 멍해진다(죽지 않는다).
-## 서식지 곰은 고기를 담을 자리가 있어야 싸우지만, 습격 곰은 자리가 없어도 막는다(현상금은 돈으로 받는다).
+## 서식지 곰은 고기를 담을 자리가 있어야 싸우지만, 습격 곰은 자리가 없어도 막는다.
 func _tick_fight(agent: SimAgent, delta: float) -> void:
 	var config: Dictionary = balance.bear
-	_fighting_bear = -1
-	_fighting_raider = -1
 	if agent.dazed_left > 0.0:
 		agent.dazed_left -= delta
 		if agent.dazed_left <= 0.0:
@@ -316,8 +356,11 @@ func _tick_fight(agent: SimAgent, delta: float) -> void:
 		agent.hp = minf(agent.hp + float(balance.player.hp_regen) * delta, agent.max_hp)
 		return
 	var enemy = raid.bears[raider_index] if raider_index != -1 else bears[bear_index]
-	_fighting_bear = bear_index
-	_fighting_raider = raider_index
+	if raider_index != -1:
+		_fighting_raiders[raider_index] = true
+	else:
+		_fighting_bears[bear_index] = true
+	var damage: int = agent.damage if agent is Worker else stats.harpoon_damage
 	agent.attack_timer += delta
 	if agent.attack_timer >= float(balance.player.harpoon_interval):
 		agent.attack_timer = 0.0
@@ -325,17 +368,17 @@ func _tick_fight(agent: SimAgent, delta: float) -> void:
 			raider_hit.emit(raider_index, agent)
 		else:
 			bear_hit.emit(bear_index, agent)
-		if enemy.take_hit(stats.harpoon_damage):
+		if enemy.take_hit(damage):
 			bears_killed += 1
 			if raider_index != -1:
+				_fighting_raiders.erase(raider_index)
 				_reward_raider_kill(agent)
 				raider_killed.emit(raider_index, agent)
 			else:
+				_fighting_bears.erase(bear_index)
 				for i in int(config.meat_dropped):
 					agent.stack.push("meat")
 				bear_killed.emit(bear_index, agent)
-			_fighting_bear = -1
-			_fighting_raider = -1
 			return
 	enemy.attack_timer += delta
 	if enemy.attack_timer >= float(config.attack_interval):
@@ -370,7 +413,7 @@ func _tick_raid(delta: float) -> void:
 	var config: Dictionary = balance.raid
 	for i in raid.bears.size():
 		var bear := raid.bears[i]
-		if not bear.is_alive() or i == _fighting_raider:
+		if not bear.is_alive() or _fighting_raiders.has(i):
 			continue
 		if bear.target == -1 or not is_structure_standing(bear.target):
 			bear.target = _nearest_standing_structure(bear.pos)

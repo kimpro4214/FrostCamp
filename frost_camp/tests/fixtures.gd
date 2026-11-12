@@ -21,6 +21,7 @@ static func balance() -> Dictionary:
 		"structures": {
 			"stall": {"hp": 10, "repair_cost": 20},
 			"woodpile": {"hp": 10, "repair_cost": 20},
+			"meat_pile": {"hp": 10, "repair_cost": 20},
 			"tower": {"hp": 10, "repair_cost": 20},
 			"conveyor": {"hp": 10, "repair_cost": 20},
 		},
@@ -35,6 +36,7 @@ static func balance() -> Dictionary:
 			"lumberjack": {"speed": 4.0, "capacity": 4, "damage": 1},
 			"porter": {"speed": 4.0, "capacity": 4},
 			"cashier": {"speed": 4.0},
+			"hunter": {"speed": 4.0, "capacity": 4, "damage": 2, "hp": 10},
 		},
 		"cold": {
 			"max": 30,
@@ -91,6 +93,8 @@ static func layout() -> Dictionary:
 		"worker_spawn": [0, -2],
 		"woodpile": [-6, 0],
 		"woodpile_repair": [-6, -3],
+		"meat_pile": [0, -15],
+		"meat_pile_repair": [3, -15],
 		"ship": [30, 0],
 		"heat": {"campfire": [0, 0], "stove": [0, -10]},
 		"trees": [[-10, 0]],
