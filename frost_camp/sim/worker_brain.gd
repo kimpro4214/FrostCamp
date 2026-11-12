@@ -27,7 +27,7 @@ static func _lumberjack(sim: FrostSim, worker: Worker) -> Dictionary:
 		return _go("pile", sim.woodpile_pos)
 	var best: HarvestTree = null
 	for tree in sim.trees:
-		if tree.is_standing() and (best == null or worker.pos.distance_to(tree.pos) < worker.pos.distance_to(best.pos)):
+		if sim.is_tree_ready(tree) and (best == null or worker.pos.distance_to(tree.pos) < worker.pos.distance_to(best.pos)):
 			best = tree
 	if best:
 		return _go("tree", best.pos)

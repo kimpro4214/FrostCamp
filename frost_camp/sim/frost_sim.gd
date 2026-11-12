@@ -45,7 +45,8 @@ var worker_spawn: Vector2
 var ship_pos: Vector2
 ## 구매로 열린 것들(지역, 판매대). 이름 → true
 var unlocked := {}
-## 지역 이름 → {"rect": Rect2, "gate": Vector2}
+## 지역 이름 → {"rect": Rect2, "gate": Vector2, "open": bool}
+## open인 지역(확장 땅)은 사면 울타리 전체가 없어져 기지가 넓어진다.
 var regions := {}
 ## 열원 목록. {"id": String, "pos": Vector2, "radius": float, "unlock": String}
 var heat_sources: Array[Dictionary] = []
@@ -74,7 +75,13 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		trees.append(HarvestTree.new(_vec(p), balance.tree))
 	for region_name in layout.regions:
 		var r: Dictionary = layout.regions[region_name]
-		regions[region_name] = {"rect": Rect2(r.rect[0], r.rect[1], r.rect[2], r.rect[3]), "gate": _vec(r.gate)}
+		regions[region_name] = {
+			"rect": Rect2(r.rect[0], r.rect[1], r.rect[2], r.rect[3]), "gate": _vec(r.gate), "open": r.get("open", false),
+		}
+		for p in r.get("trees", []):
+			var tree := HarvestTree.new(_vec(p), balance.tree)
+			tree.unlock = region_name
+			trees.append(tree)
 	var bear_area: Rect2 = regions.habitat.rect.grow(-float(balance.bear.wall_margin))
 	for p in layout.bears:
 		bears.append(HarvestBear.new(_vec(p), bear_area, balance.bear))
@@ -136,6 +143,11 @@ func is_warm(pos: Vector2) -> bool:
 		if is_heat_active(source) and pos.distance_to(source.pos) <= source.radius:
 			return true
 	return false
+
+
+## 서 있고, 확장 땅의 나무라면 그 땅을 산 뒤여야 벨 수 있다.
+func is_tree_ready(tree: HarvestTree) -> bool:
+	return tree.is_standing() and (tree.unlock == "" or unlocked.has(tree.unlock))
 
 
 func is_stall_open(stall: Stall) -> bool:
@@ -357,6 +369,10 @@ func _tick_raid(delta: float) -> void:
 			bear.target = _nearest_standing_structure(bear.pos)
 			bear.attack_timer = 0.0
 		if bear.target == -1:
+			# 노릴 시설이 없으면 플레이어에게 달려든다. 닿으면 근접 전투가 시작된다.
+			var reach := float(balance.interact.bear_radius) * 0.8
+			if bear.pos.distance_to(player.pos) > reach:
+				bear.pos = bear.pos.move_toward(player.pos, bear.speed * delta)
 			continue
 		var goal := structures[bear.target].pos
 		if bear.pos.distance_to(goal) > float(config.attack_radius):
@@ -500,7 +516,7 @@ func _nearest_standing_tree(pos: Vector2) -> int:
 	var best_dist := float(balance.interact.tree_radius)
 	for i in trees.size():
 		var dist := pos.distance_to(trees[i].pos)
-		if trees[i].is_standing() and dist <= best_dist:
+		if is_tree_ready(trees[i]) and dist <= best_dist:
 			best = i
 			best_dist = dist
 	return best

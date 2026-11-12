@@ -7,6 +7,8 @@ var hits_to_fell: int
 var respawn_time: float
 var hits := 0
 var respawn_left := 0.0
+## 비어 있지 않으면 이 이름이 해금되어야 벨 수 있다(확장 땅의 숲).
+var unlock := ""
 
 
 func _init(tree_pos: Vector2, config: Dictionary) -> void:
