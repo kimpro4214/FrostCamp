@@ -2,23 +2,11 @@
 
 [ext_resource type="Script" path="res://frost_camp/scenes/worker_view.gd" id="1_script"]
 [ext_resource type="Script" path="res://frost_camp/scenes/stack_view.gd" id="2_stack"]
+[ext_resource type="Script" path="res://frost_camp/scenes/character_model.gd" id="3_model"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.35
 height = 1.4
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
-radius = 0.35
-height = 1.4
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hat"]
-albedo_color = Color(0.25, 0.25, 0.3, 1)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_hat"]
-material = SubResource("StandardMaterial3D_hat")
-top_radius = 0.2
-bottom_radius = 0.3
-height = 0.25
 
 [node name="Worker" type="CharacterBody3D"]
 collision_layer = 4
@@ -31,13 +19,8 @@ shape = SubResource("CapsuleShape3D_body")
 
 [node name="Pivot" type="Node3D" parent="."]
 
-[node name="Body" type="MeshInstance3D" parent="Pivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
-mesh = SubResource("CapsuleMesh_body")
-
-[node name="Hat" type="MeshInstance3D" parent="Pivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
-mesh = SubResource("CylinderMesh_hat")
+[node name="Model" type="Node3D" parent="Pivot"]
+script = ExtResource("3_model")
 
 [node name="StackAnchor" type="Node3D" parent="Pivot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0.5)

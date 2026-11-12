@@ -1,13 +1,13 @@
 extends CharacterBody3D
 ## 플레이어 몸. 입력으로 움직이고, 위치를 sim에 넘긴다. 등 뒤 스택은 StackAnchor가 그린다.
 
-const FrozenMaterial := preload("res://frost_camp/scenes/frozen_material.tres")
+const MODEL := "res://frost_camp/assets/models/characters/character-male-a.glb"
 
 var sim: FrostSim
 var joystick: Node
 
 @onready var _pivot: Node3D = $Pivot
-@onready var _body: MeshInstance3D = $Pivot/Body
+@onready var _model: Node3D = $Pivot/Model
 
 
 func setup(frost_sim: FrostSim, virtual_joystick: Node) -> void:
@@ -15,6 +15,7 @@ func setup(frost_sim: FrostSim, virtual_joystick: Node) -> void:
 	joystick = virtual_joystick
 	position = Vector3(sim.player.pos.x, 0.0, sim.player.pos.y)
 	$Pivot/StackAnchor.setup(sim.player.stack)
+	_model.setup(MODEL)
 
 
 func _physics_process(_delta: float) -> void:
@@ -24,7 +25,8 @@ func _physics_process(_delta: float) -> void:
 	if input.length() > 0.1:
 		_pivot.rotation.y = atan2(-input.x, -input.y)
 	sim.player.pos = Vector2(position.x, position.z)
-	_body.material_override = FrozenMaterial if sim.player.warmth <= 0.0 else null
+	_model.set_moving(input.length() > 0.1)
+	_model.set_frozen(sim.player.warmth <= 0.0)
 
 
 func _read_input() -> Vector2:

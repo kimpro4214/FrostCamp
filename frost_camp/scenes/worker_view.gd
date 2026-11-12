@@ -1,21 +1,20 @@
 extends CharacterBody3D
 ## 일꾼 몸. sim의 worker_brain이 정한 목표까지 NavigationAgent3D로 길을 찾아 걷고, 위치를 sim에 넘긴다.
 
-const ROLE_COLORS := {
-	"lumberjack": Color(0.3, 0.6, 0.3),
-	"porter": Color(0.9, 0.72, 0.25),
-	"cashier": Color(0.6, 0.4, 0.85),
+## 역할마다 다른 캐릭터를 써서 한눈에 구분되게 한다.
+const ROLE_MODELS := {
+	"lumberjack": "res://frost_camp/assets/models/characters/character-worker.glb",
+	"porter": "res://frost_camp/assets/models/characters/character-male-c.glb",
+	"cashier": "res://frost_camp/assets/models/characters/character-female-b.glb",
 }
-
-const FrozenMaterial := preload("res://frost_camp/scenes/frozen_material.tres")
 
 var sim: FrostSim
 var index: int
 var _goal := Vector2.INF
-var _role_material: StandardMaterial3D
 
 @onready var _agent: NavigationAgent3D = $NavigationAgent3D
 @onready var _pivot: Node3D = $Pivot
+@onready var _model: Node3D = $Pivot/Model
 
 
 func setup(frost_sim: FrostSim, worker_index: int) -> void:
@@ -24,9 +23,7 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	var worker := sim.workers[index]
 	position = Vector3(worker.pos.x, 0.0, worker.pos.y)
 	$Pivot/StackAnchor.setup(worker.stack)
-	_role_material = StandardMaterial3D.new()
-	_role_material.albedo_color = ROLE_COLORS[worker.role]
-	$Pivot/Body.material_override = _role_material
+	_model.setup(ROLE_MODELS[worker.role])
 
 
 func _physics_process(_delta: float) -> void:
@@ -45,4 +42,5 @@ func _physics_process(_delta: float) -> void:
 			_pivot.rotation.y = atan2(-direction.x, -direction.z)
 	move_and_slide()
 	worker.pos = Vector2(position.x, position.z)
-	$Pivot/Body.material_override = FrozenMaterial if worker.warmth <= 0.0 else _role_material
+	_model.set_moving(velocity.length() > 0.1)
+	_model.set_frozen(worker.warmth <= 0.0)
