@@ -112,6 +112,8 @@ script = ExtResource("2_camera")
 
 [node name="Woodpile" parent="." instance=ExtResource("5_woodpile")]
 
+[node name="Structures" type="Node3D" parent="."]
+
 [node name="Workers" type="Node3D" parent="."]
 
 [node name="Player" parent="." instance=ExtResource("3_player")]

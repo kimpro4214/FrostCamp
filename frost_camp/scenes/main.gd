@@ -9,6 +9,7 @@ const BearScene := preload("res://frost_camp/scenes/bear.tscn")
 const RegionScene := preload("res://frost_camp/scenes/region.tscn")
 const WorkerScene := preload("res://frost_camp/scenes/worker.tscn")
 const HeatScene := preload("res://frost_camp/scenes/heat.tscn")
+const StructureView := preload("res://frost_camp/scenes/structure_view.gd")
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const Sfx := preload("res://frost_camp/scenes/sfx.gd")
 const ESCAPE_SAIL_TIME := 5.0
@@ -51,7 +52,9 @@ func _ready() -> void:
 	for i in sim.zones.size():
 		var zone := ZoneScene.instantiate()
 		$Zones.add_child(zone)
-		zone.setup(sim, i, zone_names.get(sim.zones[i].id, sim.zones[i].id))
+		var purchase_zone := sim.zones[i]
+		zone.setup(sim, purchase_zone, zone_names.get(purchase_zone.id, purchase_zone.id),
+			func() -> bool: return sim.is_zone_available(purchase_zone))
 	for i in sim.bears.size():
 		var bear := BearScene.instantiate()
 		$Bears.add_child(bear)
@@ -66,6 +69,7 @@ func _ready() -> void:
 		heat.setup(sim, i)
 	_place_decor(GameData.load_json(GameData.LAYOUT_PATH).decor)
 	$Woodpile.setup(sim)
+	_place_structures(zone_names.get("repair", "repair"))
 	$Ship.setup(sim)
 	sim.worker_hired.connect(_on_worker_hired)
 	sim.zone_purchased.connect(_on_zone_purchased)
@@ -80,6 +84,22 @@ func _ready() -> void:
 	_bake_navigation()
 
 
+## 시설마다 체력 표시와 수리 존을 붙인다. 판매대는 계산대 모델, 적치장은 통나무 더미가 부서지는 대상이다.
+func _place_structures(repair_name: String) -> void:
+	for i in sim.structures.size():
+		var structure := sim.structures[i]
+		var target: Node3D = $Woodpile/Logs
+		for j in sim.stalls.size():
+			if sim.stalls[j].structure == structure:
+				target = $Stalls.get_child(j).get_node("Counter")
+		var view := StructureView.new()
+		$Structures.add_child(view)
+		view.setup(sim, i, target)
+		var zone := ZoneScene.instantiate()
+		$Zones.add_child(zone)
+		zone.setup(sim, structure.repair, repair_name, structure.is_broken)
+
+
 ## sim 이벤트마다 효과음을 붙인다.
 func _connect_sounds() -> void:
 	sim.tree_hit.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("chop", sim.trees[i].pos))
@@ -90,6 +110,9 @@ func _connect_sounds() -> void:
 	sim.zone_purchased.connect(func(_id: String, _level: int) -> void: _sfx.play("purchase"))
 	sim.worker_hired.connect(func(_i: int) -> void: _sfx.play("hire"))
 	sim.game_won.connect(func() -> void: _sfx.play("win"))
+	sim.structure_hit.connect(func(i: int, _damage: int) -> void: _sfx.play_at("crack", sim.structures[i].pos))
+	sim.structure_broken.connect(func(i: int) -> void: _sfx.play_at("break", sim.structures[i].pos))
+	sim.structure_repaired.connect(func(_i: int) -> void: _sfx.play("purchase"))
 
 
 ## 돈이 줄면(구매 존에 넣는 중) 틱, 등 뒤 스택이 늘면 집는 소리, 줄면 내려놓는 소리, 걸으면 발소리.

@@ -20,6 +20,8 @@ const SOUNDS := {
 	"step": [["impact/footstep_snow_000", "impact/footstep_snow_001", "impact/footstep_snow_002",
 		"impact/footstep_snow_003", "impact/footstep_snow_004"], -14.0, 0.15],
 	"win": [["jingles/jingles_SAX01"], 0.0, 1.0],
+	"crack": [["impact/impactPlank_medium_000", "impact/impactPlank_medium_001", "impact/impactPlank_medium_002"], 0.0, 0.06],
+	"break": [["impact/impactWood_heavy_000", "impact/impactWood_heavy_001", "impact/impactWood_heavy_002"], 5.0, 0.2],
 }
 const VOICES := 16
 const PITCH_JITTER := 0.08

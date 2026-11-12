@@ -16,6 +16,7 @@
 		"ship_engine": "엔진",
 		"ship_blade": "쇄빙날",
 		"ship_mast": "돛대",
-		"ship_fuel": "연료"
+		"ship_fuel": "연료",
+		"repair": "수리"
 	}
 }
