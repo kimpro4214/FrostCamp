@@ -100,9 +100,11 @@ func _harvest_target(available_only: bool) -> Dictionary:
 	var best: RefCounted = null
 	var best_score := INF
 	for source in sources:
-		var ready: bool = source.is_alive() if hunting else source.is_standing()
+		var ready: bool = source.is_alive() if hunting else sim.is_tree_ready(source)
 		if available_only and not ready:
 			continue
+		if not hunting and source.unlock != "" and not sim.unlocked.has(source.unlock):
+			continue  # 아직 안 산 확장 땅의 나무
 		var score: float = sim.player.pos.distance_to(source.pos) if available_only else source.respawn_left
 		if score < best_score:
 			best = source
@@ -128,7 +130,7 @@ func _drop_size() -> int:
 func _delivery_stall() -> Stall:
 	var best: Stall = null
 	for stall in sim.stalls:
-		if sim.is_stall_open(stall) and sim.player.stack.items.has(stall.item):
+		if sim.is_stall_working(stall) and sim.player.stack.items.has(stall.item):
 			if best == null or sim.player.pos.distance_to(stall.pos) < sim.player.pos.distance_to(best.pos):
 				best = stall
 	return best if best else sim.stalls[0]
@@ -144,7 +146,7 @@ func _nearest_heat() -> Vector2:
 
 func _has_open_stall(item: String) -> bool:
 	for stall in sim.stalls:
-		if stall.item == item and sim.is_stall_open(stall):
+		if stall.item == item and sim.is_stall_working(stall):
 			return true
 	return false
 
@@ -152,7 +154,10 @@ func _has_open_stall(item: String) -> bool:
 ## 목표와 봇이 울타리 안팎으로 갈려 있으면 먼저 입구로 간다.
 func _route(target: Dictionary) -> Dictionary:
 	var pos := sim.player.pos
-	for region in sim.regions.values():
+	for region_name in sim.regions:
+		var region: Dictionary = sim.regions[region_name]
+		if region.open and sim.unlocked.has(region_name):
+			continue  # 산 확장 땅은 울타리가 없다.
 		var rect: Rect2 = region.rect
 		if rect.has_point(pos) != rect.has_point(target.pos) and pos.distance_to(region.gate) > STOP_DIST.gate:
 			return {"kind": "gate", "pos": region.gate}
