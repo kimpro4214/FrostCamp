@@ -94,7 +94,10 @@ static func layout() -> Dictionary:
 		"ship": [30, 0],
 		"heat": {"campfire": [0, 0], "stove": [0, -10]},
 		"trees": [[-10, 0]],
-		"regions": {"habitat": {"rect": [-10, -30, 20, 10], "gate": [0, -20]}},
+		"regions": {
+			"habitat": {"rect": [-10, -30, 20, 10], "gate": [0, -20]},
+			"expand_1": {"rect": [-20, 10, 10, 10], "gate": [-15, 10], "open": true, "trees": [[-15, 15]]},
+		},
 		"bears": [[0, -25]],
 		"raid_spawns": [[0, 20]],
 		"conveyor": {"path": [[-6, 2], [4, 2], [4, 0]], "pos": [-1, 2], "repair_pos": [-1, 4]},

@@ -126,3 +126,13 @@ func test_raider_out_of_range_is_ignored_by_tower() -> void:
 	var bear := _place_raider(sim, Vector2(0, 20), 4, 0.0)
 	Fixtures.run(sim, 2.0)
 	check_eq(bear.hp, 4, "사거리 밖은 쏘지 않는다")
+
+
+func test_raider_without_target_comes_for_player() -> void:
+	var sim := _make_sim()
+	sim.damage_structure(WOODPILE, 10)
+	var bear := _place_raider(sim, Vector2(0, 10))
+	sim.player.pos = Vector2(-20, 0)
+	Fixtures.run(sim, 0.5)
+	check_eq(bear.target, -1, "노릴 시설이 없다")
+	check(bear.pos.distance_to(sim.player.pos) < Vector2(0, 10).distance_to(sim.player.pos), "플레이어 쪽으로 다가온다")
