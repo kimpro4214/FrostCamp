@@ -12,6 +12,8 @@ var sim: FrostSim
 var time := 0.0
 ## [시간, 존 id, 레벨]
 var purchases: Array = []
+## false면 추위를 무시한다(추위 압박이 의미 있는지 비교할 때 쓴다).
+var warm_up := true
 var _delivering := false
 var _warming := false
 
@@ -60,7 +62,7 @@ func _choose_target() -> Dictionary:
 		_warming = false
 	elif player.warmth < player.max_warmth * WARM_BELOW:
 		_warming = true
-	if _warming:
+	if _warming and warm_up:
 		return {"kind": "heat", "pos": _nearest_heat()}
 
 	var zone := cheapest_zone()
