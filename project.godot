@@ -20,6 +20,10 @@ config/icon="res://icon.svg"
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[gui]
+
+theme/custom_font="res://frost_camp/assets/fonts/Jua-Regular.ttf"
+
 [input_devices]
 
 pointing/emulate_touch_from_mouse=true
