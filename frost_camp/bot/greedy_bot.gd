@@ -1,6 +1,7 @@
 class_name GreedyBot
 extends RefCounted
 ## 탐욕 봇. 살 수 있는 존 중 남은 금액이 가장 싼 것을 목표로 돈을 벌고 산다.
+## 습격 곰이 오면 먼저 막고, 부서진 시설은 돈이 모이는 대로 고친다.
 ## 길찾기 없이 직선으로 움직이되 지역 울타리는 입구로 드나든다. 규칙 판정은 게임과 같은 FrostSim이 한다.
 
 const STOP_DIST := {"tree": 1.0, "bear": 1.0, "stall": 1.0, "cash": 0.4, "zone": 0.4, "gate": 0.05, "heat": 1.0}
@@ -65,6 +66,14 @@ func _choose_target() -> Dictionary:
 	if _warming and warm_up:
 		return {"kind": "heat", "pos": _nearest_heat()}
 
+	# 습격 곰이 있으면 먼저 막고, 부서진 시설은 돈이 되면 바로 고친다.
+	var raider := _nearest_raider()
+	if raider:
+		return {"kind": "bear", "pos": raider.pos}
+	for structure in sim.structures:
+		if structure.is_broken() and sim.money >= structure.repair.remaining():
+			return {"kind": "zone", "pos": structure.repair.pos}
+
 	var zone := cheapest_zone()
 	if zone and sim.money >= zone.remaining():
 		return {"kind": "zone", "pos": zone.pos}
@@ -101,6 +110,14 @@ func _harvest_target(available_only: bool) -> Dictionary:
 	if best == null:
 		return {}
 	return {"kind": "bear" if hunting else "tree", "pos": best.pos}
+
+
+func _nearest_raider() -> RaidBear:
+	var best: RaidBear = null
+	for bear in sim.raid.bears:
+		if bear.is_alive() and (best == null or sim.player.pos.distance_to(bear.pos) < sim.player.pos.distance_to(best.pos)):
+			best = bear
+	return best
 
 
 func _drop_size() -> int:
