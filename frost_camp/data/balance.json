@@ -161,6 +161,21 @@
 			"effect": { "tower": "tower_2" },
 			"requires": ["tower_1"]
 		},
+		"expand_1": {
+			"costs": [400],
+			"effect": { "unlock": "expand_1" },
+			"requires": ["lumberjack"]
+		},
+		"expand_2": {
+			"costs": [700],
+			"effect": { "unlock": "expand_2" },
+			"requires": ["expand_1"]
+		},
+		"tower_3": {
+			"costs": [300, 450],
+			"effect": { "tower": "tower_3" },
+			"requires": ["expand_1", "tower_1"]
+		},
 		"coat": {
 			"costs": [120, 300],
 			"effect": { "stat": "cold_drain", "add": -0.3 },
