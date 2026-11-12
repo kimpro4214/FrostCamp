@@ -24,6 +24,9 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	position = Vector3(worker.pos.x, 0.0, worker.pos.y)
 	$Pivot/StackAnchor.setup(worker.stack)
 	_model.setup(ROLE_MODELS[worker.role])
+	if worker.role == "lumberjack":
+		_model.set_tool("res://frost_camp/assets/models/survival/tool-axe.glb")
+		sim.tree_hit.connect(_on_tree_hit)
 
 
 func _physics_process(_delta: float) -> void:
@@ -44,3 +47,12 @@ func _physics_process(_delta: float) -> void:
 	worker.pos = Vector2(position.x, position.z)
 	_model.set_moving(velocity.length() > 0.1)
 	_model.set_frozen(worker.warmth <= 0.0)
+
+
+## 내가 친 것이면 휘두르고 나무를 바라본다.
+func _on_tree_hit(tree_index: int, agent: SimAgent) -> void:
+	if agent != sim.workers[index]:
+		return
+	_model.play_action()
+	var dir := sim.trees[tree_index].pos - agent.pos
+	_pivot.rotation.y = atan2(-dir.x, -dir.y)
