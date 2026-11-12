@@ -12,6 +12,7 @@ const HeatScene := preload("res://frost_camp/scenes/heat.tscn")
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const ESCAPE_SAIL_TIME := 5.0
 const MAX_FLYING_COINS := 10
+const SNOW_OFFSET := Vector3(0.0, 8.0, 2.0)
 
 var sim: FrostSim
 var _hit_stop_id := 0
@@ -34,10 +35,11 @@ func _ready() -> void:
 		var stall := StallScene.instantiate()
 		$Stalls.add_child(stall)
 		stall.setup(sim, i)
+	var zone_names: Dictionary = GameData.load_json(GameData.TEXT_PATH).zones
 	for i in sim.zones.size():
 		var zone := ZoneScene.instantiate()
 		$Zones.add_child(zone)
-		zone.setup(sim, i)
+		zone.setup(sim, i, zone_names.get(sim.zones[i].id, sim.zones[i].id))
 	for i in sim.bears.size():
 		var bear := BearScene.instantiate()
 		$Bears.add_child(bear)
@@ -135,3 +137,8 @@ func _bake_navigation() -> void:
 
 func _physics_process(delta: float) -> void:
 	sim.tick(delta)
+
+
+func _process(_delta: float) -> void:
+	# 눈은 플레이어 위 하늘에서 내린다(입자는 월드 좌표라 걸어도 같이 미끄러지지 않는다).
+	$Snow.position = _player.position + SNOW_OFFSET

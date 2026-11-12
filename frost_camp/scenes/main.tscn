@@ -40,6 +40,16 @@ roughness = 0.4
 material = SubResource("StandardMaterial3D_coin")
 size = Vector3(0.35, 0.08, 0.25)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_snowflake"]
+shading_mode = 0
+billboard_mode = 3
+albedo_color = Color(1, 1, 1, 0.9)
+transparency = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_snowflake"]
+material = SubResource("StandardMaterial3D_snowflake")
+size = Vector2(0.09, 0.09)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
 size = Vector3(200, 0.2, 200)
 
@@ -103,6 +113,20 @@ script = ExtResource("2_camera")
 [node name="Workers" type="Node3D" parent="."]
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
+
+[node name="Snow" type="CPUParticles3D" parent="."]
+amount = 400
+lifetime = 5.0
+preprocess = 5.0
+local_coords = false
+mesh = SubResource("QuadMesh_snowflake")
+emission_shape = 3
+emission_box_extents = Vector3(16, 0.5, 14)
+direction = Vector3(0.2, -1, 0)
+spread = 15.0
+gravity = Vector3(0, -0.6, 0)
+initial_velocity_min = 1.0
+initial_velocity_max = 1.8
 
 [node name="Coins" type="Node3D" parent="."]
 
