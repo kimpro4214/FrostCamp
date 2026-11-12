@@ -10,6 +10,8 @@ var damage: int
 var target := {}
 ## 짐을 다 내릴 때까지 배달 중인지
 var delivering := false
+## 전담 판매대 번호(계산원). -1이면 돈이 가장 많이 쌓인 판매대를 돌아다닌다.
+var stall := -1
 
 
 func _init(worker_role: String, start_pos: Vector2, config: Dictionary) -> void:

@@ -69,3 +69,15 @@ func test_full_automation_earns_while_player_idles() -> void:
 		_hire(sim, role)
 	Fixtures.run_with_workers(sim, 90.0)
 	check(sim.money > 0, "일꾼 셋이면 플레이어가 가만히 있어도 돈이 오른다 ($%d)" % sim.money)
+
+
+func test_stall_cashier_only_collects_own_stall() -> void:
+	var sim := _make_sim()
+	sim._apply_effect({"unlock": "meat_stall"})
+	sim._apply_effect({"hire": "cashier", "stall": 1})
+	check_eq(sim.workers[0].stall, 1, "고용 효과의 판매대 번호를 맡는다")
+	sim.stalls[0].cash = 30
+	sim.stalls[1].cash = 45
+	Fixtures.run_with_workers(sim, 8.0)
+	check_eq(sim.money, 45, "맡은 판매대의 돈만 넣는다")
+	check_eq(sim.stalls[0].cash, 30, "다른 판매대 돈은 그대로다")

@@ -526,6 +526,7 @@ func _apply_effect(effect: Dictionary) -> void:
 		return
 	if effect.has("hire"):
 		var worker := Worker.new(effect.hire, worker_spawn, balance.workers[effect.hire])
+		worker.stall = int(effect.get("stall", -1))
 		_fill_warmth(worker)
 		workers.append(worker)
 		worker_hired.emit(workers.size() - 1)

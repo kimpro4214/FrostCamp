@@ -51,8 +51,10 @@ static func _porter(sim: FrostSim, worker: Worker) -> Dictionary:
 	return _go("pile", sim.woodpile_pos)
 
 
-## 돈이 가장 많이 쌓인 판매대의 돈 더미로 간다.
-static func _cashier(sim: FrostSim, _worker: Worker) -> Dictionary:
+## 전담 판매대가 있으면 그 돈 더미 자리에 서 있고, 없으면 돈이 가장 많이 쌓인 판매대로 간다.
+static func _cashier(sim: FrostSim, worker: Worker) -> Dictionary:
+	if worker.stall >= 0:
+		return _go("cash", sim.stalls[worker.stall].cash_pos)
 	var best: Stall = null
 	for stall in sim.stalls:
 		if sim.is_stall_open(stall) and (best == null or stall.cash > best.cash):
