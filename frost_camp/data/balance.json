@@ -117,6 +117,39 @@
 			"costs": [120, 300],
 			"effect": { "stat": "cold_drain", "add": -0.3 },
 			"requires": ["habitat"]
+		},
+		"port": {
+			"costs": [300],
+			"effect": { "unlock": "port" },
+			"requires": ["porter"]
+		},
+		"ship_hull": {
+			"costs": [500],
+			"effect": { "unlock": "ship_hull" },
+			"requires": ["port"]
+		},
+		"ship_engine": {
+			"costs": [700],
+			"effect": { "unlock": "ship_engine" },
+			"requires": ["port"]
+		},
+		"ship_blade": {
+			"costs": [600],
+			"effect": { "unlock": "ship_blade" },
+			"requires": ["port"]
+		},
+		"ship_mast": {
+			"costs": [400],
+			"effect": { "unlock": "ship_mast" },
+			"requires": ["port"]
+		},
+		"ship_fuel": {
+			"costs": [300],
+			"effect": { "unlock": "ship_fuel" },
+			"requires": ["port"]
 		}
+	},
+	"ending": {
+		"ship_parts": ["ship_hull", "ship_engine", "ship_blade", "ship_mast", "ship_fuel"]
 	}
 }

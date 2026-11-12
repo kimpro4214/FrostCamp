@@ -9,10 +9,15 @@ signal bear_hit(index: int)
 signal bear_killed(index: int)
 signal zone_purchased(id: String, level: int)
 signal worker_hired(index: int)
+signal game_won
 
 var balance: Dictionary
 var money := 0
 var bears_killed := 0
+## 결과 화면용 기록. 엔딩에 도달하면 시간이 멈춘다.
+var time := 0.0
+var total_earned := 0
+var won := false
 var player: SimAgent
 var trees: Array[HarvestTree] = []
 var bears: Array[HarvestBear] = []
@@ -23,6 +28,8 @@ var workers: Array[Worker] = []
 var woodpile := 0
 var woodpile_pos: Vector2
 var worker_spawn: Vector2
+## 쇄빙선이 정박한 곳(연출용)
+var ship_pos: Vector2
 ## 구매로 열린 것들(지역, 판매대). 이름 → true
 var unlocked := {}
 ## 지역 이름 → {"rect": Rect2, "gate": Vector2}
@@ -42,6 +49,7 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		_vec(layout.player_start), int(balance.player.stack_capacity), float(balance.player.hp))
 	woodpile_pos = _vec(layout.woodpile)
 	worker_spawn = _vec(layout.worker_spawn)
+	ship_pos = _vec(layout.ship)
 	for p in layout.trees:
 		trees.append(HarvestTree.new(_vec(p), balance.tree))
 	for region_name in layout.regions:
@@ -114,6 +122,9 @@ func find_zone(id: String) -> PurchaseZone:
 
 
 func tick(delta: float) -> void:
+	if won:
+		return
+	time += delta
 	for tree in trees:
 		tree.tick(delta)
 	for stall in stalls:
@@ -251,6 +262,7 @@ func _tick_collect_cash(agent: SimAgent) -> void:
 	for stall in stalls:
 		if stall.cash > 0 and agent.pos.distance_to(stall.cash_pos) <= radius:
 			money += stall.cash
+			total_earned += stall.cash
 			stall.cash = 0
 
 
@@ -270,6 +282,7 @@ func _tick_purchase(agent: SimAgent, delta: float) -> void:
 func _apply_effect(effect: Dictionary) -> void:
 	if effect.has("unlock"):
 		unlocked[effect.unlock] = true
+		_check_ending()
 		return
 	if effect.has("hire"):
 		var worker := Worker.new(effect.hire, worker_spawn, balance.workers[effect.hire])
@@ -282,6 +295,15 @@ func _apply_effect(effect: Dictionary) -> void:
 			player.stack.capacity += int(effect.add)
 		"move_speed", "axe_damage", "harpoon_damage", "cold_drain":
 			stats[effect.stat] += effect.add
+
+
+## 쇄빙선 부품을 모두 사면 엔딩.
+func _check_ending() -> void:
+	for part in balance.ending.ship_parts:
+		if not unlocked.has(part):
+			return
+	won = true
+	game_won.emit()
 
 
 func _nearest_standing_tree(pos: Vector2) -> int:
