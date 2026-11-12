@@ -10,6 +10,9 @@ signal bear_killed(index: int, agent: SimAgent)
 signal zone_purchased(id: String, level: int)
 signal worker_hired(index: int)
 signal cash_collected(stall_index: int, amount: int, agent: SimAgent)
+signal structure_hit(index: int, damage: int)
+signal structure_broken(index: int)
+signal structure_repaired(index: int)
 signal game_won
 
 var balance: Dictionary
@@ -28,6 +31,9 @@ var workers: Array[Worker] = []
 ## 벌목꾼이 쌓아 두고 운반꾼이 가져가는 원목 적치장
 var woodpile := 0
 var woodpile_pos: Vector2
+## 기지 시설들의 체력(판매대, 적치장). 판매대는 stall.structure로도 닿는다.
+var structures: Array[Structure] = []
+var woodpile_structure: Structure
 var worker_spawn: Vector2
 ## 쇄빙선이 정박한 곳(연출용)
 var ship_pos: Vector2
@@ -62,7 +68,9 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 	for s in layout.stalls:
 		var stall := Stall.new(s.item, _vec(s.pos), _vec(s.cash_pos), balance)
 		stall.unlock = s.get("unlock", "")
+		stall.structure = _add_structure("stall", stall.pos, _vec(s.repair_pos))
 		stalls.append(stall)
+	woodpile_structure = _add_structure("woodpile", woodpile_pos, _vec(layout.woodpile_repair))
 	for id in layout.zones:
 		zones.append(PurchaseZone.new(id, _vec(layout.zones[id]), balance.zones[id]))
 	for id in layout.heat:
@@ -105,6 +113,22 @@ func is_stall_open(stall: Stall) -> bool:
 	return stall.unlock == "" or unlocked.has(stall.unlock)
 
 
+## 열려 있고 부서지지 않았으면 손님에게 팔고 물건을 받는다.
+func is_stall_working(stall: Stall) -> bool:
+	return is_stall_open(stall) and not stall.structure.is_broken()
+
+
+## 시설 하나에 피해를 준다. 부서지면 structure_broken이 나온다.
+func damage_structure(index: int, damage: int) -> void:
+	var structure := structures[index]
+	if structure.is_broken():
+		return
+	var broke := structure.take_hit(damage)
+	structure_hit.emit(index, damage)
+	if broke:
+		structure_broken.emit(index)
+
+
 ## 선행 조건을 모두 샀고 아직 최대 레벨이 아니면 살 수 있다.
 func is_zone_available(zone: PurchaseZone) -> bool:
 	if zone.is_maxed():
@@ -129,7 +153,7 @@ func tick(delta: float) -> void:
 	for tree in trees:
 		tree.tick(delta)
 	for stall in stalls:
-		if is_stall_open(stall):
+		if is_stall_working(stall):
 			stall.tick(delta)
 	_tick_unload(player, delta)
 	_tick_pile_take(player, delta)
@@ -157,7 +181,7 @@ func tick(delta: float) -> void:
 func _tick_unload(agent: SimAgent, delta: float) -> void:
 	var radius := float(balance.interact.stall_radius)
 	for stall in stalls:
-		if is_stall_open(stall) and agent.pos.distance_to(stall.pos) <= radius and agent.stack.items.has(stall.item):
+		if is_stall_working(stall) and agent.pos.distance_to(stall.pos) <= radius and agent.stack.items.has(stall.item):
 			agent.unload_timer += delta
 			if agent.unload_timer >= float(balance.stall.unload_interval):
 				agent.unload_timer = 0.0
@@ -186,7 +210,7 @@ func _tick_chop(agent: SimAgent, delta: float, damage: int) -> void:
 
 ## 적치장 근처에서 원목을 하나씩 내려놓는다(벌목꾼).
 func _tick_pile_drop(agent: SimAgent, delta: float) -> void:
-	if agent.pos.distance_to(woodpile_pos) > float(balance.interact.pile_radius) or not agent.stack.items.has("log"):
+	if woodpile_structure.is_broken() or agent.pos.distance_to(woodpile_pos) > float(balance.interact.pile_radius) or not agent.stack.items.has("log"):
 		agent.unload_timer = 0.0
 		return
 	agent.unload_timer += delta
@@ -198,7 +222,7 @@ func _tick_pile_drop(agent: SimAgent, delta: float) -> void:
 
 ## 적치장 근처에서 원목을 하나씩 집어 든다(운반꾼, 플레이어).
 func _tick_pile_take(agent: SimAgent, delta: float) -> void:
-	if agent.pos.distance_to(woodpile_pos) > float(balance.interact.pile_radius) or woodpile == 0 or agent.stack.free_space() == 0:
+	if woodpile_structure.is_broken() or agent.pos.distance_to(woodpile_pos) > float(balance.interact.pile_radius) or woodpile == 0 or agent.stack.free_space() == 0:
 		agent.pickup_timer = 0.0
 		return
 	agent.pickup_timer += delta
@@ -271,25 +295,36 @@ func _tick_collect_cash(agent: SimAgent) -> void:
 			cash_collected.emit(i, amount, agent)
 
 
-## 존 위에 pay_delay만큼 서 있어야 돈이 들어가기 시작한다. 지나가다 밟으면 쓰지 않는다.
+## 구매 존과 부서진 시설의 수리 존에 돈을 넣는다.
 func _tick_purchase(agent: SimAgent, delta: float) -> void:
-	var config: Dictionary = balance.purchase
 	for zone in zones:
-		if not is_zone_available(zone) or agent.pos.distance_to(zone.pos) > float(config.zone_radius):
-			continue
-		if agent.zone_wait_id != zone.id:
-			agent.zone_wait_id = zone.id
-			agent.zone_wait = 0.0
-		agent.zone_wait += delta
-		if agent.zone_wait < float(config.pay_delay):
+		if is_zone_available(zone) and _pay_into(agent, zone, delta):
+			if zone.try_complete():
+				_apply_effect(zone.effect)
+				zone_purchased.emit(zone.id, zone.level)
 			return
+	for i in structures.size():
+		var structure := structures[i]
+		if structure.is_broken() and _pay_into(agent, structure.repair, delta):
+			if structure.try_finish_repair():
+				structure_repaired.emit(i)
+			return
+	agent.zone_wait_id = ""
+
+
+## 존 위에 서 있으면 true. pay_delay만큼 서 있어야 돈이 들어가기 시작한다(지나가다 밟으면 쓰지 않는다).
+func _pay_into(agent: SimAgent, zone: PurchaseZone, delta: float) -> bool:
+	var config: Dictionary = balance.purchase
+	if agent.pos.distance_to(zone.pos) > float(config.zone_radius):
+		return false
+	if agent.zone_wait_id != zone.id:
+		agent.zone_wait_id = zone.id
+		agent.zone_wait = 0.0
+	agent.zone_wait += delta
+	if agent.zone_wait >= float(config.pay_delay):
 		var rate := maxf(zone.cost() / float(config.fill_time), float(config.min_rate))
 		money -= zone.pay(money, rate, delta)
-		if zone.try_complete():
-			_apply_effect(zone.effect)
-			zone_purchased.emit(zone.id, zone.level)
-		return
-	agent.zone_wait_id = ""
+	return true
 
 
 func _apply_effect(effect: Dictionary) -> void:
@@ -308,6 +343,13 @@ func _apply_effect(effect: Dictionary) -> void:
 			player.stack.capacity += int(effect.add)
 		"move_speed", "axe_damage", "harpoon_damage", "cold_drain":
 			stats[effect.stat] += effect.add
+
+
+func _add_structure(kind: String, pos: Vector2, repair_pos: Vector2) -> Structure:
+	var structure := Structure.new(kind, pos, repair_pos, balance.structures[kind])
+	structure.repair.id = "repair_%d" % structures.size()
+	structures.append(structure)
+	return structure
 
 
 ## 쇄빙선 부품을 모두 사면 엔딩.

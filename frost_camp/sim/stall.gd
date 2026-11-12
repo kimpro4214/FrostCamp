@@ -18,6 +18,8 @@ var cash := 0
 ## 줄 선 손님 수
 var queue := 0
 var served := 0
+## 이 판매대의 체력. 부서지면 팔지도 받지도 않는다(sim이 판단).
+var structure: Structure
 
 var _spawn_timer := 0.0
 var _sell_timer := 0.0
