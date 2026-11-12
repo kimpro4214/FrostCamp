@@ -5,6 +5,7 @@ extends CharacterBody3D
 const ROLE_MODELS := {
 	"lumberjack": "res://frost_camp/assets/models/characters/character-worker.glb",
 	"porter": "res://frost_camp/assets/models/characters/character-male-c.glb",
+	"hunter": "res://frost_camp/assets/models/characters/character-male-e.glb",
 	"cashier": "res://frost_camp/assets/models/characters/character-female-b.glb",
 }
 
@@ -27,6 +28,10 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	if worker.role == "lumberjack":
 		_model.set_tool("res://frost_camp/assets/models/survival/tool-axe.glb")
 		sim.tree_hit.connect(_on_tree_hit)
+	if worker.role == "hunter":
+		_model.set_tool("res://frost_camp/assets/models/survival/tool-axe-upgraded.glb")
+		sim.bear_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.bears[i].pos))
+		sim.raider_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.raid.bears[i].pos))
 
 
 func _physics_process(_delta: float) -> void:
@@ -55,4 +60,13 @@ func _on_tree_hit(tree_index: int, agent: SimAgent) -> void:
 		return
 	_model.play_action()
 	var dir := sim.trees[tree_index].pos - agent.pos
+	_pivot.rotation.y = atan2(-dir.x, -dir.y)
+
+
+## 내가 친 것이면 휘두르고 맞은 쪽을 바라본다(사냥꾼).
+func _on_hit(agent: SimAgent, target: Vector2) -> void:
+	if agent != sim.workers[index]:
+		return
+	_model.play_action()
+	var dir := target - agent.pos
 	_pivot.rotation.y = atan2(-dir.x, -dir.y)
