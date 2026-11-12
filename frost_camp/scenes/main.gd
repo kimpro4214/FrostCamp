@@ -10,13 +10,20 @@ const RegionScene := preload("res://frost_camp/scenes/region.tscn")
 const WorkerScene := preload("res://frost_camp/scenes/worker.tscn")
 const HeatScene := preload("res://frost_camp/scenes/heat.tscn")
 const Juice := preload("res://frost_camp/scenes/juice.gd")
+const Sfx := preload("res://frost_camp/scenes/sfx.gd")
 const ESCAPE_SAIL_TIME := 5.0
 const MAX_FLYING_COINS := 10
 const SNOW_OFFSET := Vector3(0.0, 8.0, 2.0)
 const DECOR_DIR := "res://frost_camp/assets/models/"
+## 걸을 때 발소리 간격(초)
+const STEP_INTERVAL := 0.3
 
 var sim: FrostSim
 var _hit_stop_id := 0
+var _sfx: Node
+var _last_money := 0
+var _last_stack := 0
+var _step_timer := 0.0
 
 @onready var _player: CharacterBody3D = $Player
 @onready var _camera: Camera3D = $Camera3D
@@ -27,6 +34,10 @@ var _hit_stop_id := 0
 func _ready() -> void:
 	sim = FrostSim.new(GameData.load_json(GameData.BALANCE_PATH), GameData.load_json(GameData.LAYOUT_PATH))
 	_player.setup(sim, _hud.joystick)
+	_sfx = Sfx.new()
+	add_child(_sfx)
+	_sfx.setup(sim)
+	_connect_sounds()
 	_hud.setup(sim)
 	for i in sim.trees.size():
 		var tree := TreeScene.instantiate()
@@ -67,6 +78,38 @@ func _ready() -> void:
 	_camera.target = _player
 	_camera.snap()
 	_bake_navigation()
+
+
+## sim 이벤트마다 효과음을 붙인다.
+func _connect_sounds() -> void:
+	sim.tree_hit.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("chop", sim.trees[i].pos))
+	sim.bear_hit.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("punch", sim.bears[i].pos))
+	sim.tree_felled.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("fell", sim.trees[i].pos))
+	sim.bear_killed.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("punch_heavy", sim.bears[i].pos))
+	sim.cash_collected.connect(func(i: int, _amount: int, _a: SimAgent) -> void: _sfx.play_at("coins", sim.stalls[i].cash_pos))
+	sim.zone_purchased.connect(func(_id: String, _level: int) -> void: _sfx.play("purchase"))
+	sim.worker_hired.connect(func(_i: int) -> void: _sfx.play("hire"))
+	sim.game_won.connect(func() -> void: _sfx.play("win"))
+
+
+## 돈이 줄면(구매 존에 넣는 중) 틱, 등 뒤 스택이 늘면 집는 소리, 줄면 내려놓는 소리, 걸으면 발소리.
+func _play_player_sounds(delta: float) -> void:
+	if sim.money < _last_money:
+		_sfx.play("pay")
+	_last_money = sim.money
+	var stack_size := sim.player.stack.items.size()
+	if stack_size > _last_stack:
+		_sfx.play("pickup")
+	elif stack_size < _last_stack:
+		_sfx.play("drop")
+	_last_stack = stack_size
+	if _player.velocity.length() > 0.1:
+		_step_timer -= delta
+		if _step_timer <= 0.0:
+			_step_timer = STEP_INTERVAL
+			_sfx.play("step")
+	else:
+		_step_timer = 0.0
 
 
 ## 꾸밈용 모델을 배치한다. 모델 크기에 맞춘 충돌 상자를 붙여 지나가지 못하게 한다.
@@ -171,6 +214,7 @@ func _physics_process(delta: float) -> void:
 	sim.tick(delta)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_play_player_sounds(delta)
 	# 눈은 플레이어 위 하늘에서 내린다(입자는 월드 좌표라 걸어도 같이 미끄러지지 않는다).
 	$Snow.position = _player.position + SNOW_OFFSET
