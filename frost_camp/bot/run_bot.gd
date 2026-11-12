@@ -17,6 +17,9 @@ const MILESTONES := [
 	["3 자동화", "porter", 8, 15],
 	["3 자동화", "cashier", 8, 15],
 	["3 자동화", "stove", 8, 15],
+	["3 자동화", "conveyor", 8, 15],
+	["4 확장", "expand_1", 15, 25],
+	["4 확장", "expand_2", 15, 25],
 	["4 확장", "port", 15, 25],
 	["5 탈출", "ending", 25, 30],
 ]
@@ -44,6 +47,12 @@ func _run(seed_value: int) -> Dictionary:
 	var sim := FrostSim.new(GameData.load_json(GameData.BALANCE_PATH), GameData.load_json(GameData.LAYOUT_PATH), seed_value)
 	var bot := GreedyBot.new(sim)
 	bot.warm_up = not OS.get_cmdline_user_args().has("ignore_cold")
+	# 습격 피해 기록: 부서진 횟수, 수리 횟수와 비용, 시설이 멈춰 있던 시간(시설 수 × 초)
+	var raid_stats := {"broken": 0, "repairs": 0, "repair_spent": 0, "down_time": 0.0}
+	sim.structure_broken.connect(func(_i: int) -> void: raid_stats.broken += 1)
+	sim.structure_repaired.connect(func(i: int) -> void:
+		raid_stats.repairs += 1
+		raid_stats.repair_spent += int(sim.structures[i].repair.costs[0]))
 	var samples: Array = []
 	var next_sample := 0.0
 	while bot.time < MAX_TIME and not sim.won and not bot.is_done():
@@ -51,6 +60,9 @@ func _run(seed_value: int) -> Dictionary:
 			samples.append([bot.time, sim.money, _total_spent(sim)])
 			next_sample += SAMPLE_EVERY
 		bot.step(STEP)
+		for structure in sim.structures:
+			if structure.is_broken():
+				raid_stats.down_time += STEP
 	samples.append([bot.time, sim.money, _total_spent(sim)])
 	var reached := {}
 	for p in bot.purchases:
@@ -58,7 +70,7 @@ func _run(seed_value: int) -> Dictionary:
 			reached[p[1]] = p[0]
 	if sim.won:
 		reached["ending"] = sim.time
-	return {"seed": seed_value, "bot": bot, "sim": sim, "samples": samples, "reached": reached}
+	return {"seed": seed_value, "bot": bot, "sim": sim, "samples": samples, "reached": reached, "raid": raid_stats}
 
 
 func _total_spent(sim: FrostSim) -> int:
@@ -116,6 +128,17 @@ func _write_report(path: String, runs: Array) -> void:
 		lines.append("| %d | %s | $%d | %d | %d | %d | %d |" % [
 			r.seed, _outcome(r.bot, sim), sim.total_earned, sim.bears_killed, sim.workers.size(),
 			sim.stalls[0].served, sim.stalls[1].served])
+	lines.append("")
+	lines.append("## 습격 피해")
+	lines.append("")
+	lines.append("| 시드 | 웨이브 | 부서진 횟수 | 수리 횟수 | 수리비 | 시설이 멈춘 시간 |")
+	lines.append("|---|---|---|---|---|---|")
+	for r in runs:
+		var raid: Dictionary = r.raid
+		lines.append("| %d | %d | %d | %d | $%d | %s |" % [
+			r.seed, r.sim.raid.wave, raid.broken, raid.repairs, raid.repair_spent, _clock(raid.down_time)])
+	lines.append("")
+	lines.append("시설이 멈춘 시간은 부서져 있던 시설 수를 시간에 걸쳐 더한 값이다(두 개가 1분 부서져 있으면 2분).")
 	lines.append("")
 	lines.append("## 시드 %d 구매 기록" % runs[0].seed)
 	lines.append("")
