@@ -1,5 +1,5 @@
 extends CanvasLayer
-## 화면 위 정보: 지갑의 돈, 등 뒤 적재량, 체력.
+## 화면 위 정보: 지갑의 돈, 등 뒤 적재량, 체력, 온기.
 
 var sim: FrostSim
 
@@ -7,6 +7,7 @@ var sim: FrostSim
 @onready var _money_label: Label = $Top/Money
 @onready var _stack_label: Label = $Top/Stack
 @onready var _hp_label: Label = $Top/Hp
+@onready var _warmth_label: Label = $Top/Warmth
 
 
 func setup(frost_sim: FrostSim) -> void:
@@ -24,3 +25,7 @@ func _process(_delta: float) -> void:
 	else:
 		_hp_label.text = "HP %d" % ceili(player.hp)
 		_hp_label.modulate = Color.WHITE
+	if player.warmth <= 0.0:
+		_warmth_label.text = "FROZEN"
+	else:
+		_warmth_label.text = "WARM %d%%" % ceili(player.warmth / player.max_warmth * 100.0)
