@@ -23,6 +23,13 @@ static func balance() -> Dictionary:
 			"porter": {"speed": 4.0, "capacity": 4},
 			"cashier": {"speed": 4.0},
 		},
+		"cold": {
+			"max": 30,
+			"drain": 1.0,
+			"recover": 10.0,
+			"frozen_speed_mult": 0.5,
+			"sources": {"campfire": {"radius": 3.0}, "stove": {"radius": 5.0, "unlock": "stove"}},
+		},
 		"tree": {"hits_to_fell": 3, "hit_interval": 0.5, "logs_dropped": 2, "respawn_time": 8.0},
 		"bear": {
 			"hp": 10,
@@ -56,6 +63,8 @@ static func balance() -> Dictionary:
 			"lumberjack": {"costs": [10], "effect": {"hire": "lumberjack"}},
 			"porter": {"costs": [10], "effect": {"hire": "porter"}},
 			"cashier": {"costs": [10], "effect": {"hire": "cashier"}},
+			"stove": {"costs": [10], "effect": {"unlock": "stove"}},
+			"coat": {"costs": [10], "effect": {"stat": "cold_drain", "add": -0.5}},
 		},
 	}
 
@@ -66,6 +75,7 @@ static func layout() -> Dictionary:
 		"player_start": [0, 0],
 		"worker_spawn": [0, -2],
 		"woodpile": [-6, 0],
+		"heat": {"campfire": [0, 0], "stove": [0, -10]},
 		"trees": [[-10, 0]],
 		"regions": {"habitat": {"rect": [-10, -30, 20, 10], "gate": [0, -20]}},
 		"bears": [[0, -25]],
@@ -83,6 +93,8 @@ static func layout() -> Dictionary:
 			"lumberjack": [-6, 5],
 			"porter": [-9, 5],
 			"cashier": [12, 5],
+			"stove": [-12, 5],
+			"coat": [15, 5],
 		},
 	}
 
@@ -92,7 +104,7 @@ static func run_with_workers(sim: FrostSim, seconds: float, step: float = 0.05) 
 	for i in roundi(seconds / step):
 		for worker in sim.workers:
 			if worker.pos.distance_to(worker.target.pos) > worker.target.stop:
-				worker.pos = worker.pos.move_toward(worker.target.pos, worker.speed * step)
+				worker.pos = worker.pos.move_toward(worker.target.pos, sim.agent_speed(worker) * step)
 		sim.tick(step)
 
 
