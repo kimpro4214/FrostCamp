@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://frost_camp/scenes/heat_view.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://frost_camp/assets/models/survival/campfire-pit.glb" id="2_campfire"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_range"]
 transparency = 1
@@ -12,13 +13,6 @@ material = SubResource("StandardMaterial3D_range")
 top_radius = 1.0
 bottom_radius = 1.0
 height = 0.02
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
-albedo_color = Color(0.45, 0.28, 0.15, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_log"]
-material = SubResource("StandardMaterial3D_wood")
-size = Vector3(0.9, 0.18, 0.18)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_stove"]
 albedo_color = Color(0.25, 0.25, 0.28, 1)
@@ -57,13 +51,8 @@ mesh = SubResource("CylinderMesh_range")
 
 [node name="Campfire" type="Node3D" parent="."]
 
-[node name="LogA" type="MeshInstance3D" parent="Campfire"]
-transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0, 0.09, 0)
-mesh = SubResource("BoxMesh_log")
-
-[node name="LogB" type="MeshInstance3D" parent="Campfire"]
-transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 0, 0.09, 0)
-mesh = SubResource("BoxMesh_log")
+[node name="Pit" parent="Campfire" instance=ExtResource("2_campfire")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0)
 
 [node name="Stove" type="StaticBody3D" parent="."]
 
