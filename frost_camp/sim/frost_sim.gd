@@ -27,6 +27,8 @@ var worker_spawn: Vector2
 var unlocked := {}
 ## 지역 이름 → {"rect": Rect2, "gate": Vector2}
 var regions := {}
+## 열원 목록. {"id": String, "pos": Vector2, "radius": float, "unlock": String}
+var heat_sources: Array[Dictionary] = []
 ## 업그레이드로 바뀌는 플레이어 능력치. 적재량은 player.stack.capacity에 있다.
 var stats := {}
 var rng := RandomNumberGenerator.new()
@@ -54,19 +56,40 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		stalls.append(stall)
 	for id in layout.zones:
 		zones.append(PurchaseZone.new(id, _vec(layout.zones[id]), balance.zones[id]))
+	for id in layout.heat:
+		var source: Dictionary = balance.cold.sources[id]
+		heat_sources.append({
+			"id": id, "pos": _vec(layout.heat[id]),
+			"radius": float(source.radius), "unlock": source.get("unlock", ""),
+		})
 	stats = {
 		"move_speed": float(balance.player.move_speed),
 		"axe_damage": int(balance.player.axe_damage),
 		"harpoon_damage": int(balance.player.harpoon_damage),
+		"cold_drain": float(balance.cold.drain),
 	}
+	_fill_warmth(player)
 
 
 func agent_speed(agent: SimAgent) -> float:
-	if agent is Worker:
-		return agent.speed
+	var speed: float = agent.speed if agent is Worker else stats.move_speed
 	if agent.dazed_left > 0.0:
-		return stats.move_speed * float(balance.player.dazed_speed_mult)
-	return stats.move_speed
+		speed *= float(balance.player.dazed_speed_mult)
+	if agent.warmth <= 0.0:
+		speed *= float(balance.cold.frozen_speed_mult)
+	return speed
+
+
+func is_heat_active(source: Dictionary) -> bool:
+	return source.unlock == "" or unlocked.has(source.unlock)
+
+
+## 켜진 열원의 범위 안이면 true.
+func is_warm(pos: Vector2) -> bool:
+	for source in heat_sources:
+		if is_heat_active(source) and pos.distance_to(source.pos) <= source.radius:
+			return true
+	return false
 
 
 func is_stall_open(stall: Stall) -> bool:
@@ -103,7 +126,9 @@ func tick(delta: float) -> void:
 		bears[i].tick(delta, i == _fighting_bear, rng)
 	_tick_collect_cash(player)
 	_tick_purchase(player, delta)
+	_tick_cold(player, delta, stats.cold_drain)
 	for worker in workers:
+		_tick_cold(worker, delta, float(balance.cold.drain))
 		worker.target = WorkerBrain.choose(self, worker)
 		match worker.role:
 			"lumberjack":
@@ -208,6 +233,19 @@ func _tick_fight(agent: SimAgent, delta: float) -> void:
 			agent.attack_timer = 0.0
 
 
+## 열원 안에서는 온기가 차고, 밖에서는 drain만큼 준다.
+func _tick_cold(agent: SimAgent, delta: float, drain: float) -> void:
+	if is_warm(agent.pos):
+		agent.warmth = minf(agent.warmth + float(balance.cold.recover) * delta, agent.max_warmth)
+	else:
+		agent.warmth = maxf(agent.warmth - drain * delta, 0.0)
+
+
+func _fill_warmth(agent: SimAgent) -> void:
+	agent.max_warmth = float(balance.cold.max)
+	agent.warmth = agent.max_warmth
+
+
 func _tick_collect_cash(agent: SimAgent) -> void:
 	var radius := float(balance.interact.cash_radius)
 	for stall in stalls:
@@ -234,13 +272,15 @@ func _apply_effect(effect: Dictionary) -> void:
 		unlocked[effect.unlock] = true
 		return
 	if effect.has("hire"):
-		workers.append(Worker.new(effect.hire, worker_spawn, balance.workers[effect.hire]))
+		var worker := Worker.new(effect.hire, worker_spawn, balance.workers[effect.hire])
+		_fill_warmth(worker)
+		workers.append(worker)
 		worker_hired.emit(workers.size() - 1)
 		return
 	match effect.get("stat", ""):
 		"stack_capacity":
 			player.stack.capacity += int(effect.add)
-		"move_speed", "axe_damage", "harpoon_damage":
+		"move_speed", "axe_damage", "harpoon_damage", "cold_drain":
 			stats[effect.stat] += effect.add
 
 

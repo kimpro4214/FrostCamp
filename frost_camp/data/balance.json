@@ -32,6 +32,16 @@
 		"meat_dropped": 2,
 		"wall_margin": 1.5
 	},
+	"cold": {
+		"max": 30,
+		"drain": 1.0,
+		"recover": 8.0,
+		"frozen_speed_mult": 0.5,
+		"sources": {
+			"campfire": { "radius": 4.0 },
+			"stove": { "radius": 6.5, "unlock": "stove" }
+		}
+	},
 	"workers": {
 		"lumberjack": { "speed": 3.5, "capacity": 6, "damage": 1 },
 		"porter": { "speed": 4.0, "capacity": 8 },
@@ -97,6 +107,16 @@
 			"costs": [200],
 			"effect": { "hire": "cashier" },
 			"requires": ["meat_stall"]
+		},
+		"stove": {
+			"costs": [250],
+			"effect": { "unlock": "stove" },
+			"requires": ["lumberjack"]
+		},
+		"coat": {
+			"costs": [120, 300],
+			"effect": { "stat": "cold_drain", "add": -0.3 },
+			"requires": ["habitat"]
 		}
 	}
 }

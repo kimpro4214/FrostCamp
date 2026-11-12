@@ -2,6 +2,10 @@
 	"player_start": [0, 0],
 	"worker_spawn": [0, -2],
 	"woodpile": [-3, -6],
+	"heat": {
+		"campfire": [0, -1],
+		"stove": [-5, -4]
+	},
 	"trees": [[-8, -5], [-11, -3], [-7, -9], [-12, -8], [-4, -11]],
 	"regions": {
 		"habitat": { "rect": [-3, -26, 16, 12], "gate": [5, -14] }
@@ -20,6 +24,8 @@
 		"harpoon": [9, -11],
 		"lumberjack": [-7, 0],
 		"porter": [1.5, -3],
-		"cashier": [8.5, -2.5]
+		"cashier": [8.5, -2.5],
+		"stove": [-5, -4],
+		"coat": [1.5, -6.5]
 	}
 }
