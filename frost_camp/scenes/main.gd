@@ -13,13 +13,13 @@ const StructureView := preload("res://frost_camp/scenes/structure_view.gd")
 const TowerView := preload("res://frost_camp/scenes/tower_view.gd")
 const WoodpileScene := preload("res://frost_camp/scenes/woodpile.tscn")
 const WallView := preload("res://frost_camp/scenes/wall_view.gd")
+const Ending := preload("res://frost_camp/scenes/ending.gd")
 const ConveyorView := preload("res://frost_camp/scenes/conveyor_view.gd")
 ## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
 const ARROW_RADIUS := 2.4
 const ARROW_HIDE_DIST := 8.0
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const Sfx := preload("res://frost_camp/scenes/sfx.gd")
-const ESCAPE_SAIL_TIME := 5.0
 const MAX_FLYING_COINS := 10
 const SNOW_OFFSET := Vector3(0.0, 8.0, 2.0)
 const DECOR_DIR := "res://frost_camp/assets/models/"
@@ -151,7 +151,6 @@ func _connect_sounds() -> void:
 	sim.cash_collected.connect(func(i: int, _amount: int, _a: SimAgent) -> void: _sfx.play_at("coins", sim.stalls[i].cash_pos))
 	sim.zone_purchased.connect(func(_id: String, _level: int) -> void: _sfx.play("purchase"))
 	sim.worker_hired.connect(func(_i: int) -> void: _sfx.play("hire"))
-	sim.game_won.connect(func() -> void: _sfx.play("win"))
 	sim.structure_hit.connect(func(i: int, _damage: int) -> void: _sfx.play_at("crack", sim.structures[i].pos))
 	sim.structure_broken.connect(func(i: int) -> void: _sfx.play_at("break", sim.structures[i].pos))
 	sim.structure_repaired.connect(func(_i: int) -> void: _sfx.play("purchase"))
@@ -312,14 +311,11 @@ func _on_zone_purchased(_id: String, _level: int) -> void:
 	_bake_navigation()
 
 
-## 탈출 연출: 조작을 멈추고, 카메라가 배를 따라가고, 배가 떠난 뒤 결과 화면을 띄운다.
+## 탈출 컷신을 틀고, 끝나면 컷신이 결과 화면을 띄운다.
 func _on_game_won() -> void:
-	_player.set_physics_process(false)
-	_hud.visible = false
-	_camera.target = $Ship
-	await get_tree().create_timer(1.5).timeout
-	await $Ship.sail_away(ESCAPE_SAIL_TIME)
-	$Result.show_result(sim)
+	var ending := Ending.new()
+	add_child(ending)
+	ending.play(self, sim)
 
 
 func _bake_navigation() -> void:
