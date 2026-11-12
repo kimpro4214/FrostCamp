@@ -109,13 +109,13 @@ func _write_report(path: String, runs: Array) -> void:
 	lines.append("")
 	lines.append("## 시드별 요약")
 	lines.append("")
-	lines.append("| 시드 | 결과 | 번 돈 | 잡은 곰 | 일꾼 | 원목 판매/떠남 | 고기 판매/떠남 |")
+	lines.append("| 시드 | 결과 | 번 돈 | 잡은 곰 | 일꾼 | 원목 판매 | 고기 판매 |")
 	lines.append("|---|---|---|---|---|---|---|")
 	for r in runs:
 		var sim: FrostSim = r.sim
-		lines.append("| %d | %s | $%d | %d | %d | %d / %d | %d / %d |" % [
+		lines.append("| %d | %s | $%d | %d | %d | %d | %d |" % [
 			r.seed, _outcome(r.bot, sim), sim.total_earned, sim.bears_killed, sim.workers.size(),
-			sim.stalls[0].served, sim.stalls[0].left_angry, sim.stalls[1].served, sim.stalls[1].left_angry])
+			sim.stalls[0].served, sim.stalls[1].served])
 	lines.append("")
 	lines.append("## 시드 %d 구매 기록" % runs[0].seed)
 	lines.append("")

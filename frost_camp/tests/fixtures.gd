@@ -44,8 +44,7 @@ static func balance() -> Dictionary:
 		"stall": {
 			"unload_interval": 0.1,
 			"sell_interval": 0.5,
-			"customer_interval": 1.0,
-			"customer_patience": 5.0,
+			"customer_refill": 1.0,
 			"queue_max": 3,
 		},
 		"purchase": {"zone_radius": 1.0, "pay_delay": 0.5, "fill_time": 1.0, "min_rate": 10},

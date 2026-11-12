@@ -46,7 +46,7 @@ func _process(_delta: float) -> void:
 	var state := Vector3i(
 		mini(stall.stock, MAX_SHOWN_STOCK),
 		mini(ceili(float(stall.cash) / stall.price), MAX_SHOWN_CASH),
-		stall.queue.size())
+		stall.queue)
 	if state == _shown:
 		return
 	_shown = state

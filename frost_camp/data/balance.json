@@ -54,8 +54,7 @@
 	"stall": {
 		"unload_interval": 0.1,
 		"sell_interval": 0.5,
-		"customer_interval": 3.0,
-		"customer_patience": 20.0,
+		"customer_refill": 0.3,
 		"queue_max": 4
 	},
 	"purchase": {

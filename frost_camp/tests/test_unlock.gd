@@ -9,7 +9,7 @@ func test_locked_stall_has_no_customers_and_takes_nothing() -> void:
 	sim.player.pos = Vector2(9, -8)
 	Fixtures.run(sim, 3.0)
 	check(not sim.is_stall_open(sim.stalls[1]), "해금 전에는 닫혀 있다")
-	check(sim.stalls[1].queue.is_empty(), "닫힌 판매대에는 손님이 오지 않는다")
+	check(sim.stalls[1].queue == 0, "닫힌 판매대에는 손님이 오지 않는다")
 	check_eq(sim.player.stack.items.size(), 1, "닫힌 판매대에는 내려놓지 않는다")
 
 
