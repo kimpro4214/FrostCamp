@@ -3,10 +3,10 @@ extends RefCounted
 ## Frost Camp 규칙 전체. 이동은 바깥에서 하고, 여기서는 위치를 보고 근접 규칙만 판정한다.
 ## 게임과 봇이 같은 규칙을 쓴다.
 
-signal tree_hit(index: int)
-signal tree_felled(index: int)
-signal bear_hit(index: int)
-signal bear_killed(index: int)
+signal tree_hit(index: int, agent: SimAgent)
+signal tree_felled(index: int, agent: SimAgent)
+signal bear_hit(index: int, agent: SimAgent)
+signal bear_killed(index: int, agent: SimAgent)
 signal zone_purchased(id: String, level: int)
 signal worker_hired(index: int)
 signal cash_collected(stall_index: int, amount: int, agent: SimAgent)
@@ -177,11 +177,11 @@ func _tick_chop(agent: SimAgent, delta: float, damage: int) -> void:
 	if agent.chop_timer < float(config.hit_interval):
 		return
 	agent.chop_timer = 0.0
-	tree_hit.emit(index)
+	tree_hit.emit(index, agent)
 	if trees[index].hit(damage):
 		for i in int(config.logs_dropped):
 			agent.stack.push("log")
-		tree_felled.emit(index)
+		tree_felled.emit(index, agent)
 
 
 ## 적치장 근처에서 원목을 하나씩 내려놓는다(벌목꾼).
@@ -228,12 +228,12 @@ func _tick_fight(agent: SimAgent, delta: float) -> void:
 	agent.attack_timer += delta
 	if agent.attack_timer >= float(balance.player.harpoon_interval):
 		agent.attack_timer = 0.0
-		bear_hit.emit(index)
+		bear_hit.emit(index, agent)
 		if bear.take_hit(stats.harpoon_damage):
 			for i in int(config.meat_dropped):
 				agent.stack.push("meat")
 			bears_killed += 1
-			bear_killed.emit(index)
+			bear_killed.emit(index, agent)
 			_fighting_bear = -1
 			return
 	bear.attack_timer += delta

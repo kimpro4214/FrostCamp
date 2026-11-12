@@ -59,6 +59,8 @@ func _ready() -> void:
 	sim.worker_hired.connect(_on_worker_hired)
 	sim.zone_purchased.connect(_on_zone_purchased)
 	sim.game_won.connect(_on_game_won)
+	sim.tree_hit.connect(_on_hit)
+	sim.bear_hit.connect(_on_hit)
 	sim.tree_felled.connect(_on_tree_felled)
 	sim.bear_killed.connect(_on_bear_killed)
 	sim.cash_collected.connect(_on_cash_collected)
@@ -94,14 +96,22 @@ func _on_worker_hired(index: int) -> void:
 	Juice.pop(worker.get_node("Pivot"), Vector3(0.2, 1.6, 0.2), 0.4)
 
 
-func _on_tree_felled(_index: int) -> void:
-	_camera.add_trauma(0.35)
-	_hit_stop(0.05)
+## 플레이어가 친 한 방마다 화면을 살짝 흔들고 아주 짧게 멈춘다. 일꾼이 친 것은 흔들지 않는다.
+func _on_hit(_index: int, agent: SimAgent) -> void:
+	if agent == sim.player:
+		_camera.add_trauma(0.12)
+		_hit_stop(0.03)
 
 
-func _on_bear_killed(_index: int) -> void:
-	_camera.add_trauma(0.6)
-	_hit_stop(0.1)
+func _on_tree_felled(_index: int, agent: SimAgent) -> void:
+	if agent == sim.player:
+		_camera.add_trauma(0.45)
+		_hit_stop(0.07)
+
+
+func _on_bear_killed(_index: int, _agent: SimAgent) -> void:
+	_camera.add_trauma(0.7)
+	_hit_stop(0.12)
 
 
 ## 돈 더미에서 동전이 튀어나와 주운 사람에게 빨려 들어간다.
