@@ -24,6 +24,7 @@ func setup(frost_sim: FrostSim, virtual_joystick: Node) -> void:
 	_model.setup(MODEL)
 	sim.tree_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.trees[i].pos))
 	sim.bear_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.bears[i].pos))
+	sim.raider_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.raid.bears[i].pos))
 
 
 func _physics_process(_delta: float) -> void:

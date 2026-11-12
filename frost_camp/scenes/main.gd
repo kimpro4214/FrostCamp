@@ -10,6 +10,10 @@ const RegionScene := preload("res://frost_camp/scenes/region.tscn")
 const WorkerScene := preload("res://frost_camp/scenes/worker.tscn")
 const HeatScene := preload("res://frost_camp/scenes/heat.tscn")
 const StructureView := preload("res://frost_camp/scenes/structure_view.gd")
+const TowerView := preload("res://frost_camp/scenes/tower_view.gd")
+## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
+const ARROW_RADIUS := 2.4
+const ARROW_HIDE_DIST := 8.0
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const Sfx := preload("res://frost_camp/scenes/sfx.gd")
 const ESCAPE_SAIL_TIME := 5.0
@@ -25,6 +29,7 @@ var _sfx: Node
 var _last_money := 0
 var _last_stack := 0
 var _step_timer := 0.0
+var _raid_arrow: Node3D
 
 @onready var _player: CharacterBody3D = $Player
 @onready var _camera: Camera3D = $Camera3D
@@ -58,7 +63,7 @@ func _ready() -> void:
 	for i in sim.bears.size():
 		var bear := BearScene.instantiate()
 		$Bears.add_child(bear)
-		bear.setup(sim, i)
+		bear.setup(sim, sim.bears[i], false)
 	for region_name in sim.regions:
 		var region := RegionScene.instantiate()
 		$Regions.add_child(region)
@@ -69,6 +74,12 @@ func _ready() -> void:
 		heat.setup(sim, i)
 	_place_decor(GameData.load_json(GameData.LAYOUT_PATH).decor)
 	$Woodpile.setup(sim)
+	for i in sim.towers.size():
+		var tower := TowerView.new()
+		$Towers.add_child(tower)
+		tower.setup(sim, i)
+	sim.raid_started.connect(_on_raid_started)
+	_raid_arrow = _make_arrow()
 	_place_structures(zone_names.get("repair", "repair"))
 	$Ship.setup(sim)
 	sim.worker_hired.connect(_on_worker_hired)
@@ -76,8 +87,10 @@ func _ready() -> void:
 	sim.game_won.connect(_on_game_won)
 	sim.tree_hit.connect(_on_hit)
 	sim.bear_hit.connect(_on_hit)
+	sim.raider_hit.connect(_on_hit)
 	sim.tree_felled.connect(_on_tree_felled)
 	sim.bear_killed.connect(_on_bear_killed)
+	sim.raider_killed.connect(_on_bear_killed)
 	sim.cash_collected.connect(_on_cash_collected)
 	_camera.target = _player
 	_camera.snap()
@@ -92,6 +105,9 @@ func _place_structures(repair_name: String) -> void:
 		for j in sim.stalls.size():
 			if sim.stalls[j].structure == structure:
 				target = $Stalls.get_child(j).get_node("Counter")
+		for j in sim.towers.size():
+			if sim.towers[j].structure == structure:
+				target = $Towers.get_child(j).model
 		var view := StructureView.new()
 		$Structures.add_child(view)
 		view.setup(sim, i, target)
@@ -113,6 +129,11 @@ func _connect_sounds() -> void:
 	sim.structure_hit.connect(func(i: int, _damage: int) -> void: _sfx.play_at("crack", sim.structures[i].pos))
 	sim.structure_broken.connect(func(i: int) -> void: _sfx.play_at("break", sim.structures[i].pos))
 	sim.structure_repaired.connect(func(_i: int) -> void: _sfx.play("purchase"))
+	sim.raider_hit.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("punch", sim.raid.bears[i].pos))
+	sim.raider_killed.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("punch_heavy", sim.raid.bears[i].pos))
+	sim.tower_fired.connect(func(t: int, _r: int) -> void: _sfx.play_at("shoot", sim.towers[t].pos))
+	sim.raid_warning.connect(func(_wave: int, _pos: Vector2) -> void: _sfx.play("raid"))
+	sim.raid_cleared.connect(func(_wave: int) -> void: _sfx.play("hire"))
 
 
 ## 돈이 줄면(구매 존에 넣는 중) 틱, 등 뒤 스택이 늘면 집는 소리, 줄면 내려놓는 소리, 걸으면 발소리.
@@ -155,6 +176,50 @@ func _place_decor(entries: Array) -> void:
 		body.add_child(shape)
 
 
+## 웨이브가 오면 습격 곰마다 겉모습을 붙인다. 겉모습은 곰이 쓰러지면 스스로 사라진다.
+func _on_raid_started(_wave: int) -> void:
+	for raider in sim.raid.bears:
+		var view := BearScene.instantiate()
+		$Bears.add_child(view)
+		view.setup(sim, raider, true)
+		Juice.pop(view, Vector3(0.3, 1.6, 0.3), 0.35)
+
+
+## 땅에 눕힌 빨간 삼각형. 경고 중에는 곰이 나올 곳을, 습격 중에는 가장 가까운 곰을 가리킨다.
+func _make_arrow() -> Node3D:
+	var pivot := Node3D.new()
+	var arrow := MeshInstance3D.new()
+	var mesh := PrismMesh.new()
+	mesh.size = Vector3(0.8, 1.0, 0.08)
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color(1.0, 0.3, 0.25)
+	mesh.material = material
+	arrow.mesh = mesh
+	arrow.rotation.x = -PI / 2.0  # 꼭짓점(+Y)이 앞(-Z)을 보게 눕힌다
+	arrow.position = Vector3(0.0, 0.15, -ARROW_RADIUS)
+	pivot.add_child(arrow)
+	pivot.visible = false
+	add_child(pivot)
+	return pivot
+
+
+func _update_arrow() -> void:
+	var target := Vector2.INF
+	var here := sim.player.pos
+	if sim.raid.state == Raid.State.WARNING:
+		target = sim.raid.spawn_pos
+	elif sim.raid.state == Raid.State.ATTACKING:
+		for raider in sim.raid.bears:
+			if raider.is_alive() and (target == Vector2.INF or here.distance_to(raider.pos) < here.distance_to(target)):
+				target = raider.pos
+	_raid_arrow.visible = target != Vector2.INF and here.distance_to(target) > ARROW_HIDE_DIST
+	if _raid_arrow.visible:
+		var dir := target - here
+		_raid_arrow.position = _player.position
+		_raid_arrow.rotation.y = atan2(-dir.x, -dir.y)
+
+
 func _on_worker_hired(index: int) -> void:
 	var worker := WorkerScene.instantiate()
 	$Workers.add_child(worker)
@@ -175,9 +240,11 @@ func _on_tree_felled(_index: int, agent: SimAgent) -> void:
 		_hit_stop(0.07)
 
 
-func _on_bear_killed(_index: int, _agent: SimAgent) -> void:
-	_camera.add_trauma(0.7)
-	_hit_stop(0.12)
+## 내가 잡았을 때만 크게 흔든다(포탑이 잡은 습격 곰은 흔들지 않는다).
+func _on_bear_killed(_index: int, agent: SimAgent) -> void:
+	if agent == sim.player:
+		_camera.add_trauma(0.7)
+		_hit_stop(0.12)
 
 
 ## 돈 더미에서 동전이 튀어나와 주운 사람에게 빨려 들어간다.
@@ -239,5 +306,6 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_play_player_sounds(delta)
+	_update_arrow()
 	# 눈은 플레이어 위 하늘에서 내린다(입자는 월드 좌표라 걸어도 같이 미끄러지지 않는다).
 	$Snow.position = _player.position + SNOW_OFFSET
