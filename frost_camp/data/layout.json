@@ -2,7 +2,7 @@
 	"player_start": [0, 0],
 	"worker_spawn": [0, -2],
 	"woodpile": [-3, -6],
-	"ship": [31, -3],
+	"ship": [35, -3],
 	"heat": {
 		"campfire": [0, -1],
 		"stove": [-5, -4]

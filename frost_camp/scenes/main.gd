@@ -9,6 +9,7 @@ const BearScene := preload("res://frost_camp/scenes/bear.tscn")
 const RegionScene := preload("res://frost_camp/scenes/region.tscn")
 const WorkerScene := preload("res://frost_camp/scenes/worker.tscn")
 const HeatScene := preload("res://frost_camp/scenes/heat.tscn")
+const ESCAPE_SAIL_TIME := 5.0
 
 var sim: FrostSim
 
@@ -46,8 +47,10 @@ func _ready() -> void:
 		$Heat.add_child(heat)
 		heat.setup(sim, i)
 	$Woodpile.setup(sim)
+	$Ship.setup(sim)
 	sim.worker_hired.connect(_on_worker_hired)
 	sim.zone_purchased.connect(_on_zone_purchased)
+	sim.game_won.connect(_on_game_won)
 	_camera.target = _player
 	_camera.snap()
 	_bake_navigation()
@@ -63,6 +66,16 @@ func _on_worker_hired(index: int) -> void:
 func _on_zone_purchased(_id: String, _level: int) -> void:
 	await get_tree().process_frame
 	_bake_navigation()
+
+
+## 탈출 연출: 조작을 멈추고, 카메라가 배를 따라가고, 배가 떠난 뒤 결과 화면을 띄운다.
+func _on_game_won() -> void:
+	_player.set_physics_process(false)
+	_hud.visible = false
+	_camera.target = $Ship
+	await get_tree().create_timer(1.5).timeout
+	await $Ship.sail_away(ESCAPE_SAIL_TIME)
+	$Result.show_result(sim)
 
 
 func _bake_navigation() -> void:

@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" path="res://frost_camp/scenes/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://frost_camp/ui/hud.tscn" id="4_hud"]
 [ext_resource type="PackedScene" path="res://frost_camp/scenes/woodpile.tscn" id="5_woodpile"]
+[ext_resource type="PackedScene" path="res://frost_camp/scenes/ship.tscn" id="6_ship"]
+[ext_resource type="PackedScene" path="res://frost_camp/ui/result.tscn" id="7_result"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
@@ -19,6 +21,15 @@ albedo_color = Color(0.6, 0.66, 0.76, 1)
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 material = SubResource("StandardMaterial3D_snow")
 size = Vector2(200, 200)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_water"]
+albedo_color = Color(0.15, 0.4, 0.6, 1)
+metallic = 0.3
+roughness = 0.15
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_water"]
+material = SubResource("StandardMaterial3D_water")
+size = Vector2(100, 200)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
 size = Vector3(200, 0.2, 200)
@@ -54,6 +65,10 @@ mesh = SubResource("PlaneMesh_ground")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 shape = SubResource("BoxShape3D_ground")
 
+[node name="Water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 0.03, 0)
+mesh = SubResource("PlaneMesh_water")
+
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
 navigation_mesh = SubResource("NavigationMesh_camp")
 
@@ -80,4 +95,8 @@ script = ExtResource("2_camera")
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
 
+[node name="Ship" parent="." instance=ExtResource("6_ship")]
+
 [node name="HUD" parent="." instance=ExtResource("4_hud")]
+
+[node name="Result" parent="." instance=ExtResource("7_result")]
