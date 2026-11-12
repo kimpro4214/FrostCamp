@@ -62,7 +62,8 @@
 		"damage": 3,
 		"attack_interval": 1.0,
 		"attack_radius": 1.8,
-		"reward": 10
+		"reward": 10,
+		"meat_dropped": 2
 	},
 	"conveyor": {
 		"speed": [2.0, 3.5],
@@ -120,6 +121,11 @@
 			"costs": [150],
 			"effect": { "unlock": "meat_stall" },
 			"requires": ["habitat"]
+		},
+		"bear_den": {
+			"costs": [200, 400],
+			"effect": { "bears": 2 },
+			"requires": ["meat_stall"]
 		},
 		"harpoon": {
 			"costs": [100, 250],

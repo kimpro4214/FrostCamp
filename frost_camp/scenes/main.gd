@@ -84,6 +84,11 @@ func _ready() -> void:
 	add_child(conveyor)
 	conveyor.setup(sim)
 	sim.raid_started.connect(_on_raid_started)
+	sim.bear_added.connect(func(i: int) -> void:
+		var bear := BearScene.instantiate()
+		$Bears.add_child(bear)
+		bear.setup(sim, sim.bears[i], false)
+		Juice.pop(bear, Vector3(0.3, 1.6, 0.3), 0.4))
 	_raid_arrow = _make_arrow()
 	_place_structures(zone_names.get("repair", "repair"))
 	$Ship.setup(sim)
