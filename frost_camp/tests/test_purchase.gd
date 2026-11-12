@@ -9,6 +9,20 @@ func _make_sim(money: int) -> FrostSim:
 	return sim
 
 
+func test_walking_across_zone_spends_nothing() -> void:
+	var sim := _make_sim(100)
+	sim.player.pos = Vector2(-2, 5)
+	for i in 16:
+		sim.player.pos.x += 0.25
+		sim.tick(0.05)
+	check_eq(sim.money, 100, "지나가다 밟은 존에는 돈이 들어가지 않는다")
+	sim.player.pos = Vector2(0, 5)
+	Fixtures.run(sim, 0.4)
+	check_eq(sim.money, 100, "pay_delay 동안은 서 있어도 아직 내지 않는다")
+	Fixtures.run(sim, 0.3)
+	check(sim.money < 100, "pay_delay가 지나면 돈이 들어가기 시작한다")
+
+
 func test_partial_payment_stays_after_leaving() -> void:
 	var sim := _make_sim(12)
 	sim.player.pos = Vector2(0, 5)

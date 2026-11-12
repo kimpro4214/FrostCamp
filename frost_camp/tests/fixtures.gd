@@ -48,7 +48,7 @@ static func balance() -> Dictionary:
 			"customer_patience": 5.0,
 			"queue_max": 3,
 		},
-		"purchase": {"zone_radius": 1.0, "fill_time": 1.0, "min_rate": 10},
+		"purchase": {"zone_radius": 1.0, "pay_delay": 0.5, "fill_time": 1.0, "min_rate": 10},
 		"zones": {
 			"backpack": {"costs": [20, 40], "effect": {"stat": "stack_capacity", "add": 4}},
 			"boots": {
