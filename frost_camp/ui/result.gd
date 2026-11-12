@@ -11,7 +11,7 @@ func _ready() -> void:
 
 func show_result(sim: FrostSim) -> void:
 	var seconds := int(sim.time)
-	_stats.text = "TIME  %d:%02d\nEARNED  $%d\nBEARS  %d\nWORKERS  %d" % [
+	_stats.text = "플레이 시간  %d:%02d\n번 돈  $%d\n잡은 곰  %d마리\n고용한 일꾼  %d명" % [
 		seconds / 60, seconds % 60, sim.total_earned, sim.bears_killed, sim.workers.size()]
 	visible = true
 	$Center/Panel/Box/Again.grab_focus()

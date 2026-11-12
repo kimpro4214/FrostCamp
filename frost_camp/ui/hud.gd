@@ -21,15 +21,15 @@ func _process(_delta: float) -> void:
 	_stack_label.text = "%d / %d" % [stack.items.size(), stack.capacity]
 	var player := sim.player
 	if player.dazed_left > 0.0:
-		_hp_label.text = "DAZED %.1f" % player.dazed_left
+		_hp_label.text = "기절 %.1f" % player.dazed_left
 		_hp_label.modulate = Color(0.7, 0.7, 0.75)
 	else:
-		_hp_label.text = "HP %d" % ceili(player.hp)
+		_hp_label.text = "체력 %d" % ceili(player.hp)
 		_hp_label.modulate = Color.WHITE
 	if player.warmth <= 0.0:
-		_warmth_label.text = "FROZEN"
+		_warmth_label.text = "꽁꽁 얼었다"
 	else:
-		_warmth_label.text = "WARM %d%%" % ceili(player.warmth / player.max_warmth * 100.0)
+		_warmth_label.text = "온기 %d%%" % ceili(player.warmth / player.max_warmth * 100.0)
 
 
 ## 돈이 들어오면 숫자가 툭 커졌다가 돌아온다.

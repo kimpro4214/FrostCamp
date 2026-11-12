@@ -45,13 +45,13 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
 theme_override_font_sizes/font_size = 52
-text = "ESCAPED!"
+text = "섬 탈출 성공!"
 horizontal_alignment = 1
 
 [node name="Stats" type="Label" parent="Center/Panel/Box"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "TIME  0:00"
+text = "플레이 시간  0:00"
 horizontal_alignment = 1
 
 [node name="Again" type="Button" parent="Center/Panel/Box"]
@@ -59,4 +59,4 @@ custom_minimum_size = Vector2(280, 64)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 30
-text = "PLAY AGAIN"
+text = "다시 하기"
