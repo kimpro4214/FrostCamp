@@ -1,22 +1,25 @@
 extends Node3D
-## 구매 존의 겉모습. 낸 돈만큼 안쪽 원판이 차고, 남은 금액을 띄운다. 살 수 없으면 숨는다.
+## 구매 존(또는 수리 존)의 겉모습. 낸 돈만큼 안쪽 원판이 차고, 남은 금액을 띄운다.
+## 지금 살 수 없으면 숨는다.
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 
 var sim: FrostSim
-var index: int
+var zone: PurchaseZone
 var display_name: String
+var _available: Callable
 
 @onready var _base: MeshInstance3D = $Base
 @onready var _fill: MeshInstance3D = $Fill
 @onready var _label: Label3D = $Label
 
 
-func setup(frost_sim: FrostSim, zone_index: int, zone_name: String) -> void:
+## available은 존이 지금 보여야 하는지 돌려주는 함수다(구매 존은 선행 조건, 수리 존은 부서짐).
+func setup(frost_sim: FrostSim, purchase_zone: PurchaseZone, zone_name: String, available: Callable) -> void:
 	sim = frost_sim
-	index = zone_index
+	zone = purchase_zone
 	display_name = zone_name
-	var zone := sim.zones[index]
+	_available = available
 	position = Vector3(zone.pos.x, 0.0, zone.pos.y)
 	var radius := float(sim.balance.purchase.zone_radius)
 	scale = Vector3(radius, 1.0, radius)
@@ -26,8 +29,7 @@ func setup(frost_sim: FrostSim, zone_index: int, zone_name: String) -> void:
 
 
 func _process(_delta: float) -> void:
-	var zone := sim.zones[index]
-	visible = sim.is_zone_available(zone)
+	visible = _available.call()
 	if not visible:
 		return
 	var progress := float(zone.paid) / zone.cost()
