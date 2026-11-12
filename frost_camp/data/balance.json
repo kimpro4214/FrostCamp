@@ -60,6 +60,7 @@
 	},
 	"purchase": {
 		"zone_radius": 1.2,
+		"pay_delay": 0.6,
 		"fill_time": 1.5,
 		"min_rate": 10
 	},

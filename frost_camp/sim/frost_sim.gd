@@ -266,17 +266,25 @@ func _tick_collect_cash(agent: SimAgent) -> void:
 			stall.cash = 0
 
 
+## 존 위에 pay_delay만큼 서 있어야 돈이 들어가기 시작한다. 지나가다 밟으면 쓰지 않는다.
 func _tick_purchase(agent: SimAgent, delta: float) -> void:
 	var config: Dictionary = balance.purchase
 	for zone in zones:
 		if not is_zone_available(zone) or agent.pos.distance_to(zone.pos) > float(config.zone_radius):
 			continue
+		if agent.zone_wait_id != zone.id:
+			agent.zone_wait_id = zone.id
+			agent.zone_wait = 0.0
+		agent.zone_wait += delta
+		if agent.zone_wait < float(config.pay_delay):
+			return
 		var rate := maxf(zone.cost() / float(config.fill_time), float(config.min_rate))
 		money -= zone.pay(money, rate, delta)
 		if zone.try_complete():
 			_apply_effect(zone.effect)
 			zone_purchased.emit(zone.id, zone.level)
 		return
+	agent.zone_wait_id = ""
 
 
 func _apply_effect(effect: Dictionary) -> void:
