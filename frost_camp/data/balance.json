@@ -117,7 +117,7 @@
 			"requires": ["backpack"]
 		},
 		"meat_stall": {
-			"costs": [60],
+			"costs": [150],
 			"effect": { "unlock": "meat_stall" },
 			"requires": ["habitat"]
 		},
@@ -142,7 +142,7 @@
 			"requires": ["porter"]
 		},
 		"cashier": {
-			"costs": [200],
+			"costs": [320],
 			"effect": { "hire": "cashier" },
 			"requires": ["meat_stall"]
 		},
@@ -162,7 +162,7 @@
 			"requires": ["tower_1"]
 		},
 		"expand_1": {
-			"costs": [400],
+			"costs": [650],
 			"effect": { "unlock": "expand_1" },
 			"requires": ["lumberjack"]
 		},
