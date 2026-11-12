@@ -1,0 +1,21 @@
+{
+	"zones": {
+		"backpack": "배낭",
+		"boots": "장화",
+		"axe": "도끼",
+		"habitat": "곰 서식지",
+		"meat_stall": "고기 판매대",
+		"harpoon": "작살",
+		"lumberjack": "벌목꾼",
+		"porter": "운반꾼",
+		"cashier": "계산원",
+		"stove": "난로",
+		"coat": "방한복",
+		"port": "항구",
+		"ship_hull": "선체",
+		"ship_engine": "엔진",
+		"ship_blade": "쇄빙날",
+		"ship_mast": "돛대",
+		"ship_fuel": "연료"
+	}
+}

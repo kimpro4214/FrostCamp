@@ -4,6 +4,7 @@ extends RefCounted
 
 const BALANCE_PATH := "res://frost_camp/data/balance.json"
 const LAYOUT_PATH := "res://frost_camp/data/layout.json"
+const TEXT_PATH := "res://frost_camp/data/text.json"
 
 
 static func load_json(path: String) -> Dictionary:

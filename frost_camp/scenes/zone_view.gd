@@ -5,15 +5,17 @@ const Juice := preload("res://frost_camp/scenes/juice.gd")
 
 var sim: FrostSim
 var index: int
+var display_name: String
 
 @onready var _base: MeshInstance3D = $Base
 @onready var _fill: MeshInstance3D = $Fill
 @onready var _label: Label3D = $Label
 
 
-func setup(frost_sim: FrostSim, zone_index: int) -> void:
+func setup(frost_sim: FrostSim, zone_index: int, zone_name: String) -> void:
 	sim = frost_sim
 	index = zone_index
+	display_name = zone_name
 	var zone := sim.zones[index]
 	position = Vector3(zone.pos.x, 0.0, zone.pos.y)
 	var radius := float(sim.balance.purchase.zone_radius)
@@ -31,4 +33,5 @@ func _process(_delta: float) -> void:
 	var progress := float(zone.paid) / zone.cost()
 	_fill.scale = Vector3(progress, 1.0, progress)
 	_fill.visible = progress > 0.0
-	_label.text = "%s Lv%d\n$ %d" % [zone.id.to_upper().replace("_", " "), zone.level + 1, zone.remaining()]
+	var title := display_name if zone.costs.size() == 1 else "%s %d단계" % [display_name, zone.level + 1]
+	_label.text = "%s\n$ %d" % [title, zone.remaining()]
