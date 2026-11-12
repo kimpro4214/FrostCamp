@@ -65,7 +65,10 @@ static func balance() -> Dictionary:
 			"cashier": {"costs": [10], "effect": {"hire": "cashier"}},
 			"stove": {"costs": [10], "effect": {"unlock": "stove"}},
 			"coat": {"costs": [10], "effect": {"stat": "cold_drain", "add": -0.5}},
+			"ship_hull": {"costs": [10], "effect": {"unlock": "ship_hull"}},
+			"ship_mast": {"costs": [10], "effect": {"unlock": "ship_mast"}},
 		},
+		"ending": {"ship_parts": ["ship_hull", "ship_mast"]},
 	}
 
 
@@ -75,6 +78,7 @@ static func layout() -> Dictionary:
 		"player_start": [0, 0],
 		"worker_spawn": [0, -2],
 		"woodpile": [-6, 0],
+		"ship": [30, 0],
 		"heat": {"campfire": [0, 0], "stove": [0, -10]},
 		"trees": [[-10, 0]],
 		"regions": {"habitat": {"rect": [-10, -30, 20, 10], "gate": [0, -20]}},
@@ -95,6 +99,8 @@ static func layout() -> Dictionary:
 			"cashier": [12, 5],
 			"stove": [-12, 5],
 			"coat": [15, 5],
+			"ship_hull": [20, 0],
+			"ship_mast": [23, 0],
 		},
 	}
 
