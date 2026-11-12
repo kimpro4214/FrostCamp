@@ -22,12 +22,14 @@ static func balance() -> Dictionary:
 			"stall": {"hp": 10, "repair_cost": 20},
 			"woodpile": {"hp": 10, "repair_cost": 20},
 			"tower": {"hp": 10, "repair_cost": 20},
+			"conveyor": {"hp": 10, "repair_cost": 20},
 		},
 		"raid": {
 			"start_after": "habitat", "start_delay": 10.0, "interval": 20.0, "warning": 5.0,
 			"count_base": 2, "count_growth": 1, "count_max": 3, "hp_base": 4, "hp_growth": 2,
 			"speed": 2.0, "damage": 2, "attack_interval": 1.0, "attack_radius": 1.5, "meat_dropped": 1,
 		},
+		"conveyor": {"speed": [2.0, 4.0], "take_interval": [0.5, 0.25], "spacing": 1.0},
 		"tower": {"range": 6.0, "interval": 1.0, "damage": 2, "damage_add": 2},
 		"workers": {
 			"lumberjack": {"speed": 4.0, "capacity": 4, "damage": 1},
@@ -95,6 +97,7 @@ static func layout() -> Dictionary:
 		"regions": {"habitat": {"rect": [-10, -30, 20, 10], "gate": [0, -20]}},
 		"bears": [[0, -25]],
 		"raid_spawns": [[0, 20]],
+		"conveyor": {"path": [[-6, 2], [4, 2], [4, 0]], "pos": [-1, 2], "repair_pos": [-1, 4]},
 		"towers": [{"id": "tower_1", "pos": [0, 8], "repair_pos": [2, 8]}],
 		"stalls": [
 			{"item": "log", "pos": [10, 0], "cash_pos": [10, 3], "repair_pos": [7, 0], "raid_target": false},
