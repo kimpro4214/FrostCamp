@@ -54,6 +54,8 @@ var stats := {}
 var rng := RandomNumberGenerator.new()
 ## 습격 웨이브와 습격 곰들
 var raid: Raid
+## 적치장 → 원목 판매대 컨베이어. 사기 전에는 level 0이다.
+var conveyor: Conveyor
 ## 포탑 목록. {"id": String, "pos": Vector2, "level": int, "timer": float, "structure": Structure}
 var towers: Array[Dictionary] = []
 var _fighting_bear := -1
@@ -88,6 +90,12 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		var tower_structure := _add_structure("tower", _vec(t.pos), _vec(t.repair_pos))
 		tower_structure.unlock = t.id
 		towers.append({"id": t.id, "pos": _vec(t.pos), "level": 0, "timer": 0.0, "structure": tower_structure})
+	var belt_points: Array[Vector2] = []
+	for p in layout.conveyor.path:
+		belt_points.append(_vec(p))
+	conveyor = Conveyor.new(belt_points, balance.conveyor)
+	conveyor.structure = _add_structure("conveyor", _vec(layout.conveyor.pos), _vec(layout.conveyor.repair_pos))
+	conveyor.structure.unlock = "conveyor"
 	var spawns: Array[Vector2] = []
 	for p in layout.raid_spawns:
 		spawns.append(_vec(p))
@@ -182,6 +190,7 @@ func tick(delta: float) -> void:
 	for stall in stalls:
 		if is_stall_working(stall):
 			stall.tick(delta)
+	_tick_conveyor(delta)
 	_tick_unload(player, delta)
 	_tick_pile_take(player, delta)
 	_tick_chop(player, delta, stats.axe_damage)
@@ -319,6 +328,17 @@ func _tick_fight(agent: SimAgent, delta: float) -> void:
 			agent.attack_timer = 0.0
 
 
+## 컨베이어가 적치장 원목을 싣고 첫 원목 판매대로 보낸다. 컨베이어나 적치장이 부서지면 멈추고,
+## 판매대가 부서지면 끝에 닿은 원목이 거기서 기다린다.
+func _tick_conveyor(delta: float) -> void:
+	if conveyor.level == 0 or conveyor.structure.is_broken():
+		return
+	var stall := stalls[0]
+	stall.stock += conveyor.advance(delta, is_stall_working(stall))
+	if conveyor.try_load(delta, woodpile > 0 and not woodpile_structure.is_broken()):
+		woodpile -= 1
+
+
 ## 습격 진행. 경고·습격·방어 성공 이벤트를 내고, 습격 곰을 가장 가까운 멀쩡한 시설로 몰아 부수게 한다.
 func _tick_raid(delta: float) -> void:
 	match raid.tick(delta, rng):
@@ -433,6 +453,10 @@ func _apply_effect(effect: Dictionary) -> void:
 		if effect.unlock == balance.raid.start_after:
 			raid.activate()
 		_check_ending()
+		return
+	if effect.has("conveyor"):
+		unlocked["conveyor"] = true
+		conveyor.level += 1
 		return
 	if effect.has("tower"):
 		unlocked[effect.tower] = true
