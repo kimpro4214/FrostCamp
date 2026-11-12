@@ -8,6 +8,7 @@ const ZoneScene := preload("res://frost_camp/scenes/zone.tscn")
 const BearScene := preload("res://frost_camp/scenes/bear.tscn")
 const RegionScene := preload("res://frost_camp/scenes/region.tscn")
 const WorkerScene := preload("res://frost_camp/scenes/worker.tscn")
+const HeatScene := preload("res://frost_camp/scenes/heat.tscn")
 
 var sim: FrostSim
 
@@ -40,6 +41,10 @@ func _ready() -> void:
 		var region := RegionScene.instantiate()
 		$Regions.add_child(region)
 		region.setup(sim, region_name)
+	for i in sim.heat_sources.size():
+		var heat := HeatScene.instantiate()
+		$Heat.add_child(heat)
+		heat.setup(sim, i)
 	$Woodpile.setup(sim)
 	sim.worker_hired.connect(_on_worker_hired)
 	sim.zone_purchased.connect(_on_zone_purchased)
