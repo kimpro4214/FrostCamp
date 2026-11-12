@@ -9,6 +9,8 @@ var speed: float
 var attack_timer := 0.0
 ## 지금 노리는 시설 번호(sim.structures). 없으면 -1.
 var target := -1
+## 방벽을 뚫었는지. 뚫은 뒤에는 방벽을 더 노리지 않고 안쪽 시설로 간다.
+var breached := false
 
 
 func _init(spawn_pos: Vector2, bear_hp: int, bear_speed: float) -> void:

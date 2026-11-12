@@ -45,6 +45,11 @@ var woodpile_structure: Structure
 var meat_pile := 0
 var meat_pile_pos: Vector2
 var meat_pile_structure: Structure
+## 기지 방벽. 구간마다 시설 번호(sim.structures). 방벽 구매 레벨이 0이면 서 있지 않다.
+var walls: Array[int] = []
+var wall_level := 0
+## 기지 영역. 해금 이름("" = 처음부터) → Rect2. 습격 곰이 이 밖에 있으면 방벽부터 부순다.
+var base_rects := {}
 var worker_spawn: Vector2
 ## 쇄빙선이 정박한 곳(연출용)
 var ship_pos: Vector2
@@ -118,6 +123,11 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 	conveyor.structure.unlock = "conveyor"
 	meat_pile_structure = _add_structure("meat_pile", meat_pile_pos, _vec(layout.meat_pile_repair))
 	meat_pile_structure.unlock = "habitat"
+	for key in layout.base.rects:
+		var r: Array = layout.base.rects[key]
+		base_rects[key] = Rect2(r[0], r[1], r[2], r[3])
+	for w in layout.base.walls:
+		_add_wall(w)
 	var spawns: Array[Vector2] = []
 	for p in layout.raid_spawns:
 		spawns.append(_vec(p))
@@ -174,10 +184,27 @@ func is_stall_working(stall: Stall) -> bool:
 	return is_stall_open(stall) and not stall.structure.is_broken()
 
 
-## 열려 있고(해금된) 부서지지 않은 시설이면 true.
-func is_structure_standing(index: int) -> bool:
+## 지금 기지에 있는 시설이면 true. 해금 전 시설, 확장으로 사라진 방벽 구간, 사기 전 방벽은 없는 것으로 친다.
+func is_structure_active(index: int) -> bool:
 	var structure := structures[index]
-	return not structure.is_broken() and (structure.unlock == "" or unlocked.has(structure.unlock))
+	if structure.unlock != "" and not unlocked.has(structure.unlock):
+		return false
+	if structure.until != "" and unlocked.has(structure.until):
+		return false
+	return structure.kind != "wall" or wall_level > 0
+
+
+## 있고 부서지지 않은 시설이면 true.
+func is_structure_standing(index: int) -> bool:
+	return is_structure_active(index) and not structures[index].is_broken()
+
+
+## 해금된 기지 영역 안이면 true.
+func is_in_base(pos: Vector2) -> bool:
+	for key in base_rects:
+		if (key == "" or unlocked.has(key)) and base_rects[key].has_point(pos):
+			return true
+	return false
 
 
 ## 시설 하나에 피해를 준다. 부서지면 structure_broken이 나온다.
@@ -416,7 +443,9 @@ func _tick_raid(delta: float) -> void:
 		if not bear.is_alive() or _fighting_raiders.has(i):
 			continue
 		if bear.target == -1 or not is_structure_standing(bear.target):
-			bear.target = _nearest_standing_structure(bear.pos)
+			if bear.target != -1 and structures[bear.target].kind == "wall":
+				bear.breached = true  # 노리던 방벽 구간이 무너졌으니 그 틈으로 들어간다.
+			bear.target = _raid_target(bear)
 			bear.attack_timer = 0.0
 		if bear.target == -1:
 			# 노릴 시설이 없으면 플레이어에게 달려든다. 닿으면 근접 전투가 시작된다.
@@ -523,7 +552,7 @@ func _tick_purchase(agent: SimAgent, delta: float) -> void:
 			return
 	for i in structures.size():
 		var structure := structures[i]
-		if structure.is_broken() and _pay_into(agent, structure.repair, delta):
+		if structure.is_broken() and is_structure_active(i) and _pay_into(agent, structure.repair, delta):
 			if structure.try_finish_repair():
 				structure_repaired.emit(i)
 			return
@@ -552,6 +581,9 @@ func _apply_effect(effect: Dictionary) -> void:
 			raid.activate()
 		_check_ending()
 		return
+	if effect.has("walls"):
+		_raise_walls()
+		return
 	if effect.has("bears"):
 		_add_bears(int(effect.bears))
 		return
@@ -579,6 +611,36 @@ func _apply_effect(effect: Dictionary) -> void:
 			player.stack.capacity += int(effect.add)
 		"move_speed", "axe_damage", "harpoon_damage", "cold_drain":
 			stats[effect.stat] += effect.add
+
+
+## 방벽 구간 하나. 위치는 구간 가운데, 수리 존은 그 단계 기지 영역 안쪽으로 조금 들어간 곳이다.
+func _add_wall(w: Dictionary) -> void:
+	var a := _vec(w.a)
+	var b := _vec(w.b)
+	var mid := (a + b) / 2.0
+	var stage: String = w.get("from", "")
+	var inward: Vector2 = (base_rects[stage].get_center() - mid).normalized()
+	var config: Dictionary = balance.structures.wall
+	var structure := Structure.new("wall", mid, mid + inward * 1.6, {"hp": config.hp[0], "repair_cost": config.repair_cost})
+	structure.repair.id = "repair_%d" % structures.size()
+	structure.unlock = stage
+	structure.until = w.get("until", "")
+	structure.raid_target = false  # 방벽은 _raid_target이 따로 고른다.
+	walls.append(structures.size())
+	structures.append(structure)
+
+
+## 방벽 레벨을 올린다. 모든 구간이 새 최대 체력으로 다시 선다(부서진 구간도).
+func _raise_walls() -> void:
+	wall_level += 1
+	var hp_levels: Array = balance.structures.wall.hp
+	var max_hp := int(hp_levels[mini(wall_level, hp_levels.size()) - 1])
+	for i in walls:
+		var structure := structures[i]
+		structure.max_hp = max_hp
+		structure.hp = max_hp
+		structure.repair.level = 1
+		structure.repair.paid = 0
 
 
 func _add_structure(kind: String, pos: Vector2, repair_pos: Vector2) -> Structure:
@@ -620,7 +682,22 @@ func _nearest_raider(pos: Vector2, max_dist: float = -1.0) -> int:
 	return best
 
 
-## 습격 곰이 노릴 가장 가까운 시설.
+## 기지 밖에 있고 아직 방벽을 뚫지 않았으면 가장 가까운 방벽 구간, 아니면 가장 가까운 시설.
+func _raid_target(bear: RaidBear) -> int:
+	if wall_level > 0 and not bear.breached and not is_in_base(bear.pos):
+		var best := -1
+		var best_dist := INF
+		for i in walls:
+			var dist := bear.pos.distance_to(structures[i].pos)
+			if is_structure_standing(i) and dist < best_dist:
+				best = i
+				best_dist = dist
+		if best != -1:
+			return best
+	return _nearest_standing_structure(bear.pos)
+
+
+## 습격 곰이 노릴 가장 가까운 시설(방벽 제외).
 func _nearest_standing_structure(pos: Vector2) -> int:
 	var best := -1
 	var best_dist := INF

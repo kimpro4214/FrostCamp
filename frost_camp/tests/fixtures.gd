@@ -22,6 +22,7 @@ static func balance() -> Dictionary:
 			"stall": {"hp": 10, "repair_cost": 20},
 			"woodpile": {"hp": 10, "repair_cost": 20},
 			"meat_pile": {"hp": 10, "repair_cost": 20},
+			"wall": {"hp": [10, 20, 30], "repair_cost": 20},
 			"tower": {"hp": 10, "repair_cost": 20},
 			"conveyor": {"hp": 10, "repair_cost": 20},
 		},
@@ -105,6 +106,14 @@ static func layout() -> Dictionary:
 		"bears": [[0, -25]],
 		"extra_bears": [[5, -25], [-5, -25], [3, -22]],
 		"raid_spawns": [[0, 20]],
+		"base": {
+			"rects": {"": [-20, -12, 40, 22], "expand_1": [-20, 10, 10, 10]},
+			"walls": [
+				{"a": [-10, 10], "b": [10, 10]},
+				{"a": [-20, 10], "b": [-10, 10], "until": "expand_1"},
+				{"a": [-20, 20], "b": [-10, 20], "from": "expand_1"},
+			],
+		},
 		"conveyor": {"path": [[-6, 2], [4, 2], [4, 0]], "pos": [-1, 2], "repair_pos": [-1, 4]},
 		"towers": [{"id": "tower_1", "pos": [0, 8], "repair_pos": [2, 8]}],
 		"stalls": [
