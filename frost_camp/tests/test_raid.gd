@@ -138,3 +138,34 @@ func test_raider_without_target_comes_for_player() -> void:
 	Fixtures.run(sim, 0.5)
 	check_eq(bear.target, -1, "노릴 시설이 없다")
 	check(bear.pos.distance_to(sim.player.pos) < Vector2(0, 10).distance_to(sim.player.pos), "플레이어 쪽으로 다가온다")
+
+
+func test_raider_drops_meat_once_meat_stall_opens() -> void:
+	var sim := _make_sim()
+	sim._apply_effect({"unlock": "meat_stall"})
+	var bear := _place_raider(sim, sim.player.pos + Vector2(1, 0), 4, 0.0)
+	Fixtures.run(sim, 1.5)
+	check(not bear.is_alive(), "잡았다")
+	check_eq(sim.player.stack.items.count("meat"), 2, "고기 판매대가 열려 있으면 고기를 떨군다")
+	check_eq(sim.money, 0, "고기를 받으면 현상금은 없다")
+
+
+func test_tower_kill_pays_bounty_even_with_meat_stall() -> void:
+	var sim := _make_sim()
+	sim._apply_effect({"unlock": "meat_stall"})
+	sim._apply_effect({"tower": "tower_1"})
+	_place_raider(sim, Vector2(0, 12), 2, 0.0)
+	Fixtures.run(sim, 0.2)
+	check_eq(sim.money, 10, "포탑이 잡으면 현상금")
+
+
+func test_bear_den_adds_habitat_bears() -> void:
+	var sim := _make_sim()
+	var added := []
+	sim.bear_added.connect(func(i: int) -> void: added.append(i))
+	sim._apply_effect({"bears": 2})
+	check_eq(sim.bears.size(), 3, "곰이 2마리 늘어난다")
+	check_eq(added, [1, 2], "새 곰마다 이벤트가 나온다")
+	check_eq(sim.bears[1].pos, Vector2(5, -25), "준비된 자리에 나타난다")
+	sim._apply_effect({"bears": 2})
+	check_eq(sim.bears.size(), 4, "자리가 모자라면 남은 만큼만 는다")

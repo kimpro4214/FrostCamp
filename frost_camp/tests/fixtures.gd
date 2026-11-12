@@ -27,7 +27,7 @@ static func balance() -> Dictionary:
 		"raid": {
 			"start_after": "habitat", "start_delay": 10.0, "interval": 20.0, "warning": 5.0,
 			"count_base": 2, "count_growth": 1, "count_max": 3, "hp_base": 4, "hp_growth": 2,
-			"speed": 2.0, "damage": 2, "attack_interval": 1.0, "attack_radius": 1.5, "reward": 10,
+			"speed": 2.0, "damage": 2, "attack_interval": 1.0, "attack_radius": 1.5, "reward": 10, "meat_dropped": 2,
 		},
 		"conveyor": {"speed": [2.0, 4.0], "take_interval": [0.5, 0.25], "spacing": 1.0},
 		"tower": {"range": 6.0, "interval": 1.0, "damage": 2, "damage_add": 2},
@@ -99,6 +99,7 @@ static func layout() -> Dictionary:
 			"expand_1": {"rect": [-20, 10, 10, 10], "gate": [-15, 10], "open": true, "trees": [[-15, 15]]},
 		},
 		"bears": [[0, -25]],
+		"extra_bears": [[5, -25], [-5, -25], [3, -22]],
 		"raid_spawns": [[0, 20]],
 		"conveyor": {"path": [[-6, 2], [4, 2], [4, 0]], "pos": [-1, 2], "repair_pos": [-1, 4]},
 		"towers": [{"id": "tower_1", "pos": [0, 8], "repair_pos": [2, 8]}],

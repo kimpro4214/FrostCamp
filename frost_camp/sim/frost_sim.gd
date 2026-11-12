@@ -19,6 +19,7 @@ signal raid_cleared(wave: int)
 signal raider_hit(index: int, agent: SimAgent)
 signal raider_killed(index: int, agent: SimAgent)
 signal tower_fired(tower_index: int, raider_index: int)
+signal bear_added(index: int)
 signal game_won
 
 var balance: Dictionary
@@ -59,6 +60,9 @@ var raid: Raid
 var conveyor: Conveyor
 ## 포탑 목록. {"id": String, "pos": Vector2, "level": int, "timer": float, "structure": Structure}
 var towers: Array[Dictionary] = []
+## 곰 늘리기 구매로 서식지에 더 나올 곰 자리. 앞에서부터 쓴다.
+var extra_bear_spots: Array[Vector2] = []
+var _bear_area: Rect2
 var _fighting_bear := -1
 var _fighting_raider := -1
 
@@ -83,6 +87,9 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 			tree.unlock = region_name
 			trees.append(tree)
 	var bear_area: Rect2 = regions.habitat.rect.grow(-float(balance.bear.wall_margin))
+	_bear_area = bear_area
+	for p in layout.get("extra_bears", []):
+		extra_bear_spots.append(_vec(p))
 	for p in layout.bears:
 		bears.append(HarvestBear.new(_vec(p), bear_area, balance.bear))
 	for s in layout.stalls:
@@ -321,7 +328,7 @@ func _tick_fight(agent: SimAgent, delta: float) -> void:
 		if enemy.take_hit(stats.harpoon_damage):
 			bears_killed += 1
 			if raider_index != -1:
-				_reward_raider_kill()
+				_reward_raider_kill(agent)
 				raider_killed.emit(raider_index, agent)
 			else:
 				for i in int(config.meat_dropped):
@@ -403,15 +410,39 @@ func _tick_towers(delta: float) -> void:
 		var damage: int = int(config.damage) + int(config.damage_add) * (int(tower.level) - 1)
 		if raid.bears[target].take_hit(damage):
 			bears_killed += 1
-			_reward_raider_kill()
+			_reward_raider_kill(null)
 			raider_killed.emit(target, null)
 
 
-## 습격 곰을 잡으면 고기 대신 현상금이 바로 지갑에 들어온다(고기 판매대가 없을 때 등이 고기로 막히지 않게).
-func _reward_raider_kill() -> void:
+## 습격 곰 보상. 직접 잡았고 고기 판매대가 열려 있으면 등에 들어가는 만큼 고기를 준다.
+## 포탑이 잡았거나, 판매대가 아직 없거나(등이 고기로 막히지 않게), 등에 자리가 없으면 현상금을 준다.
+func _reward_raider_kill(agent: SimAgent) -> void:
+	var meat := 0
+	if agent and _has_open_stall("meat"):
+		meat = mini(int(balance.raid.meat_dropped), agent.stack.free_space())
+	for i in meat:
+		agent.stack.push("meat")
+	if meat > 0:
+		return
 	var reward := int(balance.raid.reward)
 	money += reward
 	total_earned += reward
+
+
+func _has_open_stall(item: String) -> bool:
+	for stall in stalls:
+		if stall.item == item and is_stall_open(stall):
+			return true
+	return false
+
+
+## 서식지에 곰을 count마리 더 풀어 놓는다(남은 자리만큼).
+func _add_bears(count: int) -> void:
+	for i in count:
+		if extra_bear_spots.is_empty():
+			return
+		bears.append(HarvestBear.new(extra_bear_spots.pop_front(), _bear_area, balance.bear))
+		bear_added.emit(bears.size() - 1)
 
 
 ## 열원 안에서는 온기가 차고, 밖에서는 drain만큼 준다.
@@ -477,6 +508,9 @@ func _apply_effect(effect: Dictionary) -> void:
 		if effect.unlock == balance.raid.start_after:
 			raid.activate()
 		_check_ending()
+		return
+	if effect.has("bears"):
+		_add_bears(int(effect.bears))
 		return
 	if effect.has("conveyor"):
 		unlocked["conveyor"] = true
