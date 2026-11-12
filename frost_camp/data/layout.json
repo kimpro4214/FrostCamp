@@ -2,6 +2,7 @@
 	"player_start": [0, 0],
 	"worker_spawn": [0, -2],
 	"woodpile": [-3, -6],
+	"woodpile_repair": [-3, -8.4],
 	"ship": [35, -3],
 	"heat": {
 		"campfire": [0, -1],
@@ -14,8 +15,8 @@
 	},
 	"bears": [[2, -20], [8, -22], [5, -18]],
 	"stalls": [
-		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6] },
-		{ "item": "meat", "pos": [5, -5], "cash_pos": [5, -7.4], "unlock": "meat_stall" }
+		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6], "repair_pos": [3, 1.6] },
+		{ "item": "meat", "pos": [5, -5], "cash_pos": [5, -7.4], "repair_pos": [3.6, -8.2], "unlock": "meat_stall" }
 	],
 	"zones": {
 		"backpack": [-1.5, 3.5],

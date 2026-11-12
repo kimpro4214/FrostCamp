@@ -42,6 +42,10 @@
 			"stove": { "radius": 6.5, "unlock": "stove" }
 		}
 	},
+	"structures": {
+		"stall": { "hp": 30, "repair_cost": 60 },
+		"woodpile": { "hp": 20, "repair_cost": 40 }
+	},
 	"workers": {
 		"lumberjack": { "speed": 3.5, "capacity": 6, "damage": 1 },
 		"porter": { "speed": 4.0, "capacity": 8 },
