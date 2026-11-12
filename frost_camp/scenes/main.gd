@@ -13,6 +13,7 @@ const Juice := preload("res://frost_camp/scenes/juice.gd")
 const ESCAPE_SAIL_TIME := 5.0
 const MAX_FLYING_COINS := 10
 const SNOW_OFFSET := Vector3(0.0, 8.0, 2.0)
+const DECOR_DIR := "res://frost_camp/assets/models/"
 
 var sim: FrostSim
 var _hit_stop_id := 0
@@ -52,6 +53,7 @@ func _ready() -> void:
 		var heat := HeatScene.instantiate()
 		$Heat.add_child(heat)
 		heat.setup(sim, i)
+	_place_decor(GameData.load_json(GameData.LAYOUT_PATH).decor)
 	$Woodpile.setup(sim)
 	$Ship.setup(sim)
 	sim.worker_hired.connect(_on_worker_hired)
@@ -63,6 +65,26 @@ func _ready() -> void:
 	_camera.target = _player
 	_camera.snap()
 	_bake_navigation()
+
+
+## 꾸밈용 모델을 배치한다. 모델 크기에 맞춘 충돌 상자를 붙여 지나가지 못하게 한다.
+func _place_decor(entries: Array) -> void:
+	for entry in entries:
+		var model: Node3D = load(DECOR_DIR + entry.model + ".glb").instantiate()
+		model.scale = Vector3.ONE * float(entry.scale)
+		var body := StaticBody3D.new()
+		body.position = Vector3(entry.pos[0], 0.0, entry.pos[1])
+		body.rotation.y = deg_to_rad(float(entry.rot))
+		body.add_child(model)
+		$Decor.add_child(body)
+		var box := AABB()
+		for mesh in model.find_children("*", "MeshInstance3D", true, false):
+			box = box.merge(body.global_transform.affine_inverse() * mesh.global_transform * mesh.get_aabb())
+		var shape := CollisionShape3D.new()
+		shape.shape = BoxShape3D.new()
+		shape.shape.size = box.size
+		shape.position = box.get_center()
+		body.add_child(shape)
 
 
 func _on_worker_hired(index: int) -> void:

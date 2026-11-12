@@ -106,6 +106,8 @@ script = ExtResource("2_camera")
 
 [node name="Regions" type="Node3D" parent="." groups=["nav_source"]]
 
+[node name="Decor" type="Node3D" parent="." groups=["nav_source"]]
+
 [node name="Heat" type="Node3D" parent="."]
 
 [node name="Woodpile" parent="." instance=ExtResource("5_woodpile")]
