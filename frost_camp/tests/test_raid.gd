@@ -91,6 +91,8 @@ func test_player_fights_raider_even_with_full_stack() -> void:
 	Fixtures.run(sim, 1.5)
 	check(not bear.is_alive(), "등이 가득 차도 습격 곰은 막는다")
 	check_eq(sim.bears_killed, 1, "잡은 곰 수에 들어간다")
+	check_eq(sim.money, 10, "현상금이 지갑에 들어온다")
+	check_eq(sim.player.stack.items.count("meat"), 0, "고기는 떨구지 않는다")
 
 
 func test_tower_fires_only_after_purchase() -> void:

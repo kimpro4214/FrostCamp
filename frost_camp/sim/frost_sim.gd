@@ -284,7 +284,7 @@ func _tick_pile_take(agent: SimAgent, delta: float) -> void:
 
 ## 곰(서식지 곰이나 습격 곰) 근처에 가면 가까운 쪽과 자동으로 싸운다.
 ## 곰도 반격하고, 체력이 0이 되면 잠시 멍해진다(죽지 않는다).
-## 서식지 곰은 고기를 담을 자리가 있어야 싸우지만, 습격 곰은 자리가 없어도 막는다.
+## 서식지 곰은 고기를 담을 자리가 있어야 싸우지만, 습격 곰은 자리가 없어도 막는다(현상금은 돈으로 받는다).
 func _tick_fight(agent: SimAgent, delta: float) -> void:
 	var config: Dictionary = balance.bear
 	_fighting_bear = -1
@@ -319,13 +319,13 @@ func _tick_fight(agent: SimAgent, delta: float) -> void:
 		else:
 			bear_hit.emit(bear_index, agent)
 		if enemy.take_hit(stats.harpoon_damage):
-			var meat := int(balance.raid.meat_dropped) if raider_index != -1 else int(config.meat_dropped)
-			for i in mini(meat, agent.stack.free_space()):
-				agent.stack.push("meat")
 			bears_killed += 1
 			if raider_index != -1:
+				_reward_raider_kill()
 				raider_killed.emit(raider_index, agent)
 			else:
+				for i in int(config.meat_dropped):
+					agent.stack.push("meat")
 				bear_killed.emit(bear_index, agent)
 			_fighting_bear = -1
 			_fighting_raider = -1
@@ -403,7 +403,15 @@ func _tick_towers(delta: float) -> void:
 		var damage: int = int(config.damage) + int(config.damage_add) * (int(tower.level) - 1)
 		if raid.bears[target].take_hit(damage):
 			bears_killed += 1
+			_reward_raider_kill()
 			raider_killed.emit(target, null)
+
+
+## 습격 곰을 잡으면 고기 대신 현상금이 바로 지갑에 들어온다(고기 판매대가 없을 때 등이 고기로 막히지 않게).
+func _reward_raider_kill() -> void:
+	var reward := int(balance.raid.reward)
+	money += reward
+	total_earned += reward
 
 
 ## 열원 안에서는 온기가 차고, 밖에서는 drain만큼 준다.

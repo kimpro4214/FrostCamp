@@ -27,7 +27,7 @@ static func balance() -> Dictionary:
 		"raid": {
 			"start_after": "habitat", "start_delay": 10.0, "interval": 20.0, "warning": 5.0,
 			"count_base": 2, "count_growth": 1, "count_max": 3, "hp_base": 4, "hp_growth": 2,
-			"speed": 2.0, "damage": 2, "attack_interval": 1.0, "attack_radius": 1.5, "meat_dropped": 1,
+			"speed": 2.0, "damage": 2, "attack_interval": 1.0, "attack_radius": 1.5, "reward": 10,
 		},
 		"conveyor": {"speed": [2.0, 4.0], "take_interval": [0.5, 0.25], "spacing": 1.0},
 		"tower": {"range": 6.0, "interval": 1.0, "damage": 2, "damage_add": 2},
