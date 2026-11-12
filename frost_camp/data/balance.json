@@ -44,7 +44,30 @@
 	},
 	"structures": {
 		"stall": { "hp": 30, "repair_cost": 60 },
-		"woodpile": { "hp": 20, "repair_cost": 40 }
+		"woodpile": { "hp": 20, "repair_cost": 40 },
+		"tower": { "hp": 25, "repair_cost": 50 }
+	},
+	"raid": {
+		"start_after": "habitat",
+		"start_delay": 60.0,
+		"interval": 90.0,
+		"warning": 8.0,
+		"count_base": 2,
+		"count_growth": 1,
+		"count_max": 6,
+		"hp_base": 8,
+		"hp_growth": 2,
+		"speed": 2.0,
+		"damage": 3,
+		"attack_interval": 1.0,
+		"attack_radius": 1.8,
+		"meat_dropped": 1
+	},
+	"tower": {
+		"range": 7.0,
+		"interval": 1.0,
+		"damage": 2,
+		"damage_add": 2
 	},
 	"workers": {
 		"lumberjack": { "speed": 3.5, "capacity": 6, "damage": 1 },
@@ -116,6 +139,16 @@
 			"costs": [250],
 			"effect": { "unlock": "stove" },
 			"requires": ["lumberjack"]
+		},
+		"tower_1": {
+			"costs": [150, 300],
+			"effect": { "tower": "tower_1" },
+			"requires": ["habitat"]
+		},
+		"tower_2": {
+			"costs": [250, 400],
+			"effect": { "tower": "tower_2" },
+			"requires": ["tower_1"]
 		},
 		"coat": {
 			"costs": [120, 300],

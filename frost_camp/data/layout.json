@@ -14,8 +14,13 @@
 		"port": { "rect": [14, -10, 14, 14], "gate": [14, -3] }
 	},
 	"bears": [[2, -20], [8, -22], [5, -18]],
+	"raid_spawns": [[2, 16], [12, 11], [-7, -18]],
+	"towers": [
+		{ "id": "tower_1", "pos": [2.5, 7.5], "repair_pos": [4.8, 7.5] },
+		{ "id": "tower_2", "pos": [-0.5, -10], "repair_pos": [-0.5, -12.3] }
+	],
 	"stalls": [
-		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6], "repair_pos": [3, 1.6] },
+		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6], "repair_pos": [3, 1.6], "raid_target": false },
 		{ "item": "meat", "pos": [5, -5], "cash_pos": [5, -7.4], "repair_pos": [3.6, -8.2], "unlock": "meat_stall" }
 	],
 	"zones": {
@@ -30,6 +35,8 @@
 		"cashier": [8.5, -2.5],
 		"stove": [-5, -4],
 		"coat": [1.5, -6.5],
+		"tower_1": [0.2, 7.5],
+		"tower_2": [1.8, -10],
 		"port": [12, -3],
 		"ship_hull": [18, -7],
 		"ship_engine": [18, -3],
