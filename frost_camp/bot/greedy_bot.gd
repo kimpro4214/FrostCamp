@@ -3,13 +3,17 @@ extends RefCounted
 ## 탐욕 봇. 살 수 있는 존 중 남은 금액이 가장 싼 것을 목표로 돈을 벌고 산다.
 ## 길찾기 없이 직선으로 움직이되 지역 울타리는 입구로 드나든다. 규칙 판정은 게임과 같은 FrostSim이 한다.
 
-const STOP_DIST := {"tree": 1.0, "bear": 1.0, "stall": 1.0, "cash": 0.4, "zone": 0.4, "gate": 0.05}
+const STOP_DIST := {"tree": 1.0, "bear": 1.0, "stall": 1.0, "cash": 0.4, "zone": 0.4, "gate": 0.05, "heat": 1.0}
+## 온기가 이 비율 밑으로 떨어지면 불가로 가서 WARM_UNTIL까지 녹인다.
+const WARM_BELOW := 0.2
+const WARM_UNTIL := 0.95
 
 var sim: FrostSim
 var time := 0.0
 ## [시간, 존 id, 레벨]
 var purchases: Array = []
 var _delivering := false
+var _warming := false
 
 
 func _init(frost_sim: FrostSim) -> void:
@@ -50,6 +54,14 @@ func _choose_target() -> Dictionary:
 		_delivering = false
 	elif stack.free_space() < _drop_size():
 		_delivering = true
+
+	var player := sim.player
+	if player.warmth >= player.max_warmth * WARM_UNTIL:
+		_warming = false
+	elif player.warmth < player.max_warmth * WARM_BELOW:
+		_warming = true
+	if _warming:
+		return {"kind": "heat", "pos": _nearest_heat()}
 
 	var zone := cheapest_zone()
 	if zone and sim.money >= zone.remaining():
@@ -101,6 +113,14 @@ func _delivery_stall() -> Stall:
 			if best == null or sim.player.pos.distance_to(stall.pos) < sim.player.pos.distance_to(best.pos):
 				best = stall
 	return best if best else sim.stalls[0]
+
+
+func _nearest_heat() -> Vector2:
+	var best := Vector2.INF
+	for source in sim.heat_sources:
+		if sim.is_heat_active(source) and sim.player.pos.distance_to(source.pos) < sim.player.pos.distance_to(best):
+			best = source.pos
+	return best
 
 
 func _has_open_stall(item: String) -> bool:
