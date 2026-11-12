@@ -18,6 +18,10 @@ static func balance() -> Dictionary:
 		"interact": {
 			"tree_radius": 1.5, "bear_radius": 1.5, "stall_radius": 1.5, "pile_radius": 1.0, "cash_radius": 1.0,
 		},
+		"structures": {
+			"stall": {"hp": 10, "repair_cost": 20},
+			"woodpile": {"hp": 10, "repair_cost": 20},
+		},
 		"workers": {
 			"lumberjack": {"speed": 4.0, "capacity": 4, "damage": 1},
 			"porter": {"speed": 4.0, "capacity": 4},
@@ -77,14 +81,15 @@ static func layout() -> Dictionary:
 		"player_start": [0, 0],
 		"worker_spawn": [0, -2],
 		"woodpile": [-6, 0],
+		"woodpile_repair": [-6, -3],
 		"ship": [30, 0],
 		"heat": {"campfire": [0, 0], "stove": [0, -10]},
 		"trees": [[-10, 0]],
 		"regions": {"habitat": {"rect": [-10, -30, 20, 10], "gate": [0, -20]}},
 		"bears": [[0, -25]],
 		"stalls": [
-			{"item": "log", "pos": [10, 0], "cash_pos": [10, 3]},
-			{"item": "meat", "pos": [10, -8], "cash_pos": [10, -11], "unlock": "meat_stall"},
+			{"item": "log", "pos": [10, 0], "cash_pos": [10, 3], "repair_pos": [7, 0]},
+			{"item": "meat", "pos": [10, -8], "cash_pos": [10, -11], "repair_pos": [7, -8], "unlock": "meat_stall"},
 		],
 		"zones": {
 			"backpack": [0, 5],
