@@ -100,7 +100,7 @@
 			"requires": ["backpack"]
 		},
 		"porter": {
-			"costs": [150, 350],
+			"costs": [220, 400],
 			"effect": { "hire": "porter" },
 			"requires": ["lumberjack"]
 		},
@@ -120,32 +120,32 @@
 			"requires": ["habitat"]
 		},
 		"port": {
-			"costs": [300],
+			"costs": [900],
 			"effect": { "unlock": "port" },
-			"requires": ["porter"]
+			"requires": ["stove"]
 		},
 		"ship_hull": {
-			"costs": [500],
+			"costs": [900],
 			"effect": { "unlock": "ship_hull" },
 			"requires": ["port"]
 		},
 		"ship_engine": {
-			"costs": [700],
+			"costs": [1200],
 			"effect": { "unlock": "ship_engine" },
 			"requires": ["port"]
 		},
 		"ship_blade": {
-			"costs": [600],
+			"costs": [1100],
 			"effect": { "unlock": "ship_blade" },
 			"requires": ["port"]
 		},
 		"ship_mast": {
-			"costs": [400],
+			"costs": [700],
 			"effect": { "unlock": "ship_mast" },
 			"requires": ["port"]
 		},
 		"ship_fuel": {
-			"costs": [300],
+			"costs": [600],
 			"effect": { "unlock": "ship_fuel" },
 			"requires": ["port"]
 		}
