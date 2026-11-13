@@ -13,6 +13,7 @@ const StructureView := preload("res://frost_camp/scenes/structure_view.gd")
 const TowerView := preload("res://frost_camp/scenes/tower_view.gd")
 const WoodpileScene := preload("res://frost_camp/scenes/woodpile.tscn")
 const WallView := preload("res://frost_camp/scenes/wall_view.gd")
+const FishingView := preload("res://frost_camp/scenes/fishing_view.gd")
 const Ending := preload("res://frost_camp/scenes/ending.gd")
 const ConveyorView := preload("res://frost_camp/scenes/conveyor_view.gd")
 ## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
@@ -81,6 +82,15 @@ func _ready() -> void:
 	meat_pile.name = "MeatPile"
 	add_child(meat_pile)
 	meat_pile.setup(sim, "meat")
+	for item in sim.extra_piles:
+		var pile: Node3D = WoodpileScene.instantiate()
+		pile.name = item.capitalize() + "Pile"
+		add_child(pile)
+		pile.setup(sim, item)
+	var fishing := FishingView.new()
+	add_child(fishing)
+	fishing.setup(sim, _body_of)
+	sim.fish_caught.connect(func(hole: int, _a: SimAgent) -> void: _sfx.play_at("pickup", sim.fishing_holes[hole], 6.0))
 	for i in sim.towers.size():
 		var tower := TowerView.new()
 		$Towers.add_child(tower)
@@ -127,6 +137,9 @@ func _place_structures(repair_name: String) -> void:
 				target = $Stalls.get_child(j).get_node("Counter")
 		if structure == sim.meat_pile_structure:
 			target = $MeatPile/Logs
+		for item in sim.extra_piles:
+			if structure == sim.extra_piles[item].structure:
+				target = get_node(item.capitalize() + "Pile/Logs")
 		if structure == sim.conveyor.structure:
 			target = $Conveyor.model
 		for j in sim.towers.size():
@@ -270,6 +283,13 @@ func _on_bear_killed(_index: int, agent: SimAgent) -> void:
 	if agent == sim.player:
 		_camera.add_trauma(0.7)
 		_hit_stop(0.12)
+
+
+## sim 일꾼(또는 플레이어)의 화면 노드
+func _body_of(agent: SimAgent) -> Node3D:
+	if agent is Worker:
+		return $Workers.get_child(sim.workers.find(agent))
+	return _player
 
 
 ## 돈 더미에서 동전이 튀어나와 주운 사람에게 빨려 들어간다.

@@ -6,6 +6,7 @@ const ROLE_MODELS := {
 	"lumberjack": "res://frost_camp/assets/models/characters/character-worker.glb",
 	"porter": "res://frost_camp/assets/models/characters/character-male-c.glb",
 	"hunter": "res://frost_camp/assets/models/characters/character-male-e.glb",
+	"fisher": "res://frost_camp/assets/models/characters/character-female-d.glb",
 	"cashier": "res://frost_camp/assets/models/characters/character-female-b.glb",
 }
 
@@ -28,6 +29,8 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	if worker.role == "lumberjack":
 		_model.set_tool("res://frost_camp/assets/models/survival/tool-axe.glb")
 		sim.tree_hit.connect(_on_tree_hit)
+	if worker.role == "fisher":
+		_model.set_tool("res://frost_camp/scenes/fishing_rod.tscn")
 	if worker.role == "hunter":
 		_model.set_tool("res://frost_camp/assets/models/survival/tool-axe-upgraded.glb")
 		sim.bear_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.bears[i].pos))

@@ -6,7 +6,7 @@ const Juice := preload("res://frost_camp/scenes/juice.gd")
 const BAR_WIDTH := 1.6
 const BAR_HEIGHT := 0.16
 ## 시설 종류별 체력바 높이
-const BAR_Y := {"stall": 2.4, "woodpile": 1.8, "tower": 2.9, "conveyor": 1.2, "meat_pile": 1.8, "wall": 2.2}
+const BAR_Y := {"stall": 2.4, "woodpile": 1.8, "tower": 2.9, "conveyor": 1.2, "meat_pile": 1.8, "wall": 2.2, "salmon_pile": 1.8}
 const FULL_COLOR := Color(0.35, 0.85, 0.4)
 const LOW_COLOR := Color(0.95, 0.3, 0.25)
 const BROKEN_TILT := 0.3

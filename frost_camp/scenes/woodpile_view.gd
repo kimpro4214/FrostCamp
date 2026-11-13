@@ -2,7 +2,8 @@ extends Node3D
 ## 적치장(원목 또는 고기). 쌓인 개수만큼 상자를 쌓아 그린다. 고기 적치장은 서식지를 열기 전에는 숨는다.
 
 const MAX_SHOWN := 24
-const MEAT_COLOR := Color(0.78, 0.3, 0.28)
+## 품목별 상자 색(원목은 장면의 기본 색을 쓴다)
+const ITEM_COLORS := {"meat": Color(0.78, 0.3, 0.28), "salmon": Color(0.98, 0.55, 0.5)}
 
 var sim: FrostSim
 var item := "log"
@@ -19,9 +20,9 @@ func setup(frost_sim: FrostSim, pile_item: String = "log") -> void:
 	position = Vector3(pos.x, 0.0, pos.y)
 	var radius := float(sim.balance.interact.pile_radius)
 	$Zone.scale = Vector3(radius, 1.0, radius)
-	if item == "meat":
+	if ITEM_COLORS.has(item):
 		var material := StandardMaterial3D.new()
-		material.albedo_color = MEAT_COLOR
+		material.albedo_color = ITEM_COLORS[item]
 		_template.material_override = material
 
 

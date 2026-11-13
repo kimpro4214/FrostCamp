@@ -3,6 +3,7 @@ extends CharacterBody3D
 
 const MODEL := "res://frost_camp/assets/models/characters/character-male-a.glb"
 ## 도끼 레벨별로 손에 드는 모델. 0레벨은 맨주먹이다.
+const ROD := "res://frost_camp/scenes/fishing_rod.tscn"
 const AXE_MODELS := [
 	"",
 	"res://frost_camp/assets/models/survival/tool-axe.glb",
@@ -36,7 +37,11 @@ func _physics_process(_delta: float) -> void:
 	sim.player.pos = Vector2(position.x, position.z)
 	_model.set_moving(input.length() > 0.1)
 	_model.set_frozen(sim.player.warmth <= 0.0)
-	_model.set_tool(AXE_MODELS[mini(sim.find_zone("axe").level, AXE_MODELS.size() - 1)])
+	# 얼음 구멍 위에서는 낚싯대, 아니면 도끼 레벨에 맞는 도구를 든다.
+	if sim.fishing_hole_at(sim.player.pos) != -1:
+		_model.set_tool(ROD)
+	else:
+		_model.set_tool(AXE_MODELS[mini(sim.find_zone("axe").level, AXE_MODELS.size() - 1)])
 
 
 ## 내가 친 것이면 휘두르고, 서 있을 때는 맞은 쪽을 바라본다.
