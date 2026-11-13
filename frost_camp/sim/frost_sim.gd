@@ -21,6 +21,7 @@ signal raider_killed(index: int, agent: SimAgent)
 signal tower_fired(tower_index: int, raider_index: int)
 signal bear_added(index: int)
 signal fish_caught(hole: int, agent: SimAgent)
+signal worker_retired(index: int)
 signal game_won
 
 var balance: Dictionary
@@ -71,8 +72,14 @@ var stats := {}
 var rng := RandomNumberGenerator.new()
 ## 습격 웨이브와 습격 곰들
 var raid: Raid
-## 적치장 → 원목 판매대 컨베이어. 사기 전에는 level 0이다.
-var conveyor: Conveyor
+## 자원 라인별 컨베이어(품목 → Conveyor). 적치장에서 그 품목 판매대로 나른다. 깔기 전에는 level 0이다.
+var conveyors := {}
+## 라인별 운반 레벨(품목 → 0~3). 1은 전담 운반꾼, 2부터는 운반꾼이 물러나고 컨베이어.
+var haul_levels := {}
+## 원목 라인 컨베이어(예전 이름)
+var conveyor: Conveyor:
+	get:
+		return conveyors.get("log")
 ## 포탑 목록. {"id": String, "pos": Vector2, "level": int, "timer": float, "structure": Structure}
 var towers: Array[Dictionary] = []
 ## 곰 늘리기 구매로 서식지에 더 나올 곰 자리. 앞에서부터 쓴다.
@@ -126,12 +133,18 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		var tower_structure := _add_structure("tower", _vec(t.pos), _vec(t.repair_pos))
 		tower_structure.unlock = t.id
 		towers.append({"id": t.id, "pos": _vec(t.pos), "level": 0, "timer": 0.0, "structure": tower_structure})
-	var belt_points: Array[Vector2] = []
-	for p in layout.conveyor.path:
-		belt_points.append(_vec(p))
-	conveyor = Conveyor.new(belt_points, balance.conveyor)
-	conveyor.structure = _add_structure("conveyor", _vec(layout.conveyor.pos), _vec(layout.conveyor.repair_pos))
-	conveyor.structure.unlock = "conveyor"
+	for item in layout.conveyors:
+		var line: Dictionary = layout.conveyors[item]
+		var belt_points: Array[Vector2] = []
+		for p in line.path:
+			belt_points.append(_vec(p))
+		var belt := Conveyor.new(belt_points, balance.conveyor)
+		belt.item = item
+		belt.stall = int(line.stall)
+		belt.structure = _add_structure("conveyor", _vec(line.pos), _vec(line.repair_pos))
+		belt.structure.unlock = "conveyor_" + item
+		conveyors[item] = belt
+		haul_levels[item] = 0
 	meat_pile_structure = _add_structure("meat_pile", meat_pile_pos, _vec(layout.meat_pile_repair))
 	meat_pile_structure.unlock = "habitat"
 	for p in layout.get("fishing_holes", []):
@@ -279,6 +292,9 @@ func tick(delta: float) -> void:
 	_tick_cold(player, delta, stats.cold_drain)
 	# 일꾼은 추위를 타지 않는다(3차 QA: 일꾼이 계속 어는 것이 불편했다).
 	for worker in workers:
+		if worker.retired:
+			worker.target = {"kind": "idle", "pos": worker_spawn, "stop": 0.3}
+			continue
 		worker.target = WorkerBrain.choose(self, worker)
 		match worker.role:
 			"lumberjack":
@@ -503,12 +519,14 @@ func _tick_fight(agent: SimAgent, delta: float) -> void:
 ## 컨베이어가 적치장 원목을 싣고 첫 원목 판매대로 보낸다. 컨베이어나 적치장이 부서지면 멈추고,
 ## 판매대가 부서지면 끝에 닿은 원목이 거기서 기다린다.
 func _tick_conveyor(delta: float) -> void:
-	if conveyor.level == 0 or conveyor.structure.is_broken():
-		return
-	var stall := stalls[0]
-	stall.stock += conveyor.advance(delta, is_stall_working(stall))
-	if conveyor.try_load(delta, woodpile > 0 and not woodpile_structure.is_broken()):
-		woodpile -= 1
+	for item in conveyors:
+		var belt: Conveyor = conveyors[item]
+		if belt.level == 0 or belt.structure.is_broken():
+			continue
+		var stall := stalls[belt.stall]
+		stall.stock += belt.advance(delta, is_stall_working(stall))
+		if belt.try_load(delta, pile_count(item) > 0 and is_pile_open(item)):
+			_change_pile(item, -1)
 
 
 ## 습격 진행. 경고·습격·방어 성공 이벤트를 내고, 습격 곰을 가장 가까운 멀쩡한 시설로 몰아 부수게 한다.
@@ -677,8 +695,10 @@ func _apply_effect(effect: Dictionary) -> void:
 		_add_bears(int(effect.bears))
 		return
 	if effect.has("conveyor"):
-		unlocked["conveyor"] = true
-		conveyor.level += 1
+		_raise_conveyor(effect.conveyor)
+		return
+	if effect.has("haul"):
+		_raise_haul(effect.haul)
 		return
 	if effect.has("tower"):
 		unlocked[effect.tower] = true
@@ -691,6 +711,9 @@ func _apply_effect(effect: Dictionary) -> void:
 	if effect.has("hire"):
 		var worker := Worker.new(effect.hire, worker_spawn, balance.workers[effect.hire])
 		worker.stall = int(effect.get("stall", -1))
+		worker.line = effect.get("line", "")
+		if worker.line != "":
+			worker.carry_item = worker.line
 		_fill_warmth(worker)
 		workers.append(worker)
 		worker_hired.emit(workers.size() - 1)
@@ -737,6 +760,27 @@ func _add_structure(kind: String, pos: Vector2, repair_pos: Vector2) -> Structur
 	structure.repair.id = "repair_%d" % structures.size()
 	structures.append(structure)
 	return structure
+
+
+func _raise_conveyor(item: String) -> void:
+	unlocked["conveyor_" + item] = true
+	conveyors[item].level += 1
+
+
+## 라인 운반 단계를 올린다. 1단계는 그 품목만 나르는 운반꾼을 고용하고,
+## 2단계에서 운반꾼이 물러나며 컨베이어가 깔리고, 그 뒤로는 컨베이어가 빨라진다.
+func _raise_haul(item: String) -> void:
+	haul_levels[item] += 1
+	if haul_levels[item] == 1:
+		_apply_effect({"hire": "porter", "line": item})
+		return
+	if haul_levels[item] == 2:
+		for i in workers.size():
+			if workers[i].role == "porter" and workers[i].line == item and not workers[i].retired:
+				workers[i].retired = true
+				workers[i].stack.items.clear()
+				worker_retired.emit(i)
+	_raise_conveyor(item)
 
 
 ## 쇄빙선 부품을 모두 사면 엔딩.

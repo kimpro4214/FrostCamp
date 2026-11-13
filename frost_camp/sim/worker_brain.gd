@@ -49,7 +49,7 @@ static func _porter(sim: FrostSim, worker: Worker) -> Dictionary:
 	var stack := worker.stack
 	if stack.items.is_empty():
 		worker.delivering = false
-		worker.carry_item = _fullest_pile(sim)
+		worker.carry_item = worker.line if worker.line != "" else _fullest_pile(sim)
 	elif stack.free_space() == 0 or sim.pile_count(worker.carry_item) == 0:
 		worker.delivering = true
 	if worker.delivering:

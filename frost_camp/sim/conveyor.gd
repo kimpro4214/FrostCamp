@@ -12,6 +12,9 @@ var speeds: Array = []
 var take_intervals: Array = []
 var spacing: float
 var structure: Structure
+## 나르는 품목과 받는 판매대 번호
+var item := "log"
+var stall := 0
 var _take_timer := 0.0
 
 

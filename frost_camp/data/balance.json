@@ -169,15 +169,25 @@
 			"effect": { "hire": "lumberjack" },
 			"requires": ["backpack"]
 		},
-		"porter": {
-			"costs": [220, 400],
-			"effect": { "hire": "porter" },
+		"haul_log": {
+			"costs": [150, 350, 500],
+			"effect": { "haul": "log" },
 			"requires": ["lumberjack"]
 		},
-		"conveyor": {
-			"costs": [300, 500],
-			"effect": { "conveyor": "log" },
-			"requires": ["porter"]
+		"haul_salmon": {
+			"costs": [150, 350, 500],
+			"effect": { "haul": "salmon" },
+			"requires": ["fisher"]
+		},
+		"haul_meat": {
+			"costs": [200, 400, 550],
+			"effect": { "haul": "meat" },
+			"requires": ["hunter"]
+		},
+		"haul_crystal": {
+			"costs": [250, 450, 600],
+			"effect": { "haul": "crystal" },
+			"requires": ["miner"]
 		},
 		"cashier": {
 			"costs": [320],

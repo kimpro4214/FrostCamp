@@ -125,7 +125,10 @@ static func layout() -> Dictionary:
 				{"a": [-20, 20], "b": [-10, 20], "from": "expand_1"},
 			],
 		},
-		"conveyor": {"path": [[-6, 2], [4, 2], [4, 0]], "pos": [-1, 2], "repair_pos": [-1, 4]},
+		"conveyors": {
+			"log": {"path": [[-6, 2], [4, 2], [4, 0]], "pos": [-1, 2], "repair_pos": [-1, 4], "stall": 0},
+			"meat": {"path": [[0, -15], [8, -15], [8, -8]], "pos": [4, -15], "repair_pos": [4, -13], "stall": 1},
+		},
 		"towers": [{"id": "tower_1", "pos": [0, 8], "repair_pos": [2, 8]}],
 		"stalls": [
 			{"item": "log", "pos": [10, 0], "cash_pos": [10, 3], "repair_pos": [7, 0], "raid_target": false},

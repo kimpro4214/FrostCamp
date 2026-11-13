@@ -14,6 +14,10 @@ var delivering := false
 var stall := -1
 ## 운반꾼이 이번에 나르는 품목("log" 또는 "meat")
 var carry_item := "log"
+## 전담 라인 품목(라인 운반꾼). 비어 있으면 더 많이 쌓인 적치장을 나른다.
+var line := ""
+## 컨베이어로 바뀌어 물러난 운반꾼. 아무 일도 하지 않고 나간다.
+var retired := false
 
 
 func _init(worker_role: String, start_pos: Vector2, config: Dictionary) -> void:
