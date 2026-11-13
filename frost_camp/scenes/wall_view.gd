@@ -11,10 +11,12 @@ const FENCE_WIDTH := 0.5
 const METAL_WIDTH := 0.535
 const STEP := 1.5
 const MODEL_SCALE := 3.0
+## 모델 세로 배율. 0.5m 모델을 1m로 세워, 벽 뒤 사람이 가리지 않게 낮게 둔다.
+const MODEL_HEIGHT_SCALE := 2.0
 const WALL_HEIGHT := 1.6
 const WALL_THICKNESS := 0.6
-const STONE_HEIGHT := 2.0
-const STONE_THICKNESS := 1.1
+const STONE_HEIGHT := 0.85
+const STONE_THICKNESS := 1.2
 const MERLON_GAP := 1.2
 const STONE_COLOR := Color(0.6, 0.6, 0.62)
 const RISE_TIME := 0.5
@@ -111,7 +113,7 @@ func _tiled(look: String, scene: PackedScene, width: float, length: float) -> No
 	var step := length / count
 	for i in count:
 		var piece: Node3D = scene.instantiate()
-		piece.scale = Vector3(step / width, MODEL_SCALE, MODEL_SCALE)
+		piece.scale = Vector3(step / width, MODEL_HEIGHT_SCALE, MODEL_SCALE)
 		piece.position = Vector3(-length / 2.0 + (i + 0.5) * step, 0.0, 0.0)
 		root.add_child(piece)
 	return root
@@ -129,12 +131,12 @@ func _stone_wall(length: float) -> Node3D:
 	wall.position.y = STONE_HEIGHT / 2.0
 	root.add_child(wall)
 	var merlon_mesh := BoxMesh.new()
-	merlon_mesh.size = Vector3(0.6, 0.45, STONE_THICKNESS)
+	merlon_mesh.size = Vector3(0.6, 0.3, STONE_THICKNESS)
 	merlon_mesh.material = _stone
 	for i in int(length / MERLON_GAP) + 1:
 		var merlon := MeshInstance3D.new()
 		merlon.mesh = merlon_mesh
-		merlon.position = Vector3(-length / 2.0 + i * MERLON_GAP, STONE_HEIGHT + 0.22, 0.0)
+		merlon.position = Vector3(-length / 2.0 + i * MERLON_GAP, STONE_HEIGHT + 0.15, 0.0)
 		root.add_child(merlon)
 	return root
 
