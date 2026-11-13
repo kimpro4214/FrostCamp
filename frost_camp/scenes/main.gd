@@ -15,6 +15,7 @@ const WoodpileScene := preload("res://frost_camp/scenes/woodpile.tscn")
 const WallView := preload("res://frost_camp/scenes/wall_view.gd")
 const FishingView := preload("res://frost_camp/scenes/fishing_view.gd")
 const GunView := preload("res://frost_camp/scenes/gun_view.gd")
+const Title := preload("res://frost_camp/ui/title.gd")
 const Ending := preload("res://frost_camp/scenes/ending.gd")
 const ConveyorView := preload("res://frost_camp/scenes/conveyor_view.gd")
 ## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
@@ -35,6 +36,11 @@ var _last_money := 0
 var _last_stack := 0
 var _step_timer := 0.0
 var _raid_arrow: Node3D
+
+## true면 시작 화면 없이 바로 시작한다(화면 확인용 스크립트가 쓴다).
+var skip_title := false
+## 시작 화면에서 "시작하기"를 누르기 전에는 시간이 흐르지 않는다.
+var started := false
 
 @onready var _player: CharacterBody3D = $Player
 @onready var _camera: Camera3D = $Camera3D
@@ -131,6 +137,7 @@ func _ready() -> void:
 	_camera.target = _player
 	_camera.snap()
 	_bake_navigation()
+	_show_title()
 
 
 ## 시설마다 체력 표시와 수리 존을 붙인다. 판매대는 계산대 모델, 적치장은 통나무 더미가 부서지는 대상이다.
@@ -352,7 +359,27 @@ func _bake_navigation() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	sim.tick(delta)
+	if started:
+		sim.tick(delta)
+
+
+## 시작 화면을 띄우고, 누르기 전까지 플레이어와 HUD를 멈춰 둔다.
+func _show_title() -> void:
+	if skip_title:
+		_on_started()
+		return
+	_hud.visible = false
+	_player.set_physics_process(false)
+	var title := Title.new()
+	add_child(title)
+	title.started.connect(_on_started)
+
+
+func _on_started() -> void:
+	started = true
+	_hud.visible = true
+	_player.set_physics_process(true)
+	_sfx.play("purchase")
 
 
 func _process(delta: float) -> void:
