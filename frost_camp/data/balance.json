@@ -162,7 +162,7 @@
 		},
 		"bear_den": {
 			"costs": [340, 680],
-			"effect": { "bears": 2 },
+			"effect": { "bears": 3 },
 			"requires": ["meat_stall"]
 		},
 		"harpoon": {
