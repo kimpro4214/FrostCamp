@@ -8,6 +8,8 @@ const STOP_DIST := {"tree": 1.0, "bear": 1.0, "hole": 0.3, "stall": 1.0, "cash":
 ## 온기가 이 비율 밑으로 떨어지면 불가로 가서 WARM_UNTIL까지 녹인다.
 const WARM_BELOW := 0.2
 const WARM_UNTIL := 0.95
+## 모닥불 연료가 이 비율 밑이면 원목을 넣으러 간다.
+const FUEL_BELOW := 0.3
 
 var sim: FrostSim
 var time := 0.0
@@ -63,6 +65,10 @@ func _choose_target() -> Dictionary:
 		_warming = false
 	elif player.warmth < player.max_warmth * WARM_BELOW:
 		_warming = true
+	# 불이 꺼져 가면 녹이기보다 먼저 원목을 넣는다(꺼진 불 앞에서는 녹지 않는다).
+	var fuel := _fuel_target()
+	if not fuel.is_empty():
+		return fuel
 	if _warming and warm_up:
 		return {"kind": "heat", "pos": _nearest_heat()}
 
@@ -164,12 +170,28 @@ func _delivery_stall() -> Stall:
 	return best if best else sim.stalls[0]
 
 
+## 모닥불이 저절로 채워지지 않고 연료가 FUEL_BELOW 밑이면 원목을 넣으러 간다(없으면 먼저 원목을 구한다).
+func _fuel_target() -> Dictionary:
+	for source in sim.heat_sources:
+		if source.fuel_max <= 0.0 or sim.is_fire_auto(source) or source.fuel > source.fuel_max * FUEL_BELOW:
+			continue
+		if sim.player.stack.items.has("log"):
+			return {"kind": "heat", "pos": source.pos}
+		if sim.woodpile > 0 and sim.player.stack.free_space() > 0:
+			return {"kind": "stall", "pos": sim.woodpile_pos}
+		if sim.player.stack.free_space() >= int(sim.balance.tree.logs_dropped):
+			var tree := _source_of("log", true)
+			if not tree.is_empty():
+				return tree
+	return {}
+
+
 func _nearest_heat() -> Vector2:
 	var best := Vector2.INF
 	for source in sim.heat_sources:
 		if sim.is_heat_active(source) and sim.player.pos.distance_to(source.pos) < sim.player.pos.distance_to(best):
 			best = source.pos
-	return best
+	return best if best != Vector2.INF else sim.heat_sources[0].pos
 
 
 func _has_open_stall(item: String) -> bool:

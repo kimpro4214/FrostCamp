@@ -59,3 +59,49 @@ func test_workers_never_freeze() -> void:
 	Fixtures.run(sim, 60.0)
 	check_eq(porter.warmth, porter.max_warmth, "일꾼은 밖에 오래 있어도 얼지 않는다")
 	check_eq(sim.agent_speed(porter), porter.speed, "일꾼은 늘 제 속도로 걷는다")
+
+
+func _make_fuel_sim() -> FrostSim:
+	var balance := Fixtures.balance()
+	balance.cold.refuel_radius = 2.0
+	balance.cold.sources.campfire.fuel_max = 10.0
+	balance.cold.sources.campfire.per_log = 4.0
+	balance.cold.sources.campfire.auto_level = 1
+	return FrostSim.new(balance, Fixtures.layout())
+
+
+## 모닥불 연료가 다 타면 꺼져서 따뜻하지 않다(5차 QA 7번).
+func test_fire_burns_out() -> void:
+	var sim := _make_fuel_sim()
+	var outs := []
+	sim.fire_out.connect(func(i: int) -> void: outs.append(i))
+	sim.player.pos = OUTSIDE
+	check(sim.is_warm(Vector2(1, 0)), "처음에는 연료가 가득하다")
+	Fixtures.run(sim, 10.1)
+	check(not sim.is_warm(Vector2(1, 0)), "연료가 떨어지면 꺼진다")
+	check_eq(outs, [0], "꺼질 때 알린다")
+
+
+func test_player_feeds_logs() -> void:
+	var sim := _make_fuel_sim()
+	sim.player.pos = OUTSIDE
+	Fixtures.run(sim, 10.1)
+	for i in 3:
+		sim.player.stack.push("log")
+	sim.player.pos = Vector2(1, 0)
+	Fixtures.run(sim, 1.0)
+	check_eq(sim.player.stack.items.count("log"), 1, "가득 찰 때까지만 넣는다(4씩, 최대 10)")
+	check(sim.is_warm(Vector2(1, 0)), "다시 붙는다")
+
+
+func test_fire_auto_feeds_from_woodpile_after_upgrade() -> void:
+	var sim := _make_fuel_sim()
+	sim.woodpile = 5
+	sim.player.pos = OUTSIDE
+	Fixtures.run(sim, 8.0)
+	check_eq(sim.woodpile, 5, "키우기 전에는 적치장에서 저절로 채우지 않는다")
+	sim._apply_effect({"fire": "campfire"})
+	sim._apply_effect({"hire": "lumberjack"})
+	Fixtures.run(sim, 1.0)
+	check(sim.woodpile < 5, "키우고 벌목꾼이 있으면 적치장 원목으로 채운다")
+	check(sim.heat_sources[0].fuel > 6.0, "연료가 다시 찬다")

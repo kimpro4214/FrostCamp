@@ -23,6 +23,10 @@ signal bear_added(index: int)
 signal fish_caught(hole: int, agent: SimAgent)
 ## 플레이어의 작살총이 습격 곰을 쐈다(곰 번호).
 signal gun_fired(raider_index: int)
+## 모닥불에 원목을 넣었다(열원 번호, 넣은 사람. 적치장에서 저절로 채우면 null).
+signal fire_fueled(source_index: int, agent: SimAgent)
+## 모닥불 연료가 다 떨어져 꺼졌다(열원 번호).
+signal fire_out(source_index: int)
 ## 얼음 구멍 하나를 새로 뚫었다(구멍 번호).
 signal hole_drilled(hole: int)
 signal worker_retired(index: int)
@@ -191,9 +195,13 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 	for id in layout.heat:
 		var source: Dictionary = balance.cold.sources[id]
 		var radii: Array = source.radius
+		# fuel_max가 0이면 연료가 줄지 않는다(테스트 지형 등).
 		heat_sources.append({
 			"id": id, "pos": _vec(layout.heat[id]), "radius": float(radii[0]), "radii": radii, "level": 0,
 			"unlock": source.get("unlock", ""),
+			"fuel_max": float(source.get("fuel_max", 0.0)), "fuel": float(source.get("fuel_max", 0.0)),
+			"per_log": float(source.get("per_log", 0.0)), "auto_level": int(source.get("auto_level", 99)),
+			"feed_timer": 0.0,
 		})
 	stats = {
 		"move_speed": float(balance.player.move_speed),
@@ -214,7 +222,19 @@ func agent_speed(agent: SimAgent) -> float:
 
 
 func is_heat_active(source: Dictionary) -> bool:
+	if source.fuel_max > 0.0 and source.fuel <= 0.0:
+		return false
 	return source.unlock == "" or unlocked.has(source.unlock)
+
+
+## 이 열원은 원목 적치장에서 저절로 채워지는가(모닥불 키우기 auto_level단계부터, 벌목꾼이 있을 때).
+func is_fire_auto(source: Dictionary) -> bool:
+	if source.level < source.auto_level:
+		return false
+	for worker in workers:
+		if worker.role == "lumberjack":
+			return true
+	return false
 
 
 ## 켜진 열원의 범위 안이면 true.
@@ -335,6 +355,7 @@ func tick(delta: float) -> void:
 	_tick_fight(player, delta)
 	_tick_collect_cash(player)
 	_tick_purchase(player, delta)
+	_tick_fuel(delta)
 	_tick_cold(player, delta, stats.cold_drain)
 	# 일꾼은 추위를 타지 않는다(3차 QA: 일꾼이 계속 어는 것이 불편했다).
 	for worker in workers:
@@ -721,6 +742,38 @@ func _tick_cold(agent: SimAgent, delta: float, drain: float) -> void:
 		agent.warmth = minf(agent.warmth + float(balance.cold.recover) * delta, agent.max_warmth)
 	else:
 		agent.warmth = maxf(agent.warmth - drain * delta, 0.0)
+
+
+## 모닥불 연료는 초당 1씩 탄다. 플레이어가 원목을 들고 가까이 서 있으면 하나씩 넣어 채운다.
+## 모닥불을 auto_level단계까지 키우면 벌목꾼이 원목 적치장에서 가져와 채운다(적치장 원목이 줄어든다).
+func _tick_fuel(delta: float) -> void:
+	for i in heat_sources.size():
+		var source := heat_sources[i]
+		if source.fuel_max <= 0.0:
+			continue
+		var was_lit: bool = source.fuel > 0.0
+		source.fuel = maxf(source.fuel - delta, 0.0)
+		if was_lit and source.fuel == 0.0:
+			fire_out.emit(i)
+		if source.fuel > source.fuel_max - source.per_log:
+			source.feed_timer = 0.0
+			continue
+		var feeder: SimAgent = null
+		if player.pos.distance_to(source.pos) <= float(balance.cold.refuel_radius) and player.stack.items.has("log"):
+			feeder = player
+		elif not (is_fire_auto(source) and woodpile > 0):
+			source.feed_timer = 0.0
+			continue
+		source.feed_timer += delta
+		if source.feed_timer < float(balance.stall.unload_interval) * 2.0:
+			continue
+		source.feed_timer = 0.0
+		if feeder:
+			feeder.stack.take("log")
+		else:
+			_change_pile("log", -1)
+		source.fuel = minf(source.fuel + source.per_log, source.fuel_max)
+		fire_fueled.emit(i, feeder)
 
 
 func _fill_warmth(agent: SimAgent) -> void:
