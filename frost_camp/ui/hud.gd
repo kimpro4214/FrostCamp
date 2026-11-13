@@ -173,7 +173,7 @@ func _update_raid(delta: float) -> void:
 			_raid_label.text = "북극곰이 몰려온다! %d" % ceili(raid.time_left)
 			_raid_label.modulate = WARNING_COLOR
 		Raid.State.ATTACKING:
-			_raid_label.text = "습격 %d웨이브 · 남은 곰 %d" % [raid.wave, raid.alive_count()]
+			_raid_label.text = "습격 %d웨이브, 남은 곰 %d" % [raid.wave, raid.alive_count()]
 			_raid_label.modulate = WARNING_COLOR
 		Raid.State.WAITING:
 			if _clear_left > 0.0:

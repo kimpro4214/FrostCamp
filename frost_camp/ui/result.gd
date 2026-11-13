@@ -2,11 +2,13 @@ extends CanvasLayer
 ## 엔딩 결과 화면. 탈출 시간에 따른 별 등급과 플레이 기록(시간, 번 돈, 잡은 곰, 일꾼)을 줄마다 보여 주고 다시 시작할 수 있다.
 
 const UiStyle := preload("res://frost_camp/ui/ui_style.gd")
+const StarIcon := preload("res://frost_camp/assets/icons/star.png")
+const EMPTY_STAR := Color(0.3, 0.34, 0.45)
 ## 이 시간(분) 안에 탈출하면 별 3개, 다음 값 안이면 2개, 아니면 1개
 const STAR_MINUTES := [25.0, 30.0]
 
 var _rows: GridContainer
-var _stars: Label
+var _stars: HBoxContainer
 
 @onready var _box: VBoxContainer = $Center/Panel/Box
 
@@ -18,8 +20,16 @@ func _ready() -> void:
 	var title: Label = $Center/Panel/Box/Title
 	title.add_theme_color_override("font_outline_color", UiStyle.OUTLINE)
 	title.add_theme_constant_override("outline_size", 10)
-	_stars = UiStyle.label("", 64, UiStyle.GOLD)
-	_stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stars = HBoxContainer.new()
+	_stars.alignment = BoxContainer.ALIGNMENT_CENTER
+	_stars.add_theme_constant_override("separation", 12)
+	for i in 3:
+		var star := TextureRect.new()
+		star.texture = StarIcon
+		star.custom_minimum_size = Vector2(64, 64)
+		star.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		star.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_stars.add_child(star)
 	_box.add_child(_stars)
 	_box.move_child(_stars, 1)
 	_rows = GridContainer.new()
@@ -37,7 +47,8 @@ func show_result(sim: FrostSim) -> void:
 	var seconds := int(sim.time)
 	var minutes := sim.time / 60.0
 	var stars := 3 if minutes <= STAR_MINUTES[0] else (2 if minutes <= STAR_MINUTES[1] else 1)
-	_stars.text = "★".repeat(stars) + "☆".repeat(3 - stars)
+	for i in 3:
+		_stars.get_child(i).modulate = UiStyle.GOLD if i < stars else EMPTY_STAR
 	for child in _rows.get_children():
 		child.queue_free()
 	for row in [

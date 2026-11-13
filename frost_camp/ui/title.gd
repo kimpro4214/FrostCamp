@@ -44,7 +44,7 @@ func _ready() -> void:
 	help.add_theme_stylebox_override("panel", UiStyle.panel(14, 16.0))
 	help.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(help)
-	var tips := UiStyle.label("이동: 화면을 끌거나 방향키·WASD\n멈춰 서 있으면 베고, 낚고, 사고, 판다", 24)
+	var tips := UiStyle.label("이동: 화면을 끌거나 방향키, WASD\n멈춰 서 있으면 베고, 낚고, 사고, 판다", 24)
 	tips.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help.add_child(tips)
 	start.grab_focus.call_deferred()

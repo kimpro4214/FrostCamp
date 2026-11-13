@@ -35,7 +35,7 @@ var _standing := true
 var _chips: CPUParticles3D
 var _snow: CPUParticles3D
 var _crystal_material: StandardMaterial3D
-var _star: Label3D
+var _star: Sprite3D
 var _glowing := false
 
 @onready var _crown: Node3D = $Crown
@@ -65,11 +65,11 @@ func setup(frost_sim: FrostSim, tree_index: int) -> void:
 	sim.tree_hit.connect(_on_tree_hit)
 	sim.tree_felled.connect(_on_tree_felled)
 	if crystal:
-		_star = Label3D.new()
-		_star.text = "★"
+		_star = Sprite3D.new()
+		_star.texture = preload("res://frost_camp/assets/icons/star.png")
 		_star.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		_star.font_size = 120
-		_star.outline_size = 16
+		_star.no_depth_test = true
+		_star.pixel_size = 0.009
 		_star.modulate = GLOW_COLOR
 		_star.position.y = 2.6
 		_star.visible = false
