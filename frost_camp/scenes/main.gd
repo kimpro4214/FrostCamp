@@ -16,6 +16,7 @@ const WallView := preload("res://frost_camp/scenes/wall_view.gd")
 const FishingView := preload("res://frost_camp/scenes/fishing_view.gd")
 const GunView := preload("res://frost_camp/scenes/gun_view.gd")
 const Title := preload("res://frost_camp/ui/title.gd")
+const Music := preload("res://frost_camp/scenes/music.gd")
 const Ending := preload("res://frost_camp/scenes/ending.gd")
 const ConveyorView := preload("res://frost_camp/scenes/conveyor_view.gd")
 ## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
@@ -55,6 +56,9 @@ func _ready() -> void:
 	add_child(_sfx)
 	_sfx.setup(sim)
 	_connect_sounds()
+	var music := Music.new()
+	add_child(music)
+	music.setup(sim)
 	_hud.setup(sim)
 	for i in sim.trees.size():
 		var tree := TreeScene.instantiate()
