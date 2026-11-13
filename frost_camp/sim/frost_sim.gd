@@ -256,13 +256,35 @@ func damage_structure(index: int, damage: int) -> void:
 
 
 ## 선행 조건을 모두 샀고 아직 최대 레벨이 아니면 살 수 있다.
+## 선행 조건은 존 id("habitat"), 또는 레벨이 붙은 "fire:2"(그 존이 2단계 이상) 형식이다.
 func is_zone_available(zone: PurchaseZone) -> bool:
 	if zone.is_maxed():
 		return false
 	for required in zone.requires:
-		if find_zone(required).level == 0:
+		if not _requirement_met(required):
 			return false
 	return true
+
+
+## 모닥불 단계만 모자라 못 사는 존이면 필요한 모닥불 단계, 아니면 0(화면이 "모닥불 N단계 필요"를 띄운다).
+func fire_needed(zone: PurchaseZone) -> int:
+	if zone.is_maxed():
+		return 0
+	var needed := 0
+	for required in zone.requires:
+		if _requirement_met(required):
+			continue
+		var parts: PackedStringArray = required.split(":")
+		if parts[0] != "fire" or parts.size() < 2:
+			return 0
+		needed = int(parts[1])
+	return needed
+
+
+func _requirement_met(required: String) -> bool:
+	var parts := required.split(":")
+	var level := int(parts[1]) if parts.size() > 1 else 1
+	return find_zone(parts[0]).level >= level
 
 
 func find_zone(id: String) -> PurchaseZone:

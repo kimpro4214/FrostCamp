@@ -81,3 +81,28 @@ func test_axe_upgrade_fells_tree_faster() -> void:
 	sim.player.pos = Vector2(-9, 0)
 	Fixtures.run(sim, 1.2)
 	check_eq(sim.player.stack.items.size(), 2, "공격력 3이면 2타 만에 쓰러진다")
+
+
+## 모닥불 단계가 붙은 선행 조건(4차 QA 10번). "fire:2"는 모닥불을 2단계 이상 키워야 한다.
+func test_leveled_requirement_needs_fire_level() -> void:
+	var balance := Fixtures.balance()
+	balance.zones.fire.costs = [10, 10, 10]
+	balance.zones.coat.requires = ["fire:2"]
+	var sim := FrostSim.new(balance, Fixtures.layout())
+	var coat := sim.find_zone("coat")
+	check(not sim.is_zone_available(coat), "모닥불 0단계에서는 못 산다")
+	check_eq(sim.fire_needed(coat), 2, "모닥불 2단계가 필요하다고 알려 준다")
+	sim.find_zone("fire").level = 1
+	check(not sim.is_zone_available(coat), "1단계로는 모자라다")
+	sim.find_zone("fire").level = 2
+	check(sim.is_zone_available(coat), "2단계면 살 수 있다")
+	check_eq(sim.fire_needed(coat), 0, "다 채우면 안내가 사라진다")
+
+
+func test_fire_hint_only_when_fire_is_the_last_gap() -> void:
+	var balance := Fixtures.balance()
+	balance.zones.coat.requires = ["habitat", "fire:1"]
+	var sim := FrostSim.new(balance, Fixtures.layout())
+	check_eq(sim.fire_needed(sim.find_zone("coat")), 0, "다른 선행 조건도 모자라면 숨긴다")
+	sim.find_zone("habitat").level = 1
+	check_eq(sim.fire_needed(sim.find_zone("coat")), 1, "모닥불만 남으면 안내한다")

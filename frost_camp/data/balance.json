@@ -237,12 +237,12 @@
 		"expand_1": {
 			"costs": [1110],
 			"effect": { "unlock": "expand_1" },
-			"requires": ["lumberjack"]
+			"requires": ["lumberjack", "fire:1"]
 		},
 		"expand_2": {
 			"costs": [1190],
 			"effect": { "unlock": "expand_2" },
-			"requires": ["expand_1"]
+			"requires": ["expand_1", "fire:2"]
 		},
 		"miner": {
 			"costs": [510, 850],
@@ -262,7 +262,7 @@
 		"port": {
 			"costs": [1530],
 			"effect": { "unlock": "port" },
-			"requires": ["fire"]
+			"requires": ["fire:3"]
 		},
 		"ship_hull": {
 			"costs": [1800],
