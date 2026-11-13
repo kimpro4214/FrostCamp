@@ -49,6 +49,13 @@ albedo_color = Color(0.98, 0.55, 0.5, 1)
 material = SubResource("StandardMaterial3D_salmon")
 size = Vector3(0.45, 0.16, 0.22)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_crystal"]
+albedo_color = Color(0.55, 0.85, 1, 1)
+
+[sub_resource type="PrismMesh" id="PrismMesh_crystal"]
+material = SubResource("StandardMaterial3D_crystal")
+size = Vector3(0.3, 0.4, 0.3)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_coin"]
 albedo_color = Color(1, 0.8, 0.15, 1)
 metallic = 0.6
@@ -97,6 +104,10 @@ mesh = SubResource("BoxMesh_meat")
 [node name="Salmon" type="MeshInstance3D" parent="Templates"]
 visible = false
 mesh = SubResource("BoxMesh_salmon")
+
+[node name="Crystal" type="MeshInstance3D" parent="Templates"]
+visible = false
+mesh = SubResource("PrismMesh_crystal")
 
 [node name="Coin" type="MeshInstance3D" parent="Templates"]
 visible = false

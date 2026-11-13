@@ -3,7 +3,7 @@ extends Node3D
 
 const MAX_SHOWN := 24
 ## 품목별 상자 색(원목은 장면의 기본 색을 쓴다)
-const ITEM_COLORS := {"meat": Color(0.78, 0.3, 0.28), "salmon": Color(0.98, 0.55, 0.5)}
+const ITEM_COLORS := {"meat": Color(0.78, 0.3, 0.28), "salmon": Color(0.98, 0.55, 0.5), "crystal": Color(0.55, 0.85, 1.0)}
 
 var sim: FrostSim
 var item := "log"

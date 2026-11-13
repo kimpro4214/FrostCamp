@@ -7,6 +7,7 @@ const ROLE_MODELS := {
 	"porter": "res://frost_camp/assets/models/characters/character-male-c.glb",
 	"hunter": "res://frost_camp/assets/models/characters/character-male-e.glb",
 	"fisher": "res://frost_camp/assets/models/characters/character-female-d.glb",
+	"miner": "res://frost_camp/assets/models/characters/character-female-a.glb",
 	"cashier": "res://frost_camp/assets/models/characters/character-female-b.glb",
 }
 
@@ -26,6 +27,9 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	position = Vector3(worker.pos.x, 0.0, worker.pos.y)
 	$Pivot/StackAnchor.setup(worker.stack)
 	_model.setup(ROLE_MODELS[worker.role])
+	if worker.role == "miner":
+		_model.set_tool("res://frost_camp/assets/models/survival/tool-pickaxe.glb")
+		sim.tree_hit.connect(_on_tree_hit)
 	if worker.role == "lumberjack":
 		_model.set_tool("res://frost_camp/assets/models/survival/tool-axe.glb")
 		sim.tree_hit.connect(_on_tree_hit)
