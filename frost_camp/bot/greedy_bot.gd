@@ -69,6 +69,10 @@ func _choose_target() -> Dictionary:
 	# 습격 곰이 있으면 먼저 막고, 부서진 시설은 돈이 되면 바로 고친다.
 	var raider := _nearest_raider()
 	if raider:
+		# 작살총이 있으면 방벽 밖 곰은 기지 안쪽 사거리 안에서 쏜다.
+		if sim.gun_level > 0 and not sim.is_in_base(raider.pos):
+			var inward: Vector2 = (sim.base_rects[""].get_center() - raider.pos).normalized()
+			return {"kind": "bear", "pos": raider.pos + inward * 3.5}
 		return {"kind": "bear", "pos": raider.pos}
 	for structure in sim.structures:
 		if structure.is_broken() and sim.can_repair() and sim.money >= structure.repair.remaining():

@@ -21,6 +21,8 @@ signal raider_killed(index: int, agent: SimAgent)
 signal tower_fired(tower_index: int, raider_index: int)
 signal bear_added(index: int)
 signal fish_caught(hole: int, agent: SimAgent)
+## 플레이어의 작살총이 습격 곰을 쐈다(곰 번호).
+signal gun_fired(raider_index: int)
 ## 얼음 구멍 하나를 새로 뚫었다(구멍 번호).
 signal hole_drilled(hole: int)
 signal worker_retired(index: int)
@@ -59,6 +61,9 @@ var fishing_holes: Array[Vector2] = []
 var holes_open := 0
 ## 구멍마다 지금 낚고 있는 사람(먼저 선 사람). 비었으면 null. 한 구멍에서는 한 사람만 낚는다.
 var hole_users: Array = []
+## 작살총 단계(0이면 없음)와 다음 발사까지 쌓인 시간
+var gun_level := 0
+var gun_timer := 0.0
 ## 원목·고기 말고 다른 품목의 적치장. 품목 → {"count": int, "pos": Vector2, "structure": Structure}
 var extra_piles := {}
 var wall_level := 0
@@ -360,6 +365,7 @@ func tick(delta: float) -> void:
 		bears[i].tick(delta, _fighting_bears.has(i), rng)
 	_tick_raid(delta)
 	_tick_towers(delta)
+	_tick_gun(delta)
 
 
 func _tick_unload(agent: SimAgent, delta: float) -> void:
@@ -656,6 +662,28 @@ func _tick_towers(delta: float) -> void:
 			raider_killed.emit(target, null)
 
 
+## 작살총: 플레이어가 사거리 안의 가장 가까운 습격 곰을 interval마다 자동으로 쏜다. 기절해 있으면 못 쏜다.
+## 단계마다 사거리와 피해가 오른다. 플레이어가 잡은 것으로 쳐서 고기 보상을 받을 수 있다.
+func _tick_gun(delta: float) -> void:
+	if gun_level == 0 or player.dazed_left > 0.0:
+		return
+	var config: Dictionary = balance.gun
+	gun_timer = minf(gun_timer + delta, float(config.interval))
+	if gun_timer < float(config.interval):
+		return
+	var level := mini(gun_level, config.range.size()) - 1
+	var target := _nearest_raider(player.pos, float(config.range[level]))
+	if target == -1:
+		return
+	gun_timer = 0.0
+	gun_fired.emit(target)
+	raider_hit.emit(target, player)
+	if raid.bears[target].take_hit(int(config.damage[level])):
+		bears_killed += 1
+		_reward_raider_kill(player)
+		raider_killed.emit(target, player)
+
+
 ## 습격 곰 보상. 직접 잡았고 고기 판매대가 열려 있으면 등에 들어가는 만큼 고기를 준다.
 ## 포탑이 잡았거나, 판매대가 아직 없거나(등이 고기로 막히지 않게), 등에 자리가 없으면 현상금을 준다.
 func _reward_raider_kill(agent: SimAgent) -> void:
@@ -756,6 +784,10 @@ func _apply_effect(effect: Dictionary) -> void:
 			if source.id == effect.fire:
 				source.level = mini(source.level + 1, source.radii.size() - 1)
 				source.radius = float(source.radii[source.level])
+		return
+	if effect.has("gun"):
+		gun_level += int(effect.gun)
+		gun_timer = float(balance.gun.interval)  # 사자마자 쏠 수 있다.
 		return
 	if effect.has("holes"):
 		holes_open = mini(holes_open + int(effect.holes), fishing_holes.size())
@@ -877,19 +909,14 @@ func _nearest_standing_tree(pos: Vector2, only_item: String = "") -> int:
 	return best
 
 
-## 사거리 안에서 가장 가까운 살아 있는 습격 곰. 사거리를 안 주면 근접 전투 거리이고,
-## 방벽을 치고 있는 곰은 방벽 너머에서도 닿게 over_wall_reach만큼 더 멀리서 칠 수 있다.
+## 사거리 안에서 가장 가까운 살아 있는 습격 곰. 사거리를 안 주면 근접 전투 거리다.
 func _nearest_raider(pos: Vector2, max_dist: float = -1.0) -> int:
 	var best := -1
 	var best_dist := INF
+	var reach := max_dist if max_dist > 0.0 else float(balance.interact.bear_radius)
 	for i in raid.bears.size():
 		var bear := raid.bears[i]
 		var dist := pos.distance_to(bear.pos)
-		var reach := max_dist
-		if max_dist <= 0.0:
-			reach = float(balance.interact.bear_radius)
-			if bear.target != -1 and structures[bear.target].kind == "wall":
-				reach += float(balance.raid.get("over_wall_reach", 0.0))
 		if bear.is_alive() and dist <= reach and dist < best_dist:
 			best = i
 			best_dist = dist

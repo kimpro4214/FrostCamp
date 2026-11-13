@@ -97,21 +97,13 @@ func test_raiders_hit_their_spawn_gate() -> void:
 		check_eq(bear.target, sim.walls[0], "더 가까운 구간이 있어도 길목 구간을 노린다")
 
 
-## 방벽을 치는 곰은 방벽 안쪽에 붙어 선 플레이어가 칠 수 있다.
-func test_player_hits_raider_over_wall() -> void:
-	var balance := Fixtures.balance()
-	balance.raid.over_wall_reach = 1.5
-	var sim := FrostSim.new(balance, Fixtures.layout())
+
+## 방벽 너머 근접 공격은 없다(5차 QA 6번). 방벽을 치는 곰도 근접 거리 밖이면 못 친다.
+func test_no_melee_over_wall() -> void:
+	var sim := _make_sim()
 	sim._apply_effect({"walls": 1})
 	var bear := _place_raider(sim, Vector2(0, 11.5))
 	sim.player.pos = Vector2(0, 9.2)
-	Fixtures.run(sim, 0.1)
-	check_eq(bear.target, sim.walls[0], "곰이 방벽을 친다")
 	Fixtures.run(sim, 2.0)
-	check(bear.hp < bear.max_hp, "방벽 너머에서도 플레이어가 곰을 친다")
-	var free := _place_raider(sim, Vector2(0, -3.5))
-	free.target = -1
-	sim.player.pos = Vector2(0, -1.0)
-	var before := free.hp
-	Fixtures.run(sim, 0.05)
-	check_eq(free.hp, before, "방벽을 치지 않는 곰은 근접 거리 그대로다")
+	check_eq(bear.target, sim.walls[0], "곰이 방벽을 친다")
+	check_eq(bear.hp, bear.max_hp, "방벽 너머 근접 공격은 닿지 않는다")

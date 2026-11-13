@@ -78,6 +78,7 @@
 		"habitat": [5, -12],
 		"meat_stall": [5, -5],
 		"harpoon": [9, -11],
+		"harpoon_gun": [-1.0, -7.6],
 		"bear_den": [11.5, -12],
 		"hunter": [6.6, -11.4],
 		"lumberjack": [-7, 0],

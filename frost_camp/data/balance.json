@@ -70,7 +70,6 @@
 		"damage": 3,
 		"attack_interval": 1.0,
 		"attack_radius": 1.8,
-		"over_wall_reach": 1.5,
 		"reward": 10,
 		"meat_dropped": 2
 	},
@@ -82,6 +81,11 @@
 		"speed": [2.0, 3.5],
 		"take_interval": [0.8, 0.45],
 		"spacing": 0.6
+	},
+	"gun": {
+		"interval": 0.8,
+		"range": [5.5, 7.0, 8.5],
+		"damage": [2, 3, 5]
 	},
 	"tower": {
 		"range": 7.0,
@@ -164,6 +168,11 @@
 			"costs": [340, 680],
 			"effect": { "bears": 3 },
 			"requires": ["meat_stall"]
+		},
+		"harpoon_gun": {
+			"costs": [250, 500, 900],
+			"effect": { "gun": 1 },
+			"requires": ["habitat"]
 		},
 		"harpoon": {
 			"costs": [170, 430],
