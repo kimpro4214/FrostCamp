@@ -1,84 +1,173 @@
 extends CanvasLayer
-## 화면 위 정보: 지갑의 돈, 등 뒤 적재량, 체력, 온기, 습격 알림.
+## 화면 위 정보: 왼쪽 위에 둥근 칩(돈, 등짐, 체력 막대, 온기 막대), 가운데 위에 습격 배너, 가운데에 고급 자원 알림.
 
+const UiStyle := preload("res://frost_camp/ui/ui_style.gd")
+const HudIcon := preload("res://frost_camp/ui/hud_icon.gd")
+const BasketIcon := preload("res://frost_camp/assets/icons/shoppingBasket.png")
+const WarningIcon := preload("res://frost_camp/assets/icons/warning.png")
 const WARNING_COLOR := Color(1.0, 0.45, 0.35)
-const CALM_COLOR := Color(0.85, 0.9, 1.0, 0.8)
+const CALM_COLOR := Color(0.85, 0.9, 1.0)
 const CLEAR_COLOR := Color(0.5, 1.0, 0.55)
+const HP_COLOR := Color(1.0, 0.36, 0.38)
+const WARMTH_COLOR := Color(0.45, 0.8, 1.0)
+const FROZEN_COLOR := Color(0.6, 0.65, 0.75)
 ## 방어 성공 문구를 띄워 두는 시간(초)
 const CLEAR_SHOW_TIME := 2.5
-
-var sim: FrostSim
-var _raid_label: Label
-var _clear_left := 0.0
-var _toast: Label
 ## 고급 자원 알림 문구
 const PREMIUM_TEXT := {"gold_salmon": "황금 연어! +$60", "gem": "보석! +$120"}
 
+var sim: FrostSim
+var _money_label: Label
+var _stack_label: Label
+var _hp_bar: ProgressBar
+var _hp_text: Label
+var _warmth_bar: ProgressBar
+var _warmth_text: Label
+var _fire_label: Label
+var _raid_panel: PanelContainer
+var _raid_icon: TextureRect
+var _raid_label: Label
+var _toast: Label
+var _clear_left := 0.0
+
 @onready var joystick: Control = $Joystick
-@onready var _money_label: Label = $Top/Money
-@onready var _stack_label: Label = $Top/Stack
-@onready var _hp_label: Label = $Top/Hp
-@onready var _warmth_label: Label = $Top/Warmth
 
 
 func setup(frost_sim: FrostSim) -> void:
 	sim = frost_sim
+	_build_chips()
+	_build_raid_banner()
+	_build_toast()
 	sim.cash_collected.connect(func(_stall: int, _amount: int, _agent: SimAgent) -> void: _punch(_money_label))
-	_raid_label = Label.new()
-	_raid_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_raid_label.offset_top = 70.0
-	_raid_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_raid_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_raid_label.add_theme_font_size_override("font_size", 34)
-	_raid_label.add_theme_constant_override("outline_size", 10)
-	_raid_label.add_theme_color_override("font_outline_color", Color(0.1, 0.1, 0.15))
-	add_child(_raid_label)
-	_toast = Label.new()
+	sim.raid_warning.connect(func(_wave: int, _pos: Vector2) -> void: _punch(_raid_panel))
+	sim.raid_cleared.connect(func(_wave: int) -> void:
+		_clear_left = CLEAR_SHOW_TIME
+		_punch(_raid_panel))
+	sim.premium_found.connect(func(item: String, _pos: Vector2) -> void: _show_toast(PREMIUM_TEXT.get(item, item)))
+	sim.crystal_glowed.connect(func(_i: int) -> void: _show_toast("광맥에 빛나는 빙결정이 나타났다!"))
+
+
+func _process(delta: float) -> void:
+	var player := sim.player
+	_money_label.text = "$ %d" % sim.money
+	_stack_label.text = "%d / %d" % [player.stack.items.size(), player.stack.capacity]
+	_hp_bar.value = player.hp / player.max_hp * 100.0
+	_hp_text.text = "기절 %.1f" % player.dazed_left if player.dazed_left > 0.0 else "%d" % ceili(player.hp)
+	_warmth_bar.value = player.warmth / player.max_warmth * 100.0
+	_set_bar_color(_warmth_bar, WARMTH_COLOR if player.warmth > 0.0 else FROZEN_COLOR)
+	_warmth_text.text = "얼었다" if player.warmth <= 0.0 else "%d%%" % ceili(_warmth_bar.value)
+	# 모닥불이 저절로 채워지지 않을 때 연료가 떨어져 가면 알린다.
+	var fire: Dictionary = sim.heat_sources[0]
+	var low: bool = fire.fuel_max > 0.0 and not sim.is_fire_auto(fire) and fire.fuel < fire.fuel_max * 0.3
+	_fire_label.visible = low
+	if low:
+		_fire_label.text = "모닥불이 꺼졌다! 원목을 넣자" if fire.fuel <= 0.0 else "모닥불이 꺼져 간다"
+	_update_raid(delta)
+
+
+## 왼쪽 위 칩 네 개: 돈, 등짐, 체력, 온기. 그 아래 모닥불 알림 한 줄.
+func _build_chips() -> void:
+	var column := VBoxContainer.new()
+	column.position = Vector2(16, 16)
+	column.add_theme_constant_override("separation", 6)
+	add_child(column)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	column.add_child(row)
+	_money_label = UiStyle.label("$ 0", 34, UiStyle.GOLD)
+	_money_label.custom_minimum_size.x = 150
+	row.add_child(_chip(HudIcon.new("coin"), [_money_label]))
+	var basket := TextureRect.new()
+	basket.texture = BasketIcon
+	basket.custom_minimum_size = Vector2(40, 40)
+	basket.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	basket.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_stack_label = UiStyle.label("0 / 10", 30)
+	row.add_child(_chip(basket, [_stack_label]))
+	_hp_bar = _bar(HP_COLOR)
+	_hp_text = UiStyle.label("10", 24)
+	row.add_child(_chip(HudIcon.new("heart"), [_hp_bar, _hp_text]))
+	_warmth_bar = _bar(WARMTH_COLOR)
+	_warmth_text = UiStyle.label("100%", 24)
+	row.add_child(_chip(HudIcon.new("snow"), [_warmth_bar, _warmth_text]))
+	_fire_label = UiStyle.label("", 26, Color(1.0, 0.6, 0.3))
+	_fire_label.visible = false
+	column.add_child(_fire_label)
+
+
+func _chip(icon: Control, parts: Array) -> PanelContainer:
+	var chip := PanelContainer.new()
+	chip.add_theme_stylebox_override("panel", UiStyle.panel(22, 8.0))
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	chip.add_child(box)
+	box.add_child(icon)
+	for part in parts:
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		box.add_child(part)
+	return chip
+
+
+func _bar(color: Color) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.custom_minimum_size = Vector2(120, 18)
+	bar.show_percentage = false
+	bar.value = 100.0
+	var back := StyleBoxFlat.new()
+	back.bg_color = Color(0.03, 0.05, 0.1, 0.9)
+	back.set_corner_radius_all(9)
+	bar.add_theme_stylebox_override("background", back)
+	_set_bar_color(bar, color)
+	return bar
+
+
+func _set_bar_color(bar: ProgressBar, color: Color) -> void:
+	var fill := bar.get_theme_stylebox("fill") as StyleBoxFlat
+	if fill == null or fill.bg_color != color:
+		fill = StyleBoxFlat.new()
+		fill.bg_color = color
+		fill.set_corner_radius_all(9)
+		bar.add_theme_stylebox_override("fill", fill)
+
+
+func _build_raid_banner() -> void:
+	_raid_panel = PanelContainer.new()
+	_raid_panel.add_theme_stylebox_override("panel", UiStyle.panel(20, 10.0))
+	_raid_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_raid_panel.offset_top = 84.0
+	_raid_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	add_child(_raid_panel)
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	_raid_panel.add_child(box)
+	_raid_icon = TextureRect.new()
+	_raid_icon.texture = WarningIcon
+	_raid_icon.custom_minimum_size = Vector2(36, 36)
+	_raid_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_raid_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	box.add_child(_raid_icon)
+	_raid_label = UiStyle.label("", 30)
+	box.add_child(_raid_label)
+
+
+func _build_toast() -> void:
+	_toast = UiStyle.label("", 44, Color(1.0, 0.82, 0.25))
+	_toast.add_theme_color_override("font_outline_color", Color(0.25, 0.15, 0.0))
 	_toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_toast.offset_top = -140.0
 	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_toast.add_theme_font_size_override("font_size", 44)
-	_toast.add_theme_constant_override("outline_size", 12)
-	_toast.add_theme_color_override("font_outline_color", Color(0.25, 0.15, 0.0))
-	_toast.add_theme_color_override("font_color", Color(1.0, 0.82, 0.25))
 	_toast.modulate.a = 0.0
 	add_child(_toast)
-	sim.premium_found.connect(func(item: String, _pos: Vector2) -> void: _show_toast(PREMIUM_TEXT.get(item, item)))
-	sim.crystal_glowed.connect(func(_i: int) -> void: _show_toast("광맥에 빛나는 빙결정이 나타났다!"))
-	sim.raid_warning.connect(func(_wave: int, _pos: Vector2) -> void: _punch(_raid_label))
-	sim.raid_cleared.connect(func(_wave: int) -> void:
-		_clear_left = CLEAR_SHOW_TIME
-		_punch(_raid_label))
 
 
-func _process(_delta: float) -> void:
-	_money_label.text = "$ %d" % sim.money
-	var stack := sim.player.stack
-	_stack_label.text = "%d / %d" % [stack.items.size(), stack.capacity]
-	var player := sim.player
-	if player.dazed_left > 0.0:
-		_hp_label.text = "기절 %.1f" % player.dazed_left
-		_hp_label.modulate = Color(0.7, 0.7, 0.75)
-	else:
-		_hp_label.text = "체력 %d" % ceili(player.hp)
-		_hp_label.modulate = Color.WHITE
-	_update_raid(_delta)
-	if player.warmth <= 0.0:
-		_warmth_label.text = "꽁꽁 얼었다"
-	else:
-		_warmth_label.text = "온기 %d%%" % ceili(player.warmth / player.max_warmth * 100.0)
-	# 모닥불이 저절로 채워지지 않을 때 연료가 떨어져 가면 알린다.
-	var fire: Dictionary = sim.heat_sources[0]
-	if fire.fuel_max > 0.0 and not sim.is_fire_auto(fire) and fire.fuel < fire.fuel_max * 0.3:
-		_warmth_label.text += " · 모닥불이 꺼졌다!" if fire.fuel <= 0.0 else " · 모닥불이 꺼져 간다"
-
-
-## 습격 경고와 남은 곰, 방어 성공, 다음 습격까지 남은 시간을 한 줄로 보여 준다.
+## 습격 경고와 남은 곰, 방어 성공, 다음 습격까지 남은 시간을 배너 한 줄로 보여 준다. 경고·습격 중에만 경고 아이콘을 띄운다.
 func _update_raid(delta: float) -> void:
 	var raid := sim.raid
 	_clear_left = maxf(_clear_left - delta, 0.0)
-	_raid_label.visible = true
+	_raid_panel.visible = true
+	_raid_icon.visible = raid.state == Raid.State.WARNING or raid.state == Raid.State.ATTACKING
 	match raid.state:
 		Raid.State.WARNING:
 			_raid_label.text = "북극곰이 몰려온다! %d" % ceili(raid.time_left)
@@ -94,7 +183,7 @@ func _update_raid(delta: float) -> void:
 				_raid_label.text = "다음 습격 %d:%02d" % [int(raid.time_left) / 60, int(raid.time_left) % 60]
 				_raid_label.modulate = CALM_COLOR
 		_:
-			_raid_label.visible = false
+			_raid_panel.visible = false
 
 
 ## 화면 가운데 위에 금빛 알림을 잠깐 띄운다.
@@ -107,9 +196,9 @@ func _show_toast(text: String) -> void:
 	tween.tween_property(_toast, "modulate:a", 0.0, 0.5)
 
 
-## 돈이 들어오면 숫자가 툭 커졌다가 돌아온다.
-func _punch(label: Control) -> void:
-	label.pivot_offset = label.size / 2.0
-	label.scale = Vector2(1.35, 1.35)
-	label.create_tween().tween_property(label, "scale", Vector2.ONE, 0.25) \
+## 숫자나 배너가 툭 커졌다가 돌아온다.
+func _punch(control: Control) -> void:
+	control.pivot_offset = control.size / 2.0
+	control.scale = Vector2(1.25, 1.25)
+	control.create_tween().tween_property(control, "scale", Vector2.ONE, 0.25) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
