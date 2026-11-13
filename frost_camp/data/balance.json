@@ -146,12 +146,12 @@
 			"requires": ["fish_stall"]
 		},
 		"habitat": {
-			"costs": [350],
+			"costs": [300],
 			"effect": { "unlock": "habitat" },
 			"requires": ["fish_stall"]
 		},
 		"meat_stall": {
-			"costs": [200],
+			"costs": [150],
 			"effect": { "unlock": "meat_stall" },
 			"requires": ["habitat"]
 		},
@@ -196,7 +196,7 @@
 			"requires": ["miner", "expand_2"]
 		},
 		"cashier": {
-			"costs": [540],
+			"costs": [420],
 			"effect": { "hire": "cashier", "stall": 0 },
 			"requires": ["meat_stall"]
 		},
@@ -216,12 +216,12 @@
 			"requires": ["expand_2"]
 		},
 		"fire": {
-			"costs": [520, 650, 940],
+			"costs": [400, 650, 940],
 			"effect": { "fire": "campfire" },
 			"requires": ["lumberjack"]
 		},
 		"wall": {
-			"costs": [510, 850, 1360],
+			"costs": [420, 850, 1360],
 			"effect": { "walls": 1 },
 			"requires": ["habitat"]
 		},
@@ -261,7 +261,7 @@
 			"requires": ["habitat"]
 		},
 		"port": {
-			"costs": [1530],
+			"costs": [1300],
 			"effect": { "unlock": "port" },
 			"requires": ["fire:3"]
 		},
