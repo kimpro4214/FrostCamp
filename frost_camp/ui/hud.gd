@@ -52,6 +52,10 @@ func _process(_delta: float) -> void:
 		_warmth_label.text = "꽁꽁 얼었다"
 	else:
 		_warmth_label.text = "온기 %d%%" % ceili(player.warmth / player.max_warmth * 100.0)
+	# 모닥불이 저절로 채워지지 않을 때 연료가 떨어져 가면 알린다.
+	var fire: Dictionary = sim.heat_sources[0]
+	if fire.fuel_max > 0.0 and not sim.is_fire_auto(fire) and fire.fuel < fire.fuel_max * 0.3:
+		_warmth_label.text += " · 모닥불이 꺼졌다!" if fire.fuel <= 0.0 else " · 모닥불이 꺼져 간다"
 
 
 ## 습격 경고와 남은 곰, 방어 성공, 다음 습격까지 남은 시간을 한 줄로 보여 준다.
