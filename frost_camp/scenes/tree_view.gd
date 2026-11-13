@@ -2,6 +2,7 @@ extends Node3D
 ## 나무 한 그루의 겉모습. 맞으면 맞은 반대쪽으로 휘청이며 파편과 데미지 숫자가 튀고,
 ## 쓰러지면 때린 반대쪽으로 넘어간 뒤 그루터기만 남고, 다시 자라면 솟아오른다.
 ## 빙결정 바위도 같은 화면을 쓴다: 푸른 결정 무리가 서 있다가 깨지면 작은 돌만 남는다.
+## 빛나는 바위(플레이어만 캐는 보석)는 금빛으로 빛나고 위에 별이 떠서 오르내린다.
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const MODELS := [
@@ -19,6 +20,7 @@ const SNOW_COLOR := Color(0.92, 0.95, 1.0)
 const HIT_TILT := 0.22
 const CRYSTAL_COLOR := Color(0.55, 0.85, 1.0, 0.85)
 const ROCK_COLOR := Color(0.55, 0.57, 0.62)
+const GLOW_COLOR := Color(1.0, 0.8, 0.25)
 ## 결정 기둥들: [크기, 위치, 기울기(라디안)]
 const CRYSTAL_SHARDS := [
 	[Vector3(0.5, 1.6, 0.5), Vector3(0.0, 0.8, 0.0), Vector3(0.0, 0.0, 0.1)],
@@ -32,6 +34,9 @@ var index: int
 var _standing := true
 var _chips: CPUParticles3D
 var _snow: CPUParticles3D
+var _crystal_material: StandardMaterial3D
+var _star: Label3D
+var _glowing := false
 
 @onready var _crown: Node3D = $Crown
 @onready var _stump: Node3D = $Stump
@@ -59,9 +64,30 @@ func setup(frost_sim: FrostSim, tree_index: int) -> void:
 	_snow.initial_velocity_max = 2.0
 	sim.tree_hit.connect(_on_tree_hit)
 	sim.tree_felled.connect(_on_tree_felled)
+	if crystal:
+		_star = Label3D.new()
+		_star.text = "★"
+		_star.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_star.font_size = 120
+		_star.outline_size = 16
+		_star.modulate = GLOW_COLOR
+		_star.position.y = 2.6
+		_star.visible = false
+		add_child(_star)
+		var bob := _star.create_tween().set_loops()
+		bob.tween_property(_star, "position:y", 2.9, 0.5).set_trans(Tween.TRANS_SINE)
+		bob.tween_property(_star, "position:y", 2.6, 0.5).set_trans(Tween.TRANS_SINE)
 
 
 func _process(_delta: float) -> void:
+	var glowing := sim.trees[index].glowing
+	if _star and glowing != _glowing:
+		_glowing = glowing
+		_star.visible = glowing
+		_crystal_material.emission = GLOW_COLOR if glowing else Color(0.3, 0.6, 0.9)
+		_crystal_material.emission_energy_multiplier = 1.4 if glowing else 0.4
+		if glowing:
+			Juice.pop(_crown, Vector3(1.3, 0.7, 1.3), 0.35)
 	var standing := sim.trees[index].is_standing()
 	if standing and not _standing:
 		_crown.quaternion = Quaternion.IDENTITY
@@ -119,6 +145,7 @@ func _make_crystal() -> Node3D:
 	material.emission_enabled = true
 	material.emission = Color(0.3, 0.6, 0.9)
 	material.emission_energy_multiplier = 0.4
+	_crystal_material = material
 	for shard in CRYSTAL_SHARDS:
 		var piece := MeshInstance3D.new()
 		var mesh := PrismMesh.new()

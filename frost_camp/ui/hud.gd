@@ -10,6 +10,9 @@ const CLEAR_SHOW_TIME := 2.5
 var sim: FrostSim
 var _raid_label: Label
 var _clear_left := 0.0
+var _toast: Label
+## 고급 자원 알림 문구
+const PREMIUM_TEXT := {"gold_salmon": "황금 연어! +$60", "gem": "보석! +$120"}
 
 @onready var joystick: Control = $Joystick
 @onready var _money_label: Label = $Top/Money
@@ -30,6 +33,19 @@ func setup(frost_sim: FrostSim) -> void:
 	_raid_label.add_theme_constant_override("outline_size", 10)
 	_raid_label.add_theme_color_override("font_outline_color", Color(0.1, 0.1, 0.15))
 	add_child(_raid_label)
+	_toast = Label.new()
+	_toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_toast.offset_top = -140.0
+	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_toast.add_theme_font_size_override("font_size", 44)
+	_toast.add_theme_constant_override("outline_size", 12)
+	_toast.add_theme_color_override("font_outline_color", Color(0.25, 0.15, 0.0))
+	_toast.add_theme_color_override("font_color", Color(1.0, 0.82, 0.25))
+	_toast.modulate.a = 0.0
+	add_child(_toast)
+	sim.premium_found.connect(func(item: String, _pos: Vector2) -> void: _show_toast(PREMIUM_TEXT.get(item, item)))
+	sim.crystal_glowed.connect(func(_i: int) -> void: _show_toast("광맥에 빛나는 빙결정이 나타났다!"))
 	sim.raid_warning.connect(func(_wave: int, _pos: Vector2) -> void: _punch(_raid_label))
 	sim.raid_cleared.connect(func(_wave: int) -> void:
 		_clear_left = CLEAR_SHOW_TIME
@@ -79,6 +95,16 @@ func _update_raid(delta: float) -> void:
 				_raid_label.modulate = CALM_COLOR
 		_:
 			_raid_label.visible = false
+
+
+## 화면 가운데 위에 금빛 알림을 잠깐 띄운다.
+func _show_toast(text: String) -> void:
+	_toast.text = text
+	_toast.modulate.a = 1.0
+	_punch(_toast)
+	var tween := _toast.create_tween()
+	tween.tween_interval(1.6)
+	tween.tween_property(_toast, "modulate:a", 0.0, 0.5)
 
 
 ## 돈이 들어오면 숫자가 툭 커졌다가 돌아온다.

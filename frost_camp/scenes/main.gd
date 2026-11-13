@@ -178,6 +178,7 @@ func _connect_sounds() -> void:
 	sim.raider_killed.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("punch_heavy", sim.raid.bears[i].pos))
 	sim.tower_fired.connect(func(t: int, _r: int) -> void: _sfx.play_at("shoot", sim.towers[t].pos))
 	sim.gun_fired.connect(func(_r: int) -> void: _sfx.play("shoot"))
+	sim.premium_found.connect(func(_item: String, _pos: Vector2) -> void: _sfx.play("win"))
 	sim.raid_warning.connect(func(_wave: int, _pos: Vector2) -> void: _sfx.play("raid"))
 	sim.raid_cleared.connect(func(_wave: int) -> void: _sfx.play("hire"))
 

@@ -1,7 +1,7 @@
 extends Node3D
 ## 등 뒤 스택 그리기. 플레이어와 일꾼이 같이 쓴다.
 
-const ITEM_COLORS := {"log": Color(0.55, 0.33, 0.18), "meat": Color(0.85, 0.3, 0.32), "salmon": Color(0.98, 0.55, 0.5), "crystal": Color(0.55, 0.85, 1.0)}
+const ITEM_COLORS := {"log": Color(0.55, 0.33, 0.18), "meat": Color(0.85, 0.3, 0.32), "salmon": Color(0.98, 0.55, 0.5), "crystal": Color(0.55, 0.85, 1.0), "gold_salmon": Color(1.0, 0.8, 0.2), "gem": Color(0.85, 0.35, 1.0)}
 const ITEM_SIZE := Vector3(0.5, 0.2, 0.3)
 
 ## 걸을 때 스택이 진행 반대쪽으로 휘는 정도

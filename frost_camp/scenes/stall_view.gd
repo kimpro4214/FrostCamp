@@ -51,6 +51,10 @@ func setup(frost_sim: FrostSim, stall_index: int) -> void:
 	_set_disc_radius(_unload_zone, float(sim.balance.interact.stall_radius))
 	_set_disc_radius(_cash_zone, float(sim.balance.interact.cash_radius))
 	_last_served = stall.served
+	sim.premium_sold.connect(func(i: int, item: String) -> void:
+		if i == index:
+			Juice.float_text(self, global_position + Vector3(0.0, 2.6, 0.0), "+$%d" % int(sim.balance.items[item].price), Color(1.0, 0.8, 0.2), 96)
+			Juice.pop(self, Vector3(1.2, 0.85, 1.2), 0.3))
 
 
 func _process(delta: float) -> void:
