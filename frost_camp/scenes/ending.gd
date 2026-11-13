@@ -1,10 +1,20 @@
 extends CanvasLayer
-## 탈출 컷신. 영화 비율 띠가 내려오고, 플레이어가 부두를 걸어 배에 오르고, 뱃고동과 함께
+## 탈출 컷신. 영화 비율 띠가 내려오고, 플레이어가 부두 끝에서 널빤지 발판을 밟고 배 옆으로 올라타고, 뱃고동과 함께
 ## 카메라가 배 옆으로 돌아간 뒤, 배가 얼음을 밀어내며 바다로 나아간다. 제목이 뜨고 흰색으로 덮이면 결과 화면을 띄운다.
 
 const BAR_HEIGHT := 90.0
 const DOCK_START := Vector3(26.0, 0.0, -3.0)
-const DECK_SPOT := Vector3(-0.8, 1.0, 0.0)  # 배 기준 갑판 위 자리
+## 배 기준 자리들. 선체는 x -3.5~3.5, z -1.3~1.3, 갑판 높이 1.0이다(ship.tscn).
+## 고물(뒤쪽) 옆 갑판 가장자리에서 기관실(x -3.7~-1.1, z -0.6~0.6)을 비켜 올라탄다.
+## 부두(pirate/structure-platform-dock)는 x -6.95~-4.45에 있고 바닥 높이는 0.7이다.
+const DOCK_EDGE := Vector3(-7.3, 0.0, 0.9)  # 얼음 끝, 부두 앞
+const DOCK_STEP := Vector3(-6.6, 0.7, 0.9)  # 부두에 올라선 자리
+const PLANK_FOOT := Vector3(-4.6, 0.7, 0.9)  # 부두 끝, 발판 아래 끝
+const PLANK_TOP := Vector3(-3.2, 1.0, 0.9)  # 갑판 가장자리, 발판 위 끝
+const DECK_PASS := Vector3(-1.0, 1.0, 1.05)  # 연료통(x -1, z 0.6) 바깥쪽으로 지나는 자리
+const DECK_SPOT := Vector3(0.1, 1.0, 0.0)  # 돛대와 연료통 사이, 갑판 위 설 자리
+const PLANK_WIDTH := 0.8
+const PLANK_COLOR := Color(0.55, 0.38, 0.22)
 const BOARD_TIME := 2.2
 const SAIL_TIME := 8.0
 const TITLE_TIME := 2.5
@@ -53,16 +63,20 @@ func play(main: Node3D, sim: FrostSim) -> void:
 	bars.tween_property(_top, "offset_bottom", BAR_HEIGHT, 0.6)
 	bars.tween_property(_bottom, "offset_top", -BAR_HEIGHT, 0.6)
 
-	# 2. 플레이어가 부두를 걸어 배에 오른다.
+	# 2. 플레이어가 부두 끝까지 걷고, 발판을 밟아 갑판 가장자리로 오른 뒤 갑판 가운데로 걸어간다.
+	var plank := _make_plank(_ship.global_position + PLANK_FOOT, _ship.global_position + PLANK_TOP)
+	main.add_child(plank)
 	player.global_position = DOCK_START
-	pivot.rotation.y = -PI / 2.0  # +X(바다)를 본다
 	model.set_moving(true)
-	var deck := _ship.global_position + DECK_SPOT
 	var walk := create_tween()
-	walk.tween_property(player, "global_position", Vector3(deck.x, 0.0, deck.z), BOARD_TIME * 0.75)
-	walk.tween_property(player, "global_position", deck, BOARD_TIME * 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var legs := [[DOCK_EDGE, 0.25], [DOCK_STEP, 0.08], [PLANK_FOOT, 0.25], [PLANK_TOP, 0.2], [DECK_PASS, 0.14], [DECK_SPOT, 0.1]]
+	for leg in legs:
+		leg[0] = _ship.global_position + leg[0]
+		walk.tween_callback(_face.bind(pivot, player, leg[0]))
+		walk.tween_property(player, "global_position", leg[0], BOARD_TIME * leg[1])
 	await walk.finished
 	model.set_moving(false)
+	pivot.rotation.y = -PI / 2.0  # +X(바다)를 본다
 	player.reparent(_ship)
 
 	# 3. 뱃고동, 카메라가 배 옆 낮은 곳으로 돈다.
@@ -74,7 +88,8 @@ func play(main: Node3D, sim: FrostSim) -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await swing.finished
 
-	# 4. 배가 얼음을 밀어내며 나아가고, 카메라는 뒤 옆에서 따라간다.
+	# 4. 발판을 치우고, 배가 얼음을 밀어내며 나아가고, 카메라는 뒤 옆에서 따라간다.
+	plank.queue_free()
 	_follow = true
 	_ship.sail_away(SAIL_TIME)
 	await get_tree().create_timer(SAIL_TIME * 0.55).timeout
@@ -101,6 +116,27 @@ func play(main: Node3D, sim: FrostSim) -> void:
 	_subtitle.visible = false
 	main.get_node("Result").show_result(sim)
 	create_tween().tween_property(_white, "color:a", 0.0, FADE_TIME)
+
+
+## 걸어갈 쪽을 보게 돌린다(높이 차이는 무시).
+func _face(pivot: Node3D, player: Node3D, target: Vector3) -> void:
+	var dir := target - player.global_position
+	pivot.rotation.y = atan2(-dir.x, -dir.z)
+
+
+## 부두에서 갑판 가장자리까지 비스듬히 걸친 널빤지
+func _make_plank(foot: Vector3, top: Vector3) -> MeshInstance3D:
+	var plank := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(foot.distance_to(top), 0.08, PLANK_WIDTH)
+	var material := StandardMaterial3D.new()
+	material.albedo_color = PLANK_COLOR
+	mesh.material = material
+	plank.mesh = mesh
+	plank.position = (foot + top) / 2.0 - Vector3(0.0, 0.04, 0.0)
+	var run := Vector2(top.x - foot.x, top.z - foot.z)
+	plank.rotation = Vector3(0.0, -run.angle(), atan2(top.y - foot.y, run.length()))
+	return plank
 
 
 func _process(_delta: float) -> void:
