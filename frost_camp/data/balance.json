@@ -46,6 +46,7 @@
 		"woodpile": { "hp": 20, "repair_cost": 40 },
 		"meat_pile": { "hp": 20, "repair_cost": 40 },
 		"wall": { "hp": [30, 60, 100], "repair_cost": 50 },
+		"salmon_pile": { "hp": 20, "repair_cost": 40 },
 		"tower": { "hp": 25, "repair_cost": 50 },
 		"conveyor": { "hp": 30, "repair_cost": 60 }
 	},
@@ -66,6 +67,10 @@
 		"reward": 10,
 		"meat_dropped": 2
 	},
+	"fish": {
+		"catch_interval": 1.2,
+		"hole_radius": 1.0
+	},
 	"conveyor": {
 		"speed": [2.0, 3.5],
 		"take_interval": [0.8, 0.45],
@@ -81,11 +86,13 @@
 		"lumberjack": { "speed": 3.5, "capacity": 6, "damage": 1 },
 		"porter": { "speed": 4.0, "capacity": 8 },
 		"cashier": { "speed": 4.0 },
-		"hunter": { "speed": 3.8, "capacity": 6, "damage": 2, "hp": 10 }
+		"hunter": { "speed": 3.8, "capacity": 6, "damage": 2, "hp": 10 },
+		"fisher": { "speed": 3.5, "capacity": 6 }
 	},
 	"items": {
 		"log": { "price": 5 },
-		"meat": { "price": 15 }
+		"salmon": { "price": 9 },
+		"meat": { "price": 22 }
 	},
 	"stall": {
 		"unload_interval": 0.1,
@@ -114,10 +121,20 @@
 			"effect": { "stat": "axe_damage", "add": 1 },
 			"requires": ["backpack"]
 		},
-		"habitat": {
-			"costs": [80],
-			"effect": { "unlock": "habitat" },
+		"fish_stall": {
+			"costs": [40],
+			"effect": { "unlock": "fish_stall" },
 			"requires": ["backpack"]
+		},
+		"fisher": {
+			"costs": [150, 300],
+			"effect": { "hire": "fisher" },
+			"requires": ["fish_stall"]
+		},
+		"habitat": {
+			"costs": [250],
+			"effect": { "unlock": "habitat" },
+			"requires": ["fish_stall"]
 		},
 		"meat_stall": {
 			"costs": [150],

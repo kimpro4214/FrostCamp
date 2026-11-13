@@ -5,6 +5,10 @@
 	"woodpile_repair": [-3, -8.4],
 	"meat_pile": [3.6, -11.8],
 	"meat_pile_repair": [1.4, -12.8],
+	"fishing_holes": [[11.2, 7.2], [12.9, 7.2], [12.0, 5.6]],
+	"piles": {
+		"salmon": { "pos": [12.6, 1.8], "repair_pos": [11.0, 0.4], "unlock": "fish_stall" }
+	},
 	"ship": [35, -3],
 	"heat": {
 		"campfire": [0, -1]
@@ -57,7 +61,8 @@
 	"stalls": [
 		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6], "repair_pos": [3, 1.6], "raid_target": false },
 		{ "item": "meat", "pos": [5, -5], "cash_pos": [5, -7.4], "repair_pos": [3.6, -8.2], "unlock": "meat_stall", "raid_target": false },
-		{ "item": "log", "pos": [9.5, 12.5], "cash_pos": [9.5, 15.1], "repair_pos": [7.3, 14], "unlock": "expand_2", "raid_target": false }
+		{ "item": "log", "pos": [9.5, 12.5], "cash_pos": [9.5, 15.1], "repair_pos": [7.3, 14], "unlock": "expand_2", "raid_target": false },
+		{ "item": "salmon", "pos": [6.2, 4.4], "cash_pos": [6.2, 7.0], "repair_pos": [4.4, 5.6], "unlock": "fish_stall", "raid_target": false }
 	],
 	"zones": {
 		"backpack": [-1.5, 3.5],
@@ -80,7 +85,9 @@
 		"tower_2": [1.8, -10],
 		"tower_3": [-8.2, 13],
 		"expand_1": [-6, 7.4],
-		"expand_2": [9.5, 7.6],
+		"expand_2": [8.6, 7.9],
+		"fish_stall": [6.2, 4.4],
+		"fisher": [12.6, -0.6],
 		"wall": [-3.2, 6.6],
 		"port": [12, -3],
 		"ship_hull": [18, -7],

@@ -2,7 +2,7 @@ class_name WorkerBrain
 extends RefCounted
 ## 일꾼의 다음 목표를 정한다. 게임(길찾기)과 봇(직선 이동)이 같은 목표를 따라간다.
 
-const STOP := {"tree": 1.0, "bear": 1.0, "pile": 0.8, "stall": 1.0, "cash": 0.4, "idle": 0.3}
+const STOP := {"tree": 1.0, "bear": 1.0, "hole": 0.2, "pile": 0.8, "stall": 1.0, "cash": 0.4, "idle": 0.3}
 
 
 static func choose(sim: FrostSim, worker: Worker) -> Dictionary:
@@ -13,6 +13,8 @@ static func choose(sim: FrostSim, worker: Worker) -> Dictionary:
 			return _porter(sim, worker)
 		"hunter":
 			return _hunter(sim, worker)
+		"fisher":
+			return _fisher(sim, worker)
 		"cashier":
 			return _cashier(sim, worker)
 	return _go("idle", worker.pos)
@@ -58,7 +60,7 @@ static func _porter(sim: FrostSim, worker: Worker) -> Dictionary:
 static func _fullest_pile(sim: FrostSim) -> String:
 	var best := "log"
 	var best_count := -1
-	for item in ["log", "meat"]:
+	for item in sim.pile_items():
 		if not sim.is_pile_open(item) or not _has_working_stall(sim, item):
 			continue
 		if sim.pile_count(item) > best_count:
@@ -92,6 +94,24 @@ static func _hunter(sim: FrostSim, worker: Worker) -> Dictionary:
 	if not stack.items.is_empty():
 		worker.delivering = true
 	return _go("pile", sim.meat_pile_pos)
+
+
+## 맡은 얼음 구멍(낚시꾼 순서대로 나눔)에서 낚고, 등이 차면 연어 적치장에 쌓는다.
+static func _fisher(sim: FrostSim, worker: Worker) -> Dictionary:
+	var stack := worker.stack
+	if stack.items.is_empty():
+		worker.delivering = false
+	elif stack.free_space() == 0:
+		worker.delivering = true
+	if worker.delivering:
+		return _go("pile", sim.pile_pos("salmon"))
+	var order := 0
+	for other in sim.workers:
+		if other == worker:
+			break
+		if other.role == "fisher":
+			order += 1
+	return _go("hole", sim.fishing_holes[order % sim.fishing_holes.size()])
 
 
 ## 전담 판매대가 있으면 그 돈 더미 자리에 서 있고, 없으면 돈이 가장 많이 쌓인 판매대로 간다.

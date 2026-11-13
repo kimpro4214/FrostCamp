@@ -7,6 +7,8 @@ var stack: BackStack
 var chop_timer := 0.0
 var unload_timer := 0.0
 var pickup_timer := 0.0
+## 얼음 구멍 위에 서서 낚시한 시간
+var fish_timer := 0.0
 ## 구매 존 위에 서 있은 시간. 지나가다 밟은 것과 사려고 선 것을 구분한다.
 var zone_wait := 0.0
 var zone_wait_id := ""

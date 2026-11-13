@@ -1,6 +1,6 @@
 class_name Worker
 extends SimAgent
-## 고용한 일꾼. 역할(lumberjack, hunter, porter, cashier)에 따라 worker_brain이 목표를 정한다.
+## 고용한 일꾼. 역할(lumberjack, hunter, fisher, porter, cashier)에 따라 worker_brain이 목표를 정한다.
 ## 플레이어처럼 위치는 바깥이 옮기고, 근접 규칙은 sim이 판정한다.
 
 var role: String

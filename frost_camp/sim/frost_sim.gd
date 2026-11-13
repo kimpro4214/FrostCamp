@@ -20,6 +20,7 @@ signal raider_hit(index: int, agent: SimAgent)
 signal raider_killed(index: int, agent: SimAgent)
 signal tower_fired(tower_index: int, raider_index: int)
 signal bear_added(index: int)
+signal fish_caught(hole: int, agent: SimAgent)
 signal game_won
 
 var balance: Dictionary
@@ -47,6 +48,10 @@ var meat_pile_pos: Vector2
 var meat_pile_structure: Structure
 ## 기지 방벽. 구간마다 시설 번호(sim.structures). 방벽 구매 레벨이 0이면 서 있지 않다.
 var walls: Array[int] = []
+## 얼음 구멍 낚시터 자리
+var fishing_holes: Array[Vector2] = []
+## 원목·고기 말고 다른 품목의 적치장. 품목 → {"count": int, "pos": Vector2, "structure": Structure}
+var extra_piles := {}
 var wall_level := 0
 ## 기지 영역. 해금 이름("" = 처음부터) → Rect2. 습격 곰이 이 밖에 있으면 방벽부터 부순다.
 var base_rects := {}
@@ -124,6 +129,13 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 	conveyor.structure.unlock = "conveyor"
 	meat_pile_structure = _add_structure("meat_pile", meat_pile_pos, _vec(layout.meat_pile_repair))
 	meat_pile_structure.unlock = "habitat"
+	for p in layout.get("fishing_holes", []):
+		fishing_holes.append(_vec(p))
+	for item in layout.get("piles", {}):
+		var pile: Dictionary = layout.piles[item]
+		var pile_structure := _add_structure(item + "_pile", _vec(pile.pos), _vec(pile.repair_pos))
+		pile_structure.unlock = pile.get("unlock", "")
+		extra_piles[item] = {"count": 0, "pos": _vec(pile.pos), "structure": pile_structure}
 	for key in layout.base.rects:
 		var r: Array = layout.base.rects[key]
 		base_rects[key] = Rect2(r[0], r[1], r[2], r[3])
@@ -252,6 +264,9 @@ func tick(delta: float) -> void:
 	_tick_unload(player, delta)
 	_tick_pile_take(player, delta, "log")
 	_tick_pile_take(player, delta, "meat")
+	for item in extra_piles:
+		_tick_pile_take(player, delta, item)
+	_tick_fish(player, delta)
 	_tick_chop(player, delta, stats.axe_damage)
 	_tick_fight(player, delta)
 	_tick_collect_cash(player)
@@ -267,6 +282,9 @@ func tick(delta: float) -> void:
 			"hunter":
 				_tick_fight(worker, delta)
 				_tick_pile_drop(worker, delta, "meat")
+			"fisher":
+				_tick_fish(worker, delta)
+				_tick_pile_drop(worker, delta, "salmon")
 			"porter":
 				_tick_pile_take(worker, delta, worker.carry_item)
 				_tick_unload(worker, delta)
@@ -309,17 +327,37 @@ func _tick_chop(agent: SimAgent, delta: float, damage: int) -> void:
 		tree_felled.emit(index, agent)
 
 
-## 적치장 개수. item은 "log"(원목 적치장) 또는 "meat"(고기 적치장).
+## 적치장 개수. 원목·고기는 따로 둔 변수, 나머지(연어 등)는 extra_piles에 있다.
 func pile_count(item: String) -> int:
-	return woodpile if item == "log" else meat_pile
+	match item:
+		"log":
+			return woodpile
+		"meat":
+			return meat_pile
+	return extra_piles[item].count
 
 
 func pile_pos(item: String) -> Vector2:
-	return woodpile_pos if item == "log" else meat_pile_pos
+	match item:
+		"log":
+			return woodpile_pos
+		"meat":
+			return meat_pile_pos
+	return extra_piles[item].pos
 
 
 func pile_structure(item: String) -> Structure:
-	return woodpile_structure if item == "log" else meat_pile_structure
+	match item:
+		"log":
+			return woodpile_structure
+		"meat":
+			return meat_pile_structure
+	return extra_piles[item].structure
+
+
+## 적치장이 있는 품목들
+func pile_items() -> Array:
+	return ["log", "meat"] + extra_piles.keys()
 
 
 ## 쓸 수 있는 적치장인가(부서지지 않았고 열려 있다).
@@ -329,10 +367,34 @@ func is_pile_open(item: String) -> bool:
 
 
 func _change_pile(item: String, amount: int) -> void:
-	if item == "log":
-		woodpile += amount
-	else:
-		meat_pile += amount
+	match item:
+		"log":
+			woodpile += amount
+		"meat":
+			meat_pile += amount
+		_:
+			extra_piles[item].count += amount
+
+
+## 낚시할 수 있는 얼음 구멍 번호. 범위 안에 없으면 -1.
+func fishing_hole_at(pos: Vector2) -> int:
+	for i in fishing_holes.size():
+		if pos.distance_to(fishing_holes[i]) <= float(balance.fish.hole_radius):
+			return i
+	return -1
+
+
+## 얼음 구멍 위에 서 있으면 catch_interval마다 연어가 한 마리씩 등에 쌓인다(자리가 있을 때).
+func _tick_fish(agent: SimAgent, delta: float) -> void:
+	var hole := fishing_hole_at(agent.pos)
+	if hole == -1 or agent.stack.free_space() == 0:
+		agent.fish_timer = 0.0
+		return
+	agent.fish_timer += delta
+	if agent.fish_timer >= float(balance.fish.catch_interval):
+		agent.fish_timer = 0.0
+		agent.stack.push("salmon")
+		fish_caught.emit(hole, agent)
 
 
 ## 적치장 근처에서 그 품목을 하나씩 내려놓는다(벌목꾼은 원목, 사냥꾼은 고기).

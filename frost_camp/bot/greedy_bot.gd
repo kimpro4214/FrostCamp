@@ -4,7 +4,7 @@ extends RefCounted
 ## 습격 곰이 오면 먼저 막고, 부서진 시설은 돈이 모이는 대로 고친다.
 ## 길찾기 없이 직선으로 움직이되 지역 울타리는 입구로 드나든다. 규칙 판정은 게임과 같은 FrostSim이 한다.
 
-const STOP_DIST := {"tree": 1.0, "bear": 1.0, "stall": 1.0, "cash": 0.4, "zone": 0.4, "gate": 0.05, "heat": 1.0}
+const STOP_DIST := {"tree": 1.0, "bear": 1.0, "hole": 0.3, "stall": 1.0, "cash": 0.4, "zone": 0.4, "gate": 0.05, "heat": 1.0}
 ## 온기가 이 비율 밑으로 떨어지면 불가로 가서 WARM_UNTIL까지 녹인다.
 const WARM_BELOW := 0.2
 const WARM_UNTIL := 0.95
@@ -92,10 +92,31 @@ func _choose_target() -> Dictionary:
 	return _harvest_target(false)
 
 
-## 고기 판매대가 열렸으면 곰을, 아니면 나무를 노린다.
-## available_only면 지금 잡을 수 있는 것 중 가장 가까운 것, 아니면 가장 빨리 다시 나타나는 것.
+## 일하는 판매대가 있는 품목 중 가장 비싼 것의 공급원을 노린다(곰 > 연어 > 나무).
+## available_only면 지금 얻을 수 있는 것 중 가장 가까운 것, 아니면 가장 빨리 다시 나타나는 것.
 func _harvest_target(available_only: bool) -> Dictionary:
-	var hunting := sim.unlocked.has("habitat") and _has_open_stall("meat")
+	var items := ["meat", "salmon", "log"].filter(func(i: String) -> bool: return sim.balance.items.has(i))
+	items.sort_custom(func(a: String, b: String) -> bool:
+		return int(sim.balance.items[a].price) > int(sim.balance.items[b].price))
+	for item in items:
+		if not _has_open_stall(item):
+			continue
+		var target := _source_of(item, available_only)
+		if not target.is_empty():
+			return target
+	return {}
+
+
+func _source_of(item: String, available_only: bool) -> Dictionary:
+	if item == "salmon":
+		var hole := Vector2.INF
+		for p in sim.fishing_holes:
+			if sim.player.pos.distance_to(p) < sim.player.pos.distance_to(hole):
+				hole = p
+		return {} if hole == Vector2.INF else {"kind": "hole", "pos": hole}
+	var hunting := item == "meat"
+	if hunting and not sim.unlocked.has("habitat"):
+		return {}
 	var sources: Array = sim.bears if hunting else sim.trees
 	var best: RefCounted = null
 	var best_score := INF
