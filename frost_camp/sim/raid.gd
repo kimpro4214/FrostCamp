@@ -13,6 +13,8 @@ var time_left := 0.0
 ## 지금까지 시작된 웨이브 수. 첫 웨이브가 1이다.
 var wave := 0
 var spawn_pos := Vector2.ZERO
+## 이번 웨이브가 나오는 스폰 번호(spawns)
+var spawn_index := 0
 var bears: Array[RaidBear] = []
 
 
@@ -53,7 +55,8 @@ func tick(delta: float, rng: RandomNumberGenerator) -> String:
 			if time_left <= 0.0:
 				state = State.WARNING
 				time_left = float(config.warning)
-				spawn_pos = spawns[rng.randi() % spawns.size()]
+				spawn_index = rng.randi() % spawns.size()
+				spawn_pos = spawns[spawn_index]
 				return "warning"
 		State.WARNING:
 			time_left -= delta

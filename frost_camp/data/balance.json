@@ -70,6 +70,7 @@
 		"damage": 3,
 		"attack_interval": 1.0,
 		"attack_radius": 1.8,
+		"over_wall_reach": 1.5,
 		"reward": 10,
 		"meat_dropped": 2
 	},
@@ -252,7 +253,7 @@
 		"tower_3": {
 			"costs": [510, 770],
 			"effect": { "tower": "tower_3" },
-			"requires": ["expand_1", "tower_1"]
+			"requires": ["tower_1"]
 		},
 		"coat": {
 			"costs": [200, 510],

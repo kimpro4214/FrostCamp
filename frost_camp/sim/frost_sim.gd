@@ -51,6 +51,8 @@ var meat_pile_pos: Vector2
 var meat_pile_structure: Structure
 ## 기지 방벽. 구간마다 시설 번호(sim.structures). 방벽 구매 레벨이 0이면 서 있지 않다.
 var walls: Array[int] = []
+## 방벽 구간 시설 번호 → 두 끝점 {"a", "b"}
+var wall_ends := {}
 ## 얼음 구멍 낚시터 자리
 var fishing_holes: Array[Vector2] = []
 ## 뚫린 얼음 구멍 수. 앞에서부터 이만큼만 낚을 수 있다("얼음 구멍 뚫기"를 살 때마다 하나씩).
@@ -92,6 +94,8 @@ var _bear_area: Rect2
 ## 이번 프레임에 누군가와 싸운 곰들(번호 → true). 싸우는 곰은 배회하거나 걸어가지 않는다.
 var _fighting_bears := {}
 var _fighting_raiders := {}
+## 스폰 지점마다 그 곰들이 노리는 방벽 구간(시설 번호). 없으면 -1.
+var spawn_gates: Array[int] = []
 
 
 func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) -> void:
@@ -166,7 +170,9 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		_add_wall(w)
 	var spawns: Array[Vector2] = []
 	for p in layout.raid_spawns:
-		spawns.append(_vec(p))
+		# [x, y] 또는 {"pos": [x, y], "gate": [a, b]}. gate는 그 스폰의 곰이 노리는 방벽 구간(길목)이다.
+		spawns.append(_vec(p.pos) if p is Dictionary else _vec(p))
+		spawn_gates.append(_wall_between(_vec(p.gate[0]), _vec(p.gate[1])) if p is Dictionary and p.has("gate") else -1)
 	raid = Raid.new(balance.raid, spawns)
 	for id in layout.zones:
 		zones.append(PurchaseZone.new(id, _vec(layout.zones[id]), balance.zones[id]))
@@ -562,6 +568,8 @@ func _tick_raid(delta: float) -> void:
 		"warning":
 			raid_warning.emit(raid.wave + 1, raid.spawn_pos)
 		"attack":
+			for bear in raid.bears:
+				bear.gate = spawn_gates[raid.spawn_index]
 			raid_started.emit(raid.wave)
 		"cleared":
 			raid_cleared.emit(raid.wave)
@@ -770,6 +778,7 @@ func _add_wall(w: Dictionary) -> void:
 	structure.until = w.get("until", "")
 	structure.raid_target = false  # 방벽은 _raid_target이 따로 고른다.
 	walls.append(structures.size())
+	wall_ends[structures.size()] = {"a": a, "b": b}
 	structures.append(structure)
 
 
@@ -834,21 +843,40 @@ func _nearest_standing_tree(pos: Vector2, only_item: String = "") -> int:
 	return best
 
 
-## 사거리 안에서 가장 가까운 살아 있는 습격 곰. 사거리를 안 주면 근접 전투 거리다.
+## 사거리 안에서 가장 가까운 살아 있는 습격 곰. 사거리를 안 주면 근접 전투 거리이고,
+## 방벽을 치고 있는 곰은 방벽 너머에서도 닿게 over_wall_reach만큼 더 멀리서 칠 수 있다.
 func _nearest_raider(pos: Vector2, max_dist: float = -1.0) -> int:
 	var best := -1
-	var best_dist := max_dist if max_dist > 0.0 else float(balance.interact.bear_radius)
+	var best_dist := INF
 	for i in raid.bears.size():
-		var dist := pos.distance_to(raid.bears[i].pos)
-		if raid.bears[i].is_alive() and dist <= best_dist:
+		var bear := raid.bears[i]
+		var dist := pos.distance_to(bear.pos)
+		var reach := max_dist
+		if max_dist <= 0.0:
+			reach = float(balance.interact.bear_radius)
+			if bear.target != -1 and structures[bear.target].kind == "wall":
+				reach += float(balance.raid.get("over_wall_reach", 0.0))
+		if bear.is_alive() and dist <= reach and dist < best_dist:
 			best = i
 			best_dist = dist
 	return best
 
 
-## 기지 밖에 있고 아직 방벽을 뚫지 않았으면 가장 가까운 방벽 구간, 아니면 가장 가까운 시설.
+## 두 끝점이 a, b인 방벽 구간의 시설 번호(순서 무관). 없으면 -1.
+func _wall_between(a: Vector2, b: Vector2) -> int:
+	for i in walls:
+		var w: Dictionary = wall_ends[i]
+		if (w.a == a and w.b == b) or (w.a == b and w.b == a):
+			return i
+	return -1
+
+
+## 기지 밖에 있고 아직 방벽을 뚫지 않았으면 그 스폰의 길목 구간(없거나 무너졌으면 가장 가까운 방벽 구간),
+## 아니면 가장 가까운 시설.
 func _raid_target(bear: RaidBear) -> int:
 	if wall_level > 0 and not bear.breached and not is_in_base(bear.pos):
+		if bear.gate != -1 and is_structure_standing(bear.gate):
+			return bear.gate
 		var best := -1
 		var best_dist := INF
 		for i in walls:

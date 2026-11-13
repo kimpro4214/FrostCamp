@@ -11,6 +11,8 @@ var attack_timer := 0.0
 var target := -1
 ## 방벽을 뚫었는지. 뚫은 뒤에는 방벽을 더 노리지 않고 안쪽 시설로 간다.
 var breached := false
+## 이 곰이 노리는 길목 방벽 구간(시설 번호). 없으면 -1.
+var gate := -1
 
 
 func _init(spawn_pos: Vector2, bear_hp: int, bear_speed: float) -> void:

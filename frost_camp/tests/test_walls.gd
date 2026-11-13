@@ -80,3 +80,38 @@ func test_broken_wall_repair_zone_only_when_active() -> void:
 	sim.player.pos = sim.structures[inner].repair.pos
 	Fixtures.run(sim, 2.0)
 	check_eq(sim.money, 100, "사라진 구간은 수리비를 받지 않는다")
+
+
+## 스폰마다 정해진 길목 구간만 친다(4차 QA 8번).
+func test_raiders_hit_their_spawn_gate() -> void:
+	var layout := Fixtures.layout()
+	layout.raid_spawns = [{"pos": [-15, 14], "gate": [[10, 10], [-10, 10]]}]
+	var sim := FrostSim.new(Fixtures.balance(), layout)
+	check_eq(sim.spawn_gates, [sim.walls[0]], "끝점 순서가 달라도 길목 구간을 찾는다")
+	sim._apply_effect({"walls": 1})
+	sim._apply_effect({"unlock": "habitat"})
+	Fixtures.run(sim, 15.1)
+	check(sim.raid.bears.size() > 0, "웨이브가 왔다")
+	Fixtures.run(sim, 0.1)
+	for bear in sim.raid.bears:
+		check_eq(bear.target, sim.walls[0], "더 가까운 구간이 있어도 길목 구간을 노린다")
+
+
+## 방벽을 치는 곰은 방벽 안쪽에 붙어 선 플레이어가 칠 수 있다.
+func test_player_hits_raider_over_wall() -> void:
+	var balance := Fixtures.balance()
+	balance.raid.over_wall_reach = 1.5
+	var sim := FrostSim.new(balance, Fixtures.layout())
+	sim._apply_effect({"walls": 1})
+	var bear := _place_raider(sim, Vector2(0, 11.5))
+	sim.player.pos = Vector2(0, 9.2)
+	Fixtures.run(sim, 0.1)
+	check_eq(bear.target, sim.walls[0], "곰이 방벽을 친다")
+	Fixtures.run(sim, 2.0)
+	check(bear.hp < bear.max_hp, "방벽 너머에서도 플레이어가 곰을 친다")
+	var free := _place_raider(sim, Vector2(0, -3.5))
+	free.target = -1
+	sim.player.pos = Vector2(0, -1.0)
+	var before := free.hp
+	Fixtures.run(sim, 0.05)
+	check_eq(free.hp, before, "방벽을 치지 않는 곰은 근접 거리 그대로다")
