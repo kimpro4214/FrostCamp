@@ -23,6 +23,11 @@
 		"logs_dropped": 2,
 		"respawn_time": 8.0
 	},
+	"crystal": {
+		"hits_to_fell": 5,
+		"dropped": 2,
+		"respawn_time": 12.0
+	},
 	"bear": {
 		"hp": 10,
 		"wander_speed": 1.5,
@@ -47,6 +52,7 @@
 		"meat_pile": { "hp": 20, "repair_cost": 40 },
 		"wall": { "hp": [30, 60, 100], "repair_cost": 50 },
 		"salmon_pile": { "hp": 20, "repair_cost": 40 },
+		"crystal_pile": { "hp": 20, "repair_cost": 40 },
 		"tower": { "hp": 25, "repair_cost": 50 },
 		"conveyor": { "hp": 30, "repair_cost": 60 }
 	},
@@ -87,12 +93,14 @@
 		"porter": { "speed": 4.0, "capacity": 8 },
 		"cashier": { "speed": 4.0 },
 		"hunter": { "speed": 3.8, "capacity": 6, "damage": 2, "hp": 10 },
-		"fisher": { "speed": 3.5, "capacity": 6 }
+		"fisher": { "speed": 3.5, "capacity": 6 },
+		"miner": { "speed": 3.5, "capacity": 6, "damage": 1 }
 	},
 	"items": {
 		"log": { "price": 5 },
 		"salmon": { "price": 9 },
-		"meat": { "price": 22 }
+		"meat": { "price": 22 },
+		"crystal": { "price": 30 }
 	},
 	"stall": {
 		"unload_interval": 0.1,
@@ -214,6 +222,11 @@
 		"expand_2": {
 			"costs": [700],
 			"effect": { "unlock": "expand_2" },
+			"requires": ["expand_1"]
+		},
+		"miner": {
+			"costs": [300, 500],
+			"effect": { "hire": "miner" },
 			"requires": ["expand_1"]
 		},
 		"tower_3": {

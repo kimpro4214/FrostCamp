@@ -1,6 +1,6 @@
 class_name HarvestTree
 extends RefCounted
-## 나무 한 그루. 정해진 타수를 채우면 쓰러지고, 시간이 지나면 다시 자란다.
+## 나무 한 그루(또는 빙결정 바위). 정해진 타수를 채우면 쓰러지고, 시간이 지나면 다시 자란다.
 
 var pos: Vector2
 var hits_to_fell: int
@@ -9,6 +9,8 @@ var hits := 0
 var respawn_left := 0.0
 ## 비어 있지 않으면 이 이름이 해금되어야 벨 수 있다(확장 땅의 숲).
 var unlock := ""
+## 캐면 나오는 품목. "log"(나무) 또는 "crystal"(빙결정 바위)
+var item := "log"
 
 
 func _init(tree_pos: Vector2, config: Dictionary) -> void:

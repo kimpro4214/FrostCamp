@@ -92,10 +92,10 @@ func _choose_target() -> Dictionary:
 	return _harvest_target(false)
 
 
-## 일하는 판매대가 있는 품목 중 가장 비싼 것의 공급원을 노린다(곰 > 연어 > 나무).
+## 일하는 판매대가 있는 품목 중 가장 비싼 것의 공급원을 노린다(빙결정 > 곰 > 연어 > 나무).
 ## available_only면 지금 얻을 수 있는 것 중 가장 가까운 것, 아니면 가장 빨리 다시 나타나는 것.
 func _harvest_target(available_only: bool) -> Dictionary:
-	var items := ["meat", "salmon", "log"].filter(func(i: String) -> bool: return sim.balance.items.has(i))
+	var items := ["crystal", "meat", "salmon", "log"].filter(func(i: String) -> bool: return sim.balance.items.has(i))
 	items.sort_custom(func(a: String, b: String) -> bool:
 		return int(sim.balance.items[a].price) > int(sim.balance.items[b].price))
 	for item in items:
@@ -121,6 +121,8 @@ func _source_of(item: String, available_only: bool) -> Dictionary:
 	var best: RefCounted = null
 	var best_score := INF
 	for source in sources:
+		if not hunting and source.item != item:
+			continue
 		var ready: bool = source.is_alive() if hunting else sim.is_tree_ready(source)
 		if available_only and not ready:
 			continue

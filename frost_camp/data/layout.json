@@ -7,7 +7,8 @@
 	"meat_pile_repair": [1.4, -12.8],
 	"fishing_holes": [[11.2, 7.2], [12.9, 7.2], [12.0, 5.6]],
 	"piles": {
-		"salmon": { "pos": [12.6, 1.8], "repair_pos": [11.0, 0.4], "unlock": "fish_stall" }
+		"salmon": { "pos": [12.6, 1.8], "repair_pos": [11.0, 0.4], "unlock": "fish_stall" },
+		"crystal": { "pos": [-1, 10.8], "repair_pos": [1, 12.6], "unlock": "expand_1" }
 	},
 	"ship": [35, -3],
 	"heat": {
@@ -18,7 +19,7 @@
 		"habitat": { "rect": [-3, -26, 16, 12], "gate": [5, -14] },
 		"port": { "rect": [14, -10, 14, 14], "gate": [14, -3] },
 		"expand_1": { "rect": [-14, 9, 16, 9], "gate": [-6, 9], "open": true,
-			"trees": [[-1.5, 12.5], [-7.5, 15], [-1.5, 15], [-12, 14.5], [-13, 11.5], [-9.5, 10.5], [-6, 10.5], [-4.5, 16.5], [1, 15], [-10, 13], [1, 11], [-3.5, 11]] },
+			"crystals": [[-1.5, 15], [-6.5, 17], [-9, 15.5], [-12, 16.5], [-4.5, 15], [1, 16.5], [-3, 17], [-13, 12.5]] },
 		"expand_2": { "rect": [2, 9, 12, 9], "gate": [9.5, 9], "open": true, "trees": [] }
 	},
 	"bears": [[2, -20], [8, -22], [5, -18]],
@@ -62,7 +63,8 @@
 		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6], "repair_pos": [3, 1.6], "raid_target": false },
 		{ "item": "meat", "pos": [5, -5], "cash_pos": [5, -7.4], "repair_pos": [3.6, -8.2], "unlock": "meat_stall", "raid_target": false },
 		{ "item": "log", "pos": [9.5, 12.5], "cash_pos": [9.5, 15.1], "repair_pos": [7.3, 14], "unlock": "expand_2", "raid_target": false },
-		{ "item": "salmon", "pos": [6.2, 4.4], "cash_pos": [6.2, 7.0], "repair_pos": [4.4, 5.6], "unlock": "fish_stall", "raid_target": false }
+		{ "item": "salmon", "pos": [6.2, 4.4], "cash_pos": [6.2, 7.0], "repair_pos": [4.4, 5.6], "unlock": "fish_stall", "raid_target": false },
+		{ "item": "crystal", "pos": [-11, 10.6], "cash_pos": [-11, 13.2], "repair_pos": [-13, 10.6], "unlock": "expand_1", "raid_target": false }
 	],
 	"zones": {
 		"backpack": [-1.5, 3.5],
@@ -84,6 +86,7 @@
 		"tower_1": [0.2, 7.5],
 		"tower_2": [1.8, -10],
 		"tower_3": [-8.2, 13],
+		"miner": [-3.6, 10.2],
 		"expand_1": [-6, 7.4],
 		"expand_2": [8.6, 7.9],
 		"fish_stall": [6.2, 4.4],

@@ -103,6 +103,11 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 			var tree := HarvestTree.new(_vec(p), balance.tree)
 			tree.unlock = region_name
 			trees.append(tree)
+		for p in r.get("crystals", []):
+			var crystal := HarvestTree.new(_vec(p), balance.crystal)
+			crystal.unlock = region_name
+			crystal.item = "crystal"
+			trees.append(crystal)
 	var bear_area: Rect2 = regions.habitat.rect.grow(-float(balance.bear.wall_margin))
 	_bear_area = bear_area
 	for p in layout.get("extra_bears", []):
@@ -277,8 +282,11 @@ func tick(delta: float) -> void:
 		worker.target = WorkerBrain.choose(self, worker)
 		match worker.role:
 			"lumberjack":
-				_tick_chop(worker, delta, worker.damage)
+				_tick_chop(worker, delta, worker.damage, "log")
 				_tick_pile_drop(worker, delta, "log")
+			"miner":
+				_tick_chop(worker, delta, worker.damage, "crystal")
+				_tick_pile_drop(worker, delta, "crystal")
 			"hunter":
 				_tick_fight(worker, delta)
 				_tick_pile_drop(worker, delta, "meat")
@@ -310,10 +318,11 @@ func _tick_unload(agent: SimAgent, delta: float) -> void:
 	agent.unload_timer = 0.0
 
 
-func _tick_chop(agent: SimAgent, delta: float, damage: int) -> void:
+## 근처 나무나 빙결정 바위를 친다. only_item을 주면 그 품목만 캔다(벌목꾼은 원목, 광부는 빙결정).
+func _tick_chop(agent: SimAgent, delta: float, damage: int, only_item: String = "") -> void:
 	var config: Dictionary = balance.tree
-	var index := _nearest_standing_tree(agent.pos)
-	if index == -1 or agent.stack.free_space() < int(config.logs_dropped):
+	var index := _nearest_standing_tree(agent.pos, only_item)
+	if index == -1 or agent.stack.free_space() < drops_of(trees[index]):
 		agent.chop_timer = 0.0
 		return
 	agent.chop_timer += delta
@@ -322,9 +331,19 @@ func _tick_chop(agent: SimAgent, delta: float, damage: int) -> void:
 	agent.chop_timer = 0.0
 	tree_hit.emit(index, agent)
 	if trees[index].hit(damage):
-		for i in int(config.logs_dropped):
-			agent.stack.push("log")
+		for i in drops_of(trees[index]):
+			agent.stack.push(trees[index].item)
 		tree_felled.emit(index, agent)
+
+
+## 지금 칠 수 있는 가장 가까운 나무·바위 번호(화면이 들 도구를 고를 때 쓴다). 없으면 -1.
+func tree_at(pos: Vector2) -> int:
+	return _nearest_standing_tree(pos)
+
+
+## 나무 한 그루(바위 하나)가 쓰러질 때 나오는 개수
+func drops_of(tree: HarvestTree) -> int:
+	return int(balance.tree.logs_dropped) if tree.item == "log" else int(balance.crystal.dropped)
 
 
 ## 적치장 개수. 원목·고기는 따로 둔 변수, 나머지(연어 등)는 extra_piles에 있다.
@@ -729,12 +748,12 @@ func _check_ending() -> void:
 	game_won.emit()
 
 
-func _nearest_standing_tree(pos: Vector2) -> int:
+func _nearest_standing_tree(pos: Vector2, only_item: String = "") -> int:
 	var best := -1
 	var best_dist := float(balance.interact.tree_radius)
 	for i in trees.size():
 		var dist := pos.distance_to(trees[i].pos)
-		if is_tree_ready(trees[i]) and dist <= best_dist:
+		if (only_item == "" or trees[i].item == only_item) and is_tree_ready(trees[i]) and dist <= best_dist:
 			best = i
 			best_dist = dist
 	return best

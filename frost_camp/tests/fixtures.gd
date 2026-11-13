@@ -24,6 +24,7 @@ static func balance() -> Dictionary:
 			"meat_pile": {"hp": 10, "repair_cost": 20},
 			"wall": {"hp": [10, 20, 30], "repair_cost": 20},
 			"salmon_pile": {"hp": 10, "repair_cost": 20},
+			"crystal_pile": {"hp": 10, "repair_cost": 20},
 			"tower": {"hp": 10, "repair_cost": 20},
 			"conveyor": {"hp": 10, "repair_cost": 20},
 		},
@@ -41,6 +42,7 @@ static func balance() -> Dictionary:
 			"cashier": {"speed": 4.0},
 			"hunter": {"speed": 4.0, "capacity": 4, "damage": 2, "hp": 10},
 			"fisher": {"speed": 4.0, "capacity": 4},
+			"miner": {"speed": 4.0, "capacity": 4, "damage": 1},
 		},
 		"cold": {
 			"max": 30,
@@ -50,6 +52,7 @@ static func balance() -> Dictionary:
 			"sources": {"campfire": {"radius": [3.0, 5.0]}},
 		},
 		"tree": {"hits_to_fell": 3, "hit_interval": 0.5, "logs_dropped": 2, "respawn_time": 8.0},
+		"crystal": {"hits_to_fell": 4, "dropped": 2, "respawn_time": 10.0},
 		"bear": {
 			"hp": 10,
 			"wander_speed": 1.0,
@@ -100,13 +103,16 @@ static func layout() -> Dictionary:
 		"meat_pile": [0, -15],
 		"meat_pile_repair": [3, -15],
 		"fishing_holes": [[15, -5], [17, -5]],
-		"piles": {"salmon": {"pos": [15, -8], "repair_pos": [17, -8], "unlock": "fish_stall"}},
+		"piles": {
+			"salmon": {"pos": [15, -8], "repair_pos": [17, -8], "unlock": "fish_stall"},
+			"crystal": {"pos": [-15, 12], "repair_pos": [-17, 12], "unlock": "expand_1"},
+		},
 		"ship": [30, 0],
 		"heat": {"campfire": [0, 0]},
 		"trees": [[-10, 0]],
 		"regions": {
 			"habitat": {"rect": [-10, -30, 20, 10], "gate": [0, -20]},
-			"expand_1": {"rect": [-20, 10, 10, 10], "gate": [-15, 10], "open": true, "trees": [[-15, 15]]},
+			"expand_1": {"rect": [-20, 10, 10, 10], "gate": [-15, 10], "open": true, "trees": [[-15, 15]], "crystals": [[-12, 15], [-18, 13]]},
 		},
 		"bears": [[0, -25]],
 		"extra_bears": [[5, -25], [-5, -25], [3, -22]],

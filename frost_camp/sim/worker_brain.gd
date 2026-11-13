@@ -8,7 +8,9 @@ const STOP := {"tree": 1.0, "bear": 1.0, "hole": 0.2, "pile": 0.8, "stall": 1.0,
 static func choose(sim: FrostSim, worker: Worker) -> Dictionary:
 	match worker.role:
 		"lumberjack":
-			return _lumberjack(sim, worker)
+			return _gatherer(sim, worker, "log")
+		"miner":
+			return _gatherer(sim, worker, "crystal")
 		"porter":
 			return _porter(sim, worker)
 		"hunter":
@@ -20,25 +22,26 @@ static func choose(sim: FrostSim, worker: Worker) -> Dictionary:
 	return _go("idle", worker.pos)
 
 
-## 나무를 베다가 원목이 더 들어가지 않으면 적치장에 쌓는다.
-static func _lumberjack(sim: FrostSim, worker: Worker) -> Dictionary:
+## 맡은 품목(벌목꾼은 원목, 광부는 빙결정)의 가장 가까운 나무·바위를 캐다가, 더 담을 수 없으면 그 적치장에 쌓는다.
+static func _gatherer(sim: FrostSim, worker: Worker, item: String) -> Dictionary:
 	var stack := worker.stack
-	if stack.items.is_empty():
-		worker.delivering = false
-	elif stack.free_space() < int(sim.balance.tree.logs_dropped):
-		worker.delivering = true
-	if worker.delivering:
-		return _go("pile", sim.woodpile_pos)
+	var pile := sim.pile_pos(item)
 	var best: HarvestTree = null
 	for tree in sim.trees:
-		if sim.is_tree_ready(tree) and (best == null or worker.pos.distance_to(tree.pos) < worker.pos.distance_to(best.pos)):
+		if tree.item == item and sim.is_tree_ready(tree) and (best == null or worker.pos.distance_to(tree.pos) < worker.pos.distance_to(best.pos)):
 			best = tree
+	if stack.items.is_empty():
+		worker.delivering = false
+	elif best and stack.free_space() < sim.drops_of(best):
+		worker.delivering = true
+	if worker.delivering:
+		return _go("pile", pile)
 	if best:
 		return _go("tree", best.pos)
 	if not stack.items.is_empty():
 		worker.delivering = true
-		return _go("pile", sim.woodpile_pos)
-	return _go("idle", sim.woodpile_pos)
+		return _go("pile", pile)
+	return _go("idle", pile)
 
 
 ## 원목·고기 적치장 중 더 많이 쌓인 쪽에서 채워, 그 품목의 일하는 판매대에 내려놓는다.
