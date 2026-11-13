@@ -29,14 +29,16 @@ func test_campfire_recovers_warmth() -> void:
 	check_eq(sim.agent_speed(sim.player), 5.0, "녹으면 원래 속도로 돌아온다")
 
 
-func test_stove_warms_only_after_purchase() -> void:
+func test_fire_upgrade_grows_warm_circle() -> void:
 	var sim := _make_sim()
-	var near_stove := Vector2(0, -13)
-	check(not sim.is_warm(near_stove), "난로를 사기 전에는 춥다")
+	var edge := Vector2(0, 4)
+	check(not sim.is_warm(edge), "처음 모닥불 범위 밖은 춥다")
 	sim.money = 10
 	sim.player.pos = Vector2(-12, 5)
 	Fixtures.run(sim, 1.5)
-	check(sim.is_warm(near_stove), "난로를 사면 그 범위가 따뜻해진다")
+	check_eq(sim.heat_sources[0].radius, 5.0, "모닥불 키우기를 사면 반경이 다음 단계가 된다")
+	check(sim.is_warm(edge), "커진 범위가 따뜻해진다")
+	check_eq(sim.heat_sources.size(), 1, "열원은 모닥불 하나다")
 
 
 func test_coat_slows_drain() -> void:
@@ -49,12 +51,11 @@ func test_coat_slows_drain() -> void:
 	check(is_equal_approx(before - sim.player.warmth, 5.0), "방한복을 입으면 덜 춥다 (%.2f)" % (before - sim.player.warmth))
 
 
-func test_workers_freeze_by_same_rule() -> void:
+func test_workers_never_freeze() -> void:
 	var sim := _make_sim()
 	sim._apply_effect({"hire": "porter"})
 	var porter := sim.workers[0]
 	porter.pos = OUTSIDE
-	porter.warmth = 1.0
-	sim.tick(1.0)
-	check_eq(porter.warmth, 0.0, "일꾼도 밖에서 온기가 준다")
-	check_eq(sim.agent_speed(porter), 2.0, "얼어붙은 일꾼은 절반 속도로 걷는다")
+	Fixtures.run(sim, 60.0)
+	check_eq(porter.warmth, porter.max_warmth, "일꾼은 밖에 오래 있어도 얼지 않는다")
+	check_eq(sim.agent_speed(porter), porter.speed, "일꾼은 늘 제 속도로 걷는다")

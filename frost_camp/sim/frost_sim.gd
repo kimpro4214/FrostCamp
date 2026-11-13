@@ -58,7 +58,8 @@ var unlocked := {}
 ## 지역 이름 → {"rect": Rect2, "gate": Vector2, "open": bool}
 ## open인 지역(확장 땅)은 사면 울타리 전체가 없어져 기지가 넓어진다.
 var regions := {}
-## 열원 목록. {"id": String, "pos": Vector2, "radius": float, "unlock": String}
+## 열원 목록. {"id": String, "pos": Vector2, "radius": float, "radii": Array, "level": int, "unlock": String}
+## 반경은 "모닥불 키우기" 구매로 radii의 다음 값이 된다.
 var heat_sources: Array[Dictionary] = []
 ## 업그레이드로 바뀌는 플레이어 능력치. 적재량은 player.stack.capacity에 있다.
 var stats := {}
@@ -136,9 +137,10 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		zones.append(PurchaseZone.new(id, _vec(layout.zones[id]), balance.zones[id]))
 	for id in layout.heat:
 		var source: Dictionary = balance.cold.sources[id]
+		var radii: Array = source.radius
 		heat_sources.append({
-			"id": id, "pos": _vec(layout.heat[id]),
-			"radius": float(source.radius), "unlock": source.get("unlock", ""),
+			"id": id, "pos": _vec(layout.heat[id]), "radius": float(radii[0]), "radii": radii, "level": 0,
+			"unlock": source.get("unlock", ""),
 		})
 	stats = {
 		"move_speed": float(balance.player.move_speed),
@@ -255,8 +257,8 @@ func tick(delta: float) -> void:
 	_tick_collect_cash(player)
 	_tick_purchase(player, delta)
 	_tick_cold(player, delta, stats.cold_drain)
+	# 일꾼은 추위를 타지 않는다(3차 QA: 일꾼이 계속 어는 것이 불편했다).
 	for worker in workers:
-		_tick_cold(worker, delta, float(balance.cold.drain))
 		worker.target = WorkerBrain.choose(self, worker)
 		match worker.role:
 			"lumberjack":
@@ -580,6 +582,12 @@ func _apply_effect(effect: Dictionary) -> void:
 		if effect.unlock == balance.raid.start_after:
 			raid.activate()
 		_check_ending()
+		return
+	if effect.has("fire"):
+		for source in heat_sources:
+			if source.id == effect.fire:
+				source.level = mini(source.level + 1, source.radii.size() - 1)
+				source.radius = float(source.radii[source.level])
 		return
 	if effect.has("walls"):
 		_raise_walls()

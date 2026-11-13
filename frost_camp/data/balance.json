@@ -38,8 +38,7 @@
 		"recover": 8.0,
 		"frozen_speed_mult": 0.5,
 		"sources": {
-			"campfire": { "radius": 4.0 },
-			"stove": { "radius": 6.5, "unlock": "stove" }
+			"campfire": { "radius": [4.0, 6.5, 9.0, 12.0] }
 		}
 	},
 	"structures": {
@@ -170,9 +169,9 @@
 			"effect": { "hire": "cashier", "stall": 2 },
 			"requires": ["expand_2"]
 		},
-		"stove": {
-			"costs": [250],
-			"effect": { "unlock": "stove" },
+		"fire": {
+			"costs": [200, 350, 550],
+			"effect": { "fire": "campfire" },
 			"requires": ["lumberjack"]
 		},
 		"wall": {
@@ -213,7 +212,7 @@
 		"port": {
 			"costs": [900],
 			"effect": { "unlock": "port" },
-			"requires": ["stove"]
+			"requires": ["fire"]
 		},
 		"ship_hull": {
 			"costs": [900],
