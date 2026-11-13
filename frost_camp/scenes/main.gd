@@ -14,6 +14,7 @@ const TowerView := preload("res://frost_camp/scenes/tower_view.gd")
 const WoodpileScene := preload("res://frost_camp/scenes/woodpile.tscn")
 const WallView := preload("res://frost_camp/scenes/wall_view.gd")
 const FishingView := preload("res://frost_camp/scenes/fishing_view.gd")
+const GunView := preload("res://frost_camp/scenes/gun_view.gd")
 const Ending := preload("res://frost_camp/scenes/ending.gd")
 const ConveyorView := preload("res://frost_camp/scenes/conveyor_view.gd")
 ## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
@@ -92,6 +93,9 @@ func _ready() -> void:
 	fishing.setup(sim, _body_of)
 	sim.fish_caught.connect(func(hole: int, _a: SimAgent) -> void: _sfx.play_at("pickup", sim.fishing_holes[hole], 6.0))
 	sim.hole_drilled.connect(func(hole: int) -> void: _sfx.play_at("chop", sim.fishing_holes[hole]))
+	var gun := GunView.new()
+	add_child(gun)
+	gun.setup(sim, _player)
 	for i in sim.towers.size():
 		var tower := TowerView.new()
 		$Towers.add_child(tower)
@@ -173,6 +177,7 @@ func _connect_sounds() -> void:
 	sim.raider_hit.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("punch", sim.raid.bears[i].pos))
 	sim.raider_killed.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("punch_heavy", sim.raid.bears[i].pos))
 	sim.tower_fired.connect(func(t: int, _r: int) -> void: _sfx.play_at("shoot", sim.towers[t].pos))
+	sim.gun_fired.connect(func(_r: int) -> void: _sfx.play("shoot"))
 	sim.raid_warning.connect(func(_wave: int, _pos: Vector2) -> void: _sfx.play("raid"))
 	sim.raid_cleared.connect(func(_wave: int) -> void: _sfx.play("hire"))
 
