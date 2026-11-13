@@ -1,7 +1,7 @@
 extends Node3D
 ## 판매대 하나의 겉모습. sim의 재고·돈 더미를 매 프레임 따라 그리고, 손님 줄을 걸어 다니는 사람들로 보여 준다.
-## 손님은 계속 같은 노드로 남는다: 물건을 받으면 들고 걸어 나가고, 뒤 손님은 한 칸씩 걸어서 당겨지고,
-## 새 손님은 줄 끝 너머에서 걸어 들어온다(sim의 줄 길이를 따라간다).
+## 손님은 한 방향으로 지나간다: 줄 끝(+X) 너머에서 걸어 들어와 맨 앞에서 사고,
+## 산 손님은 판매대마다 정한 쪽(layout의 exit, 다른 줄과 엇갈리지 않게) 옆으로 곧게 걸어 나가 사라진다(줄을 거슬러 가지 않는다). 뒤 손님은 한 칸씩 당겨진다.
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const MAX_SHOWN_STOCK := 12
@@ -17,9 +17,9 @@ const CUSTOMER_SCALE := 2.3
 const WALK_SPEED := 3.5
 ## 새 손님이 나타나는 곳: 줄 맨 끝 자리에서 이만큼 더 뒤
 const ENTER_DISTANCE := 3.0
-## 산 손님이 걸어 나가는 방향과 거리, 시간
-const EXIT_OFFSET := Vector3(1.2, 0.0, 3.5)
-const EXIT_TIME := 1.1
+## 산 손님이 줄 옆으로 걸어 나가는 거리와 시간
+const EXIT_DISTANCE := 2.2
+const EXIT_TIME := 0.8
 ## 판매대(-X)를 바라보는 방향
 const FACE_STALL := -PI / 2.0
 
@@ -29,6 +29,8 @@ var _shown := Vector2i(-1, -1)  # 재고, 돈 더미 개수
 var _customers: Array[Node3D] = []
 var _last_served := 0
 var _spawned := 0
+## 산 손님이 나가는 방향
+var _exit_dir := Vector3.BACK
 
 @onready var _stock_root: Node3D = $Stock
 @onready var _cash_root: Node3D = $Cash
@@ -45,6 +47,7 @@ func setup(frost_sim: FrostSim, stall_index: int) -> void:
 	position = Vector3(stall.pos.x, 0.0, stall.pos.y)
 	var cash_offset := stall.cash_pos - stall.pos
 	_cash_root.position = Vector3(cash_offset.x, 0.0, cash_offset.y)
+	_exit_dir = Vector3(stall.exit_dir.x, 0.0, stall.exit_dir.y).normalized()
 	_set_disc_radius(_unload_zone, float(sim.balance.interact.stall_radius))
 	_set_disc_radius(_cash_zone, float(sim.balance.interact.cash_radius))
 	_last_served = stall.served
@@ -113,8 +116,8 @@ func _leave(customer: Node3D, stall: Stall) -> void:
 	customer.add_child(item)
 	Juice.pop(item, Vector3(0.3, 0.3, 0.3), 0.25)
 	Juice.float_text(self, customer.global_position + Vector3(0.0, 2.2, 0.0), "+$%d" % stall.price, Color(1.0, 0.85, 0.3), 48)
-	var exit := customer.position + EXIT_OFFSET
-	customer.rotation.y = atan2(EXIT_OFFSET.x, EXIT_OFFSET.z)
+	var exit := customer.position + _exit_dir * EXIT_DISTANCE
+	customer.rotation.y = atan2(_exit_dir.x, _exit_dir.z)
 	_play(customer, "walk")
 	var tween := customer.create_tween()
 	tween.tween_property(customer, "position", exit, EXIT_TIME)

@@ -66,10 +66,10 @@
 		{ "id": "tower_3", "pos": [-21.4, 5], "repair_pos": [-21.4, 7.0] }
 	],
 	"stalls": [
-		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6], "repair_pos": [3, 1.6], "raid_target": false },
-		{ "item": "meat", "pos": [5, -5], "cash_pos": [5, -7.4], "repair_pos": [3.6, -8.2], "unlock": "meat_stall", "raid_target": false },
-		{ "item": "crystal", "pos": [9.5, 12.5], "cash_pos": [9.5, 15.1], "repair_pos": [7.3, 14], "unlock": "expand_2", "raid_target": false },
-		{ "item": "salmon", "pos": [6.2, 4.4], "cash_pos": [6.2, 7.0], "repair_pos": [4.4, 5.6], "unlock": "fish_stall", "raid_target": false }
+		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6], "repair_pos": [3, 1.6], "exit": [0, -1], "raid_target": false },
+		{ "item": "meat", "pos": [5, -5], "cash_pos": [5, -7.4], "repair_pos": [3.6, -8.2], "exit": [0, -1], "unlock": "meat_stall", "raid_target": false },
+		{ "item": "crystal", "pos": [9.5, 12.5], "cash_pos": [9.5, 15.1], "repair_pos": [7.3, 14], "exit": [0, -1], "unlock": "expand_2", "raid_target": false },
+		{ "item": "salmon", "pos": [6.2, 4.4], "cash_pos": [6.2, 7.0], "repair_pos": [4.4, 5.6], "exit": [0, 1], "unlock": "fish_stall", "raid_target": false }
 	],
 	"zones": {
 		"backpack": [-1.5, 3.5],

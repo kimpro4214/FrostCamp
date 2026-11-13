@@ -132,6 +132,7 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 	for s in layout.stalls:
 		var stall := Stall.new(s.item, _vec(s.pos), _vec(s.cash_pos), balance)
 		stall.unlock = s.get("unlock", "")
+		stall.exit_dir = _vec(s.get("exit", [0, 1]))
 		stall.structure = _add_structure("stall", stall.pos, _vec(s.repair_pos))
 		stall.structure.unlock = stall.unlock
 		stall.structure.raid_target = s.get("raid_target", true)

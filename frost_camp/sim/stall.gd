@@ -8,6 +8,8 @@ var item: String
 var unlock := ""
 var pos: Vector2
 var cash_pos: Vector2
+## 산 손님이 걸어 나가는 방향(화면 연출용, layout의 exit)
+var exit_dir := Vector2(0, 1)
 var price: int
 var sell_interval: float
 var customer_refill: float
