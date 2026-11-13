@@ -2,18 +2,22 @@ extends Node3D
 ## 얼음 구멍 낚시터. 구멍마다 짙은 물빛 원판과 얼음 테두리를 두고,
 ## 연어가 잡히면 물보라가 튀고 연어가 낚은 사람 등으로 포물선을 그리며 날아간다.
 ## 아직 안 뚫린 구멍은 숨어 있다가, 뚫으면 얼음 조각이 튀며 솟아오른다.
+## 누가 낚고 있는 구멍은 테두리가 주황색이 되고, 플레이어가 남이 쓰는 구멍에 서면 "자리 없음"을 띄운다.
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const HOLE_RADIUS := 0.75
 const WATER_COLOR := Color(0.1, 0.28, 0.42)
 const RIM_COLOR := Color(0.88, 0.95, 1.0)
 const SALMON_COLOR := Color(0.98, 0.55, 0.5)
+const BUSY_COLOR := Color(1.0, 0.62, 0.25)
 const FLY_TIME := 0.4
 
 var sim: FrostSim
 var _splashes: Array[CPUParticles3D] = []
 var _holes: Array[Node3D] = []
 var _chips: Array[CPUParticles3D] = []
+var _rims: Array[StandardMaterial3D] = []
+var _full_labels: Array[Label3D] = []
 ## 품목을 들어 올린 사람 노드를 찾을 때 쓴다(플레이어 또는 일꾼 화면)
 var _find_body: Callable
 
@@ -38,7 +42,9 @@ func setup(frost_sim: FrostSim, find_body: Callable) -> void:
 		var rim_mesh := TorusMesh.new()
 		rim_mesh.inner_radius = HOLE_RADIUS
 		rim_mesh.outer_radius = HOLE_RADIUS + 0.22
-		rim_mesh.material = _material(RIM_COLOR)
+		var rim_material := _material(RIM_COLOR)
+		rim_mesh.material = rim_material
+		_rims.append(rim_material)
 		rim.mesh = rim_mesh
 		rim.scale = Vector3(1.0, 0.5, 1.0)
 		root.add_child(rim)
@@ -48,10 +54,28 @@ func setup(frost_sim: FrostSim, find_body: Callable) -> void:
 		var chips := Juice.make_burst(self, RIM_COLOR, 16)
 		chips.position = root.position + Vector3(0.0, 0.2, 0.0)
 		_chips.append(chips)
+		var full := Label3D.new()
+		full.text = "자리 없음"
+		full.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		full.font_size = 80
+		full.outline_size = 12
+		full.modulate = BUSY_COLOR
+		full.position.y = 2.6
+		full.visible = false
+		root.add_child(full)
+		_full_labels.append(full)
 		root.visible = _holes.size() < sim.holes_open
 		_holes.append(root)
 	sim.fish_caught.connect(_on_fish_caught)
 	sim.hole_drilled.connect(_on_hole_drilled)
+
+
+func _process(_delta: float) -> void:
+	for i in _rims.size():
+		var user: SimAgent = sim.hole_users[i]
+		_rims[i].albedo_color = BUSY_COLOR if user else RIM_COLOR
+		var near: bool = sim.player.pos.distance_to(sim.fishing_holes[i]) <= float(sim.balance.fish.hole_radius)
+		_full_labels[i].visible = near and user != null and user != sim.player
 
 
 ## 새 구멍: 얼음 조각이 튀고 구멍이 납작하게 솟아올랐다가 자리 잡는다.
