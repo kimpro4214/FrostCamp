@@ -2,7 +2,7 @@ extends Node3D
 ## 기지 방벽. 구간마다 충돌체를 붙이고, 방벽 레벨에 따라 모습을 바꾼다.
 ## 1단계 나무 울타리, 2단계 철벽, 3단계 두꺼운 돌담. 레벨이 오르면 구간마다 차례로 새 모습이 솟는다.
 ## 방벽을 사면 솟아오르고, 확장으로 안쪽이 된 구간은 땅속으로 꺼지며, 바깥 구간이 새로 솟는다.
-## 부서진 구간은 지나갈 수 있다.
+## 부서진 구간은 지나갈 수 있다. 습격 곰이 노리는 길목 구간에는 붉은 깃발이 선다.
 
 const FenceModel := preload("res://frost_camp/assets/models/survival/fence-fortified.glb")
 const MetalModel := preload("res://frost_camp/assets/models/survival/structure-metal-wall.glb")
@@ -18,6 +18,8 @@ const STONE_THICKNESS := 1.1
 const MERLON_GAP := 1.2
 const STONE_COLOR := Color(0.6, 0.6, 0.62)
 const RISE_TIME := 0.5
+## 길목 깃대 높이
+const FLAG_HEIGHT := 3.6
 ## 레벨이 바뀔 때 구간마다 이만큼 늦게 솟는다(초)
 const STAGGER := 0.05
 ## 레벨 → 모습 노드 이름
@@ -63,12 +65,42 @@ func _build(index: int, w: Dictionary) -> void:
 	model.add_child(_tiled("Wood", FenceModel, FENCE_WIDTH, length))
 	model.add_child(_stone_wall(length))
 	model.add_child(_tiled("Metal", MetalModel, METAL_WIDTH, length))
+	if sim.spawn_gates.has(index):
+		body.add_child(_gate_flag())
 	add_child(body)
 	models[index] = model
 	_bodies[index] = body
 	_shown[index] = false
 	body.visible = false
 	body.collision_layer = 0
+
+
+## 길목 표시: 구간 가운데에 높은 깃대와 붉은 깃발을 세운다.
+func _gate_flag() -> Node3D:
+	var root := Node3D.new()
+	var pole := MeshInstance3D.new()
+	var pole_mesh := CylinderMesh.new()
+	pole_mesh.top_radius = 0.06
+	pole_mesh.bottom_radius = 0.08
+	pole_mesh.height = FLAG_HEIGHT
+	pole_mesh.material = _flat(Color(0.35, 0.25, 0.18))
+	pole.mesh = pole_mesh
+	pole.position.y = FLAG_HEIGHT / 2.0
+	root.add_child(pole)
+	var banner := MeshInstance3D.new()
+	var banner_mesh := BoxMesh.new()
+	banner_mesh.size = Vector3(1.0, 0.6, 0.05)
+	banner_mesh.material = _flat(Color(0.9, 0.18, 0.15))
+	banner.mesh = banner_mesh
+	banner.position = Vector3(0.5, FLAG_HEIGHT - 0.35, 0.0)
+	root.add_child(banner)
+	return root
+
+
+static func _flat(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	return material
 
 
 ## 모델 한 칸을 구간 길이에 맞춰 줄지어 세운다.
