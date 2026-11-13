@@ -12,10 +12,10 @@ const OUT_DIR := "res://playtest/"
 ## 기획서 5장 진행표를 MVP 구매로 옮긴 것. [단계, 기준(존 id 또는 ending), 목표 시작 분, 목표 끝 분]
 const MILESTONES := [
 	["1 표류", "backpack", 0, 3],
-	["2 사냥", "fish_stall", 3, 8],
+	["1 표류", "fish_stall", 0, 3],
+	["2 사냥", "lumberjack", 3, 8],
 	["2 사냥", "habitat", 3, 8],
 	["2 사냥", "meat_stall", 3, 8],
-	["2 사냥", "lumberjack", 3, 8],
 	["3 자동화", "haul_log", 8, 15],
 	["3 자동화", "cashier", 8, 15],
 	["3 자동화", "fire", 8, 15],

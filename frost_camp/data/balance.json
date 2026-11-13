@@ -135,147 +135,147 @@
 			"requires": ["backpack"]
 		},
 		"fisher": {
-			"costs": [150, 300],
+			"costs": [260, 510],
 			"effect": { "hire": "fisher" },
 			"requires": ["fish_stall"]
 		},
 		"habitat": {
-			"costs": [250],
+			"costs": [350],
 			"effect": { "unlock": "habitat" },
 			"requires": ["fish_stall"]
 		},
 		"meat_stall": {
-			"costs": [150],
+			"costs": [200],
 			"effect": { "unlock": "meat_stall" },
 			"requires": ["habitat"]
 		},
 		"hunter": {
-			"costs": [250, 450],
+			"costs": [430, 770],
 			"effect": { "hire": "hunter" },
 			"requires": ["meat_stall"]
 		},
 		"bear_den": {
-			"costs": [200, 400],
+			"costs": [340, 680],
 			"effect": { "bears": 2 },
 			"requires": ["meat_stall"]
 		},
 		"harpoon": {
-			"costs": [100, 250],
+			"costs": [170, 430],
 			"effect": { "stat": "harpoon_damage", "add": 1 },
 			"requires": ["habitat"]
 		},
 		"lumberjack": {
-			"costs": [100, 250],
+			"costs": [170, 430],
 			"effect": { "hire": "lumberjack" },
 			"requires": ["backpack"]
 		},
 		"haul_log": {
-			"costs": [150, 350, 500],
+			"costs": [420, 600, 850],
 			"effect": { "haul": "log" },
 			"requires": ["lumberjack"]
 		},
 		"haul_salmon": {
-			"costs": [150, 350, 500],
+			"costs": [260, 600, 850],
 			"effect": { "haul": "salmon" },
 			"requires": ["fisher"]
 		},
 		"haul_meat": {
-			"costs": [200, 400, 550],
+			"costs": [340, 680, 940],
 			"effect": { "haul": "meat" },
 			"requires": ["hunter"]
 		},
 		"haul_crystal": {
-			"costs": [250, 450, 600],
+			"costs": [430, 770, 1020],
 			"effect": { "haul": "crystal" },
 			"requires": ["miner"]
 		},
 		"cashier": {
-			"costs": [320],
+			"costs": [540],
 			"effect": { "hire": "cashier", "stall": 0 },
 			"requires": ["meat_stall"]
 		},
 		"cashier_meat": {
-			"costs": [300],
+			"costs": [510],
 			"effect": { "hire": "cashier", "stall": 1 },
 			"requires": ["cashier"]
 		},
 		"cashier_market": {
-			"costs": [350],
+			"costs": [600],
 			"effect": { "hire": "cashier", "stall": 2 },
 			"requires": ["expand_2"]
 		},
 		"fire": {
-			"costs": [200, 350, 550],
+			"costs": [520, 650, 940],
 			"effect": { "fire": "campfire" },
 			"requires": ["lumberjack"]
 		},
 		"wall": {
-			"costs": [300, 500, 800],
+			"costs": [510, 850, 1360],
 			"effect": { "walls": 1 },
 			"requires": ["habitat"]
 		},
 		"tower_1": {
-			"costs": [150, 300],
+			"costs": [260, 510],
 			"effect": { "tower": "tower_1" },
 			"requires": ["habitat"]
 		},
 		"tower_2": {
-			"costs": [250, 400],
+			"costs": [430, 680],
 			"effect": { "tower": "tower_2" },
 			"requires": ["tower_1"]
 		},
 		"expand_1": {
-			"costs": [650],
+			"costs": [1110],
 			"effect": { "unlock": "expand_1" },
 			"requires": ["lumberjack"]
 		},
 		"expand_2": {
-			"costs": [700],
+			"costs": [1190],
 			"effect": { "unlock": "expand_2" },
 			"requires": ["expand_1"]
 		},
 		"miner": {
-			"costs": [300, 500],
+			"costs": [510, 850],
 			"effect": { "hire": "miner" },
 			"requires": ["expand_1"]
 		},
 		"tower_3": {
-			"costs": [300, 450],
+			"costs": [510, 770],
 			"effect": { "tower": "tower_3" },
 			"requires": ["expand_1", "tower_1"]
 		},
 		"coat": {
-			"costs": [120, 300],
+			"costs": [200, 510],
 			"effect": { "stat": "cold_drain", "add": -0.3 },
 			"requires": ["habitat"]
 		},
 		"port": {
-			"costs": [900],
+			"costs": [1530],
 			"effect": { "unlock": "port" },
 			"requires": ["fire"]
 		},
 		"ship_hull": {
-			"costs": [900],
+			"costs": [1800],
 			"effect": { "unlock": "ship_hull" },
 			"requires": ["port"]
 		},
 		"ship_engine": {
-			"costs": [1200],
+			"costs": [2400],
 			"effect": { "unlock": "ship_engine" },
 			"requires": ["port"]
 		},
 		"ship_blade": {
-			"costs": [1100],
+			"costs": [2200],
 			"effect": { "unlock": "ship_blade" },
 			"requires": ["port"]
 		},
 		"ship_mast": {
-			"costs": [700],
+			"costs": [1400],
 			"effect": { "unlock": "ship_mast" },
 			"requires": ["port"]
 		},
 		"ship_fuel": {
-			"costs": [600],
+			"costs": [1200],
 			"effect": { "unlock": "ship_fuel" },
 			"requires": ["port"]
 		}
