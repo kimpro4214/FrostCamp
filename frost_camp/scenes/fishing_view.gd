@@ -1,6 +1,7 @@
 extends Node3D
 ## 얼음 구멍 낚시터. 구멍마다 짙은 물빛 원판과 얼음 테두리를 두고,
 ## 연어가 잡히면 물보라가 튀고 연어가 낚은 사람 등으로 포물선을 그리며 날아간다.
+## 아직 안 뚫린 구멍은 숨어 있다가, 뚫으면 얼음 조각이 튀며 솟아오른다.
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const HOLE_RADIUS := 0.75
@@ -11,6 +12,8 @@ const FLY_TIME := 0.4
 
 var sim: FrostSim
 var _splashes: Array[CPUParticles3D] = []
+var _holes: Array[Node3D] = []
+var _chips: Array[CPUParticles3D] = []
 ## 품목을 들어 올린 사람 노드를 찾을 때 쓴다(플레이어 또는 일꾼 화면)
 var _find_body: Callable
 
@@ -42,7 +45,20 @@ func setup(frost_sim: FrostSim, find_body: Callable) -> void:
 		var splash := Juice.make_burst(root, Color(0.75, 0.9, 1.0), 10, 0.1)
 		splash.position.y = 0.1
 		_splashes.append(splash)
+		var chips := Juice.make_burst(self, RIM_COLOR, 16)
+		chips.position = root.position + Vector3(0.0, 0.2, 0.0)
+		_chips.append(chips)
+		root.visible = _holes.size() < sim.holes_open
+		_holes.append(root)
 	sim.fish_caught.connect(_on_fish_caught)
+	sim.hole_drilled.connect(_on_hole_drilled)
+
+
+## 새 구멍: 얼음 조각이 튀고 구멍이 납작하게 솟아올랐다가 자리 잡는다.
+func _on_hole_drilled(hole: int) -> void:
+	_holes[hole].visible = true
+	_chips[hole].restart()
+	Juice.pop(_holes[hole], Vector3(0.3, 1.0, 0.3), 0.35)
 
 
 func _on_fish_caught(hole: int, agent: SimAgent) -> void:

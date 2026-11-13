@@ -91,6 +91,7 @@ func _ready() -> void:
 	add_child(fishing)
 	fishing.setup(sim, _body_of)
 	sim.fish_caught.connect(func(hole: int, _a: SimAgent) -> void: _sfx.play_at("pickup", sim.fishing_holes[hole], 6.0))
+	sim.hole_drilled.connect(func(hole: int) -> void: _sfx.play_at("chop", sim.fishing_holes[hole]))
 	for i in sim.towers.size():
 		var tower := TowerView.new()
 		$Towers.add_child(tower)
