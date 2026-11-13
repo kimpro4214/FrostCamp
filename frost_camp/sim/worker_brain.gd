@@ -23,13 +23,23 @@ static func choose(sim: FrostSim, worker: Worker) -> Dictionary:
 
 
 ## 맡은 품목(벌목꾼은 원목, 광부는 빙결정)의 가장 가까운 나무·바위를 캐다가, 더 담을 수 없으면 그 적치장에 쌓는다.
+## 같은 역할의 다른 일꾼이 노리는 나무·바위는 건너뛴다(남은 게 없을 때만 겹친다).
 static func _gatherer(sim: FrostSim, worker: Worker, item: String) -> Dictionary:
 	var stack := worker.stack
 	var pile := sim.pile_pos(item)
+	var taken := {}
+	for other in sim.workers:
+		if other != worker and other.role == worker.role and other.target.get("kind", "") == "tree":
+			taken[other.target.pos] = true
 	var best: HarvestTree = null
+	var best_free := false
 	for tree in sim.trees:
-		if tree.item == item and sim.is_tree_ready(tree) and (best == null or worker.pos.distance_to(tree.pos) < worker.pos.distance_to(best.pos)):
+		if tree.item != item or not sim.is_tree_ready(tree):
+			continue
+		var free := not taken.has(tree.pos)
+		if best == null or (free and not best_free) or (free == best_free and worker.pos.distance_to(tree.pos) < worker.pos.distance_to(best.pos)):
 			best = tree
+			best_free = free
 	if stack.items.is_empty():
 		worker.delivering = false
 	elif best and stack.free_space() < sim.drops_of(best):

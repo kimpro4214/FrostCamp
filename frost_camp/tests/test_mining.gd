@@ -44,3 +44,17 @@ func test_lumberjack_ignores_crystals_and_miner_fills_pile() -> void:
 	Fixtures.run_with_workers(sim, 25.0)
 	check(sim.pile_count("crystal") >= 2, "광부가 빙결정 적치장을 채운다 (%d)" % sim.pile_count("crystal"))
 	check_eq(sim.woodpile, 0, "광부는 원목을 캐지 않는다")
+
+
+## 광부 둘이 같은 바위에 몰리지 않는다(4차 QA 2번).
+func test_two_miners_pick_different_crystals() -> void:
+	var sim := _make_sim()
+	sim._apply_effect({"hire": "miner"})
+	sim._apply_effect({"hire": "miner"})
+	for worker in sim.workers:
+		worker.target = WorkerBrain.choose(sim, worker)
+	var first := WorkerBrain.choose(sim, sim.workers[0])
+	var second := WorkerBrain.choose(sim, sim.workers[1])
+	check_eq(first.kind, "tree", "첫 광부는 바위로 간다")
+	check_eq(second.kind, "tree", "둘째 광부도 바위로 간다")
+	check(first.pos != second.pos, "서로 다른 바위를 고른다")
