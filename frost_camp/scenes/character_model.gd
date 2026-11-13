@@ -5,9 +5,9 @@ extends Node3D
 const SCALE := 2.3
 const FrozenOverlay := preload("res://frost_camp/scenes/frozen_overlay.tres")
 const ACTION := "attack-melee-right"
-## 오른손 뼈(어깨) 기준으로 도구를 쥐는 위치와 방향
-const TOOL_ROTATION := Vector3(PI / 2.0, 0.0, 0.0)
-const TOOL_POSITION := Vector3(-0.01, -0.1, -0.02)
+## 오른손 뼈(어깨) 기준으로 도구를 쥐는 위치와 방향. 이 모델의 팔은 뼈의 -X 쪽으로 뻗어 있어서 손은 어깨에서 -X로 약 0.3이다.
+const TOOL_ROTATION := Vector3(PI / 2.0 - 0.6, 0.0, 0.0)  # 손잡이를 앞으로, 조금 위로 세운다
+const TOOL_POSITION := Vector3(-0.3, 0.0, 0.0)
 const TOOL_SCALE := 1.4
 
 var _player: AnimationPlayer
