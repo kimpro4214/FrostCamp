@@ -277,32 +277,32 @@
 			"requires": ["habitat"]
 		},
 		"port": {
-			"costs": [1300],
+			"costs": [1500],
 			"effect": { "unlock": "port" },
 			"requires": ["fire:3"]
 		},
 		"ship_hull": {
-			"costs": [1800],
+			"costs": [3240],
 			"effect": { "unlock": "ship_hull" },
 			"requires": ["port"]
 		},
 		"ship_engine": {
-			"costs": [2400],
+			"costs": [4320],
 			"effect": { "unlock": "ship_engine" },
 			"requires": ["port"]
 		},
 		"ship_blade": {
-			"costs": [2200],
+			"costs": [3960],
 			"effect": { "unlock": "ship_blade" },
 			"requires": ["port"]
 		},
 		"ship_mast": {
-			"costs": [1400],
+			"costs": [2520],
 			"effect": { "unlock": "ship_mast" },
 			"requires": ["port"]
 		},
 		"ship_fuel": {
-			"costs": [1200],
+			"costs": [2160],
 			"effect": { "unlock": "ship_fuel" },
 			"requires": ["port"]
 		}
