@@ -14,9 +14,10 @@
 | RPG Audio (Kenney) | 도끼질·동전 `assets/sounds/rpg/` | kenney.nl/assets/rpg-audio | CC0 1.0 |
 | Music Jingles (Kenney) | 고용·탈출·습격 짧은 음악 `assets/sounds/jingles/` | kenney.nl/assets/music-jingles | CC0 1.0 |
 | Game Icons (Kenney) | 구매 존·HUD 아이콘(집, 사람, 수레, 과녁, 더하기, 자물쇠, 렌치, 바구니, 경고 등) `assets/icons/` | kenney.nl/assets/game-icons | CC0 1.0 |
+| Wintery loop (Emma_MA) | 배경음 `assets/music/bgm.wav` | opengameart.org/content/wintery-loop | CC0 1.0 |
 
 각 Kenney 팩의 라이선스 원문은 모델·소리·아이콘 폴더마다 `License.txt`로 들어 있다. CC0이라 표기 의무는 없지만 감사의 뜻으로 적는다.
 
-북극곰, 쇄빙선, 돌담, 빙결정 바위, 낚싯대, 컨베이어, 포탑, 구매 존, 등 뒤 스택, HUD의 동전·하트·눈송이 아이콘은 Godot 기본 도형(박스·캡슐·실린더)으로 직접 만들었다.
+북극곰(몸통·혹·주둥이·귀를 박스로 조합), 쇄빙선(난간 포함), 돌담, 빙결정 바위, 낚싯대, 컨베이어, 포탑, 구매 존, 등 뒤 스택, HUD의 동전·하트·눈송이 아이콘은 Godot 기본 도형(박스·캡슐·실린더)으로 직접 만들었다.
 
 엔진: Godot Engine 4.7 (MIT License, godotengine.org).

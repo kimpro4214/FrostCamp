@@ -1,8 +1,8 @@
 extends AudioStreamPlayer
 ## 배경음. Music 버스로 한 곡을 반복해서 튼다. 습격 중에는 조금 크고 빠르게, 끝나면 원래대로 돌아간다.
-## 곡 파일이 없으면 조용히 아무것도 하지 않는다.
+## 곡 파일이 없으면 조용히 아무것도 하지 않는다. 반복은 가져오기 설정(edit/loop_mode)이 맡는다.
 
-const TRACK := "res://frost_camp/assets/music/bgm.ogg"
+const TRACK := "res://frost_camp/assets/music/bgm.wav"
 const CALM_DB := -10.0
 const RAID_DB := -6.0
 const RAID_PITCH := 1.06
@@ -18,8 +18,6 @@ func setup(frost_sim: FrostSim) -> void:
 	if not ResourceLoader.exists(TRACK):
 		return
 	var track: AudioStream = load(TRACK)
-	if track is AudioStreamOggVorbis:
-		track.loop = true
 	stream = track
 	volume_db = CALM_DB
 	play()
