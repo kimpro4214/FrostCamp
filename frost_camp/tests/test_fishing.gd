@@ -54,3 +54,34 @@ func test_player_takes_from_salmon_pile() -> void:
 	sim.player.pos = sim.pile_pos("salmon")
 	Fixtures.run(sim, 1.0)
 	check_eq(sim.player.stack.items.count("salmon"), 3, "플레이어도 연어 적치장에서 집는다")
+
+
+## 구멍은 사서 뚫는다(4차 QA 4번). 안 뚫린 구멍에서는 낚이지 않는다.
+func test_holes_open_only_after_drilling() -> void:
+	var layout := Fixtures.layout()
+	layout.holes_open = 0
+	var sim := FrostSim.new(Fixtures.balance(), layout)
+	sim._apply_effect({"unlock": "fish_stall"})
+	sim.player.pos = sim.fishing_holes[0]
+	Fixtures.run(sim, 2.1)
+	check_eq(sim.player.stack.items.count("salmon"), 0, "뚫기 전에는 낚이지 않는다")
+	var drilled := []
+	sim.hole_drilled.connect(func(hole: int) -> void: drilled.append(hole))
+	sim._apply_effect({"holes": 1})
+	check_eq(drilled, [0], "첫 구멍이 뚫린다")
+	Fixtures.run(sim, 2.1)
+	check_eq(sim.player.stack.items.count("salmon"), 2, "뚫은 구멍에서는 낚인다")
+	sim.player.stack.items.clear()
+	sim.player.pos = sim.fishing_holes[1]
+	Fixtures.run(sim, 2.1)
+	check_eq(sim.player.stack.items.count("salmon"), 0, "둘째 구멍은 아직 막혀 있다")
+
+
+func test_fishers_share_open_holes() -> void:
+	var layout := Fixtures.layout()
+	layout.holes_open = 1
+	var sim := FrostSim.new(Fixtures.balance(), layout)
+	sim._apply_effect({"unlock": "fish_stall"})
+	sim._apply_effect({"hire": "fisher"})
+	sim._apply_effect({"hire": "fisher"})
+	check_eq(WorkerBrain.choose(sim, sim.workers[1]).pos, sim.fishing_holes[0], "뚫린 구멍이 하나면 둘 다 그 구멍으로 간다")

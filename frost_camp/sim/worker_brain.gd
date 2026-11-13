@@ -109,14 +109,14 @@ static func _hunter(sim: FrostSim, worker: Worker) -> Dictionary:
 	return _go("pile", sim.meat_pile_pos)
 
 
-## 맡은 얼음 구멍(낚시꾼 순서대로 나눔)에서 낚고, 등이 차면 연어 적치장에 쌓는다.
+## 맡은 얼음 구멍(뚫린 구멍을 낚시꾼 순서대로 나눔)에서 낚고, 등이 차면 연어 적치장에 쌓는다.
 static func _fisher(sim: FrostSim, worker: Worker) -> Dictionary:
 	var stack := worker.stack
 	if stack.items.is_empty():
 		worker.delivering = false
 	elif stack.free_space() == 0:
 		worker.delivering = true
-	if worker.delivering:
+	if worker.delivering or sim.holes_open == 0:
 		return _go("pile", sim.pile_pos("salmon"))
 	var order := 0
 	for other in sim.workers:
@@ -124,7 +124,7 @@ static func _fisher(sim: FrostSim, worker: Worker) -> Dictionary:
 			break
 		if other.role == "fisher":
 			order += 1
-	return _go("hole", sim.fishing_holes[order % sim.fishing_holes.size()])
+	return _go("hole", sim.fishing_holes[order % sim.holes_open])
 
 
 ## 전담 판매대가 있으면 그 돈 더미 자리에 서 있고, 없으면 돈이 가장 많이 쌓인 판매대로 간다.

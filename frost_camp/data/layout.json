@@ -6,6 +6,7 @@
 	"meat_pile": [3.6, -11.8],
 	"meat_pile_repair": [1.4, -12.8],
 	"fishing_holes": [[11.2, 7.2], [12.9, 7.2], [12.0, 5.6]],
+	"holes_open": 0,
 	"piles": {
 		"salmon": { "pos": [12.6, 1.8], "repair_pos": [11.0, 0.4], "unlock": "fish_stall" },
 		"crystal": { "pos": [-1, 10.8], "repair_pos": [1, 12.6], "unlock": "expand_1" }
@@ -93,6 +94,7 @@
 		"expand_1": [-6, 7.4],
 		"expand_2": [8.6, 7.9],
 		"fish_stall": [6.2, 4.4],
+		"ice_hole": [13.0, 3.9],
 		"fisher": [12.6, -0.6],
 		"wall": [-3.2, 6.6],
 		"port": [12, -3],

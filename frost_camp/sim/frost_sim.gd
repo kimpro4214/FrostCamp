@@ -21,6 +21,8 @@ signal raider_killed(index: int, agent: SimAgent)
 signal tower_fired(tower_index: int, raider_index: int)
 signal bear_added(index: int)
 signal fish_caught(hole: int, agent: SimAgent)
+## 얼음 구멍 하나를 새로 뚫었다(구멍 번호).
+signal hole_drilled(hole: int)
 signal worker_retired(index: int)
 signal game_won
 
@@ -51,6 +53,8 @@ var meat_pile_structure: Structure
 var walls: Array[int] = []
 ## 얼음 구멍 낚시터 자리
 var fishing_holes: Array[Vector2] = []
+## 뚫린 얼음 구멍 수. 앞에서부터 이만큼만 낚을 수 있다("얼음 구멍 뚫기"를 살 때마다 하나씩).
+var holes_open := 0
 ## 원목·고기 말고 다른 품목의 적치장. 품목 → {"count": int, "pos": Vector2, "structure": Structure}
 var extra_piles := {}
 var wall_level := 0
@@ -149,6 +153,7 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 	meat_pile_structure.unlock = "habitat"
 	for p in layout.get("fishing_holes", []):
 		fishing_holes.append(_vec(p))
+	holes_open = mini(int(layout.get("holes_open", 0)), fishing_holes.size())
 	for item in layout.get("piles", {}):
 		var pile: Dictionary = layout.piles[item]
 		var pile_structure := _add_structure(item + "_pile", _vec(pile.pos), _vec(pile.repair_pos))
@@ -411,9 +416,9 @@ func _change_pile(item: String, amount: int) -> void:
 			extra_piles[item].count += amount
 
 
-## 낚시할 수 있는 얼음 구멍 번호. 범위 안에 없으면 -1.
+## 낚시할 수 있는(뚫린) 얼음 구멍 번호. 범위 안에 없으면 -1.
 func fishing_hole_at(pos: Vector2) -> int:
-	for i in fishing_holes.size():
+	for i in holes_open:
 		if pos.distance_to(fishing_holes[i]) <= float(balance.fish.hole_radius):
 			return i
 	return -1
@@ -687,6 +692,10 @@ func _apply_effect(effect: Dictionary) -> void:
 			if source.id == effect.fire:
 				source.level = mini(source.level + 1, source.radii.size() - 1)
 				source.radius = float(source.radii[source.level])
+		return
+	if effect.has("holes"):
+		holes_open = mini(holes_open + int(effect.holes), fishing_holes.size())
+		hole_drilled.emit(holes_open - 1)
 		return
 	if effect.has("walls"):
 		_raise_walls()

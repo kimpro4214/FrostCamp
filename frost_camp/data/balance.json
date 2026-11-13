@@ -129,10 +129,15 @@
 			"effect": { "stat": "axe_damage", "add": 1 },
 			"requires": ["backpack"]
 		},
+		"ice_hole": {
+			"costs": [30, 80, 160],
+			"effect": { "holes": 1 },
+			"requires": ["backpack"]
+		},
 		"fish_stall": {
 			"costs": [40],
 			"effect": { "unlock": "fish_stall" },
-			"requires": ["backpack"]
+			"requires": ["ice_hole"]
 		},
 		"fisher": {
 			"costs": [260, 510],

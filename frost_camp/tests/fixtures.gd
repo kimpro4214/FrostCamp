@@ -103,6 +103,7 @@ static func layout() -> Dictionary:
 		"meat_pile": [0, -15],
 		"meat_pile_repair": [3, -15],
 		"fishing_holes": [[15, -5], [17, -5]],
+		"holes_open": 2,
 		"piles": {
 			"salmon": {"pos": [15, -8], "repair_pos": [17, -8], "unlock": "fish_stall"},
 			"crystal": {"pos": [-15, 12], "repair_pos": [-17, 12], "unlock": "expand_1"},
