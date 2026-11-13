@@ -95,10 +95,11 @@ func _ready() -> void:
 		var tower := TowerView.new()
 		$Towers.add_child(tower)
 		tower.setup(sim, i)
-	var conveyor := ConveyorView.new()
-	conveyor.name = "Conveyor"
-	add_child(conveyor)
-	conveyor.setup(sim)
+	for item in sim.conveyors:
+		var conveyor := ConveyorView.new()
+		conveyor.name = "Conveyor_" + item
+		add_child(conveyor)
+		conveyor.setup(sim, item)
 	sim.raid_started.connect(_on_raid_started)
 	sim.bear_added.connect(func(i: int) -> void:
 		var bear := BearScene.instantiate()
@@ -140,8 +141,9 @@ func _place_structures(repair_name: String) -> void:
 		for item in sim.extra_piles:
 			if structure == sim.extra_piles[item].structure:
 				target = get_node(item.capitalize() + "Pile/Logs")
-		if structure == sim.conveyor.structure:
-			target = $Conveyor.model
+		for item in sim.conveyors:
+			if structure == sim.conveyors[item].structure:
+				target = get_node("Conveyor_" + item).model
 		for j in sim.towers.size():
 			if sim.towers[j].structure == structure:
 				target = $Towers.get_child(j).model

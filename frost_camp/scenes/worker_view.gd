@@ -14,6 +14,7 @@ const ROLE_MODELS := {
 var sim: FrostSim
 var index: int
 var _goal := Vector2.INF
+var _leaving := false
 
 @onready var _agent: NavigationAgent3D = $NavigationAgent3D
 @onready var _pivot: Node3D = $Pivot
@@ -43,6 +44,8 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 
 func _physics_process(_delta: float) -> void:
 	var worker := sim.workers[index]
+	if worker.retired and not _leaving:
+		_leave()
 	var goal: Vector2 = worker.target.pos
 	if goal != _goal:
 		_goal = goal
@@ -77,3 +80,15 @@ func _on_hit(agent: SimAgent, target: Vector2) -> void:
 	_model.play_action()
 	var dir := target - agent.pos
 	_pivot.rotation.y = atan2(-dir.x, -dir.y)
+
+
+## 컨베이어로 바뀌어 물러난 운반꾼: 손을 흔들 듯 한 번 휘두르고 스폰 쪽으로 걸어가며 작아져 사라진다.
+func _leave() -> void:
+	_leaving = true
+	_model.play_action()
+	var tween := create_tween()
+	tween.tween_interval(2.5)
+	tween.tween_property(self, "scale", Vector3.ONE * 0.01, 0.4).set_ease(Tween.EASE_IN)
+	tween.tween_callback(func() -> void:
+		visible = false
+		set_physics_process(false))
