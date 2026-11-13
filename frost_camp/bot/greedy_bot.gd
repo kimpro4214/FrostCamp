@@ -108,6 +108,11 @@ func _harvest_target(available_only: bool) -> Dictionary:
 	var items := ["crystal", "meat", "salmon", "log"].filter(func(i: String) -> bool: return sim.balance.items.has(i))
 	items.sort_custom(func(a: String, b: String) -> bool:
 		return int(sim.balance.items[a].price) > int(sim.balance.items[b].price))
+	# 빛나는 빙결정(보석)이 있으면 가장 먼저 캔다.
+	if _has_open_stall("crystal"):
+		for tree in sim.trees:
+			if tree.glowing and sim.is_tree_ready(tree):
+				return {"kind": "tree", "pos": tree.pos}
 	for item in items:
 		if not _has_open_stall(item):
 			continue
@@ -164,7 +169,10 @@ func _drop_size() -> int:
 func _delivery_stall() -> Stall:
 	var best: Stall = null
 	for stall in sim.stalls:
-		if sim.is_stall_working(stall) and sim.player.stack.items.has(stall.item):
+		var accepted := sim.player.stack.items.has(stall.item)
+		for premium in stall.premium:
+			accepted = accepted or sim.player.stack.items.has(premium)
+		if sim.is_stall_working(stall) and accepted:
 			if best == null or sim.player.pos.distance_to(stall.pos) < sim.player.pos.distance_to(best.pos):
 				best = stall
 	return best if best else sim.stalls[0]

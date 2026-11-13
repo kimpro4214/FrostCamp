@@ -10,6 +10,8 @@ var pos: Vector2
 var cash_pos: Vector2
 ## 산 손님이 걸어 나가는 방향(화면 연출용, layout의 exit)
 var exit_dir := Vector2(0, 1)
+## 이 판매대가 바로 사 가는 고급 자원(balance.items의 sold_at이 이 품목인 것)
+var premium: Array[String] = []
 var price: int
 var sell_interval: float
 var customer_refill: float

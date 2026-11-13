@@ -83,6 +83,10 @@
 		"take_interval": [0.8, 0.45],
 		"spacing": 0.6
 	},
+	"premium": {
+		"gold_salmon_chance": 0.125,
+		"glow_interval": 45.0
+	},
 	"gun": {
 		"interval": 0.8,
 		"range": [5.5, 7.0, 8.5],
@@ -106,7 +110,9 @@
 		"log": { "price": 5 },
 		"salmon": { "price": 9 },
 		"meat": { "price": 22 },
-		"crystal": { "price": 30 }
+		"crystal": { "price": 30 },
+		"gold_salmon": { "price": 60, "sold_at": "salmon" },
+		"gem": { "price": 120, "sold_at": "crystal" }
 	},
 	"stall": {
 		"unload_interval": 0.1,

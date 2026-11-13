@@ -34,7 +34,7 @@ static func _gatherer(sim: FrostSim, worker: Worker, item: String) -> Dictionary
 	var best: HarvestTree = null
 	var best_free := false
 	for tree in sim.trees:
-		if tree.item != item or not sim.is_tree_ready(tree):
+		if tree.item != item or not sim.is_tree_ready(tree) or tree.glowing:
 			continue
 		var free := not taken.has(tree.pos)
 		if best == null or (free and not best_free) or (free == best_free and worker.pos.distance_to(tree.pos) < worker.pos.distance_to(best.pos)):

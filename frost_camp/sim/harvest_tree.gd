@@ -11,6 +11,8 @@ var respawn_left := 0.0
 var unlock := ""
 ## 캐면 나오는 품목. "log"(나무) 또는 "crystal"(빙결정 바위)
 var item := "log"
+## 빛나는 빙결정 바위인가. 플레이어만 캘 수 있고, 캐면 보석 하나가 나온다.
+var glowing := false
 
 
 func _init(tree_pos: Vector2, config: Dictionary) -> void:

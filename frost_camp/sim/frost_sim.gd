@@ -27,6 +27,12 @@ signal gun_fired(raider_index: int)
 signal fire_fueled(source_index: int, agent: SimAgent)
 ## 모닥불 연료가 다 떨어져 꺼졌다(열원 번호).
 signal fire_out(source_index: int)
+## 플레이어만 얻는 고급 자원을 얻었다(품목, 얻은 자리).
+signal premium_found(item: String, pos: Vector2)
+## 광맥의 빙결정 바위 하나가 빛나기 시작했다(나무 번호).
+signal crystal_glowed(tree_index: int)
+## 판매대가 고급 자원을 바로 사 갔다(판매대 번호, 품목).
+signal premium_sold(stall_index: int, item: String)
 ## 얼음 구멍 하나를 새로 뚫었다(구멍 번호).
 signal hole_drilled(hole: int)
 signal worker_retired(index: int)
@@ -68,6 +74,8 @@ var hole_users: Array = []
 ## 작살총 단계(0이면 없음)와 다음 발사까지 쌓인 시간
 var gun_level := 0
 var gun_timer := 0.0
+## 다음 빛나는 빙결정까지 쌓인 시간
+var glow_timer := 0.0
 ## 원목·고기 말고 다른 품목의 적치장. 품목 → {"count": int, "pos": Vector2, "structure": Structure}
 var extra_piles := {}
 var wall_level := 0
@@ -146,6 +154,9 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		var stall := Stall.new(s.item, _vec(s.pos), _vec(s.cash_pos), balance)
 		stall.unlock = s.get("unlock", "")
 		stall.exit_dir = _vec(s.get("exit", [0, 1]))
+		for item in balance.items:
+			if balance.items[item].get("sold_at", "") == stall.item:
+				stall.premium.append(item)
 		stall.structure = _add_structure("stall", stall.pos, _vec(s.repair_pos))
 		stall.structure.unlock = stall.unlock
 		stall.structure.raid_target = s.get("raid_target", true)
@@ -356,6 +367,7 @@ func tick(delta: float) -> void:
 	_tick_collect_cash(player)
 	_tick_purchase(player, delta)
 	_tick_fuel(delta)
+	_tick_glow(delta)
 	_tick_cold(player, delta, stats.cold_drain)
 	# 일꾼은 추위를 타지 않는다(3차 QA: 일꾼이 계속 어는 것이 불편했다).
 	for worker in workers:
@@ -391,8 +403,17 @@ func tick(delta: float) -> void:
 
 func _tick_unload(agent: SimAgent, delta: float) -> void:
 	var radius := float(balance.interact.stall_radius)
-	for stall in stalls:
-		if is_stall_working(stall) and agent.pos.distance_to(stall.pos) <= radius and agent.stack.items.has(stall.item):
+	for s in stalls.size():
+		var stall := stalls[s]
+		if not is_stall_working(stall) or agent.pos.distance_to(stall.pos) > radius:
+			continue
+		# 고급 자원은 줄 선 손님과 상관없이 판매대가 바로 사 간다(돈 더미에 쌓인다).
+		for premium in stall.premium:
+			if agent.stack.items.has(premium):
+				agent.stack.take(premium)
+				stall.cash += int(balance.items[premium].price)
+				premium_sold.emit(s, premium)
+		if agent.stack.items.has(stall.item):
 			agent.unload_timer += delta
 			if agent.unload_timer >= float(balance.stall.unload_interval):
 				agent.unload_timer = 0.0
@@ -405,7 +426,7 @@ func _tick_unload(agent: SimAgent, delta: float) -> void:
 ## 근처 나무나 빙결정 바위를 친다. only_item을 주면 그 품목만 캔다(벌목꾼은 원목, 광부는 빙결정).
 func _tick_chop(agent: SimAgent, delta: float, damage: int, only_item: String = "") -> void:
 	var config: Dictionary = balance.tree
-	var index := _nearest_standing_tree(agent.pos, only_item)
+	var index := _nearest_standing_tree(agent.pos, only_item, agent is Worker)
 	if index == -1 or agent.stack.free_space() < drops_of(trees[index]):
 		agent.chop_timer = 0.0
 		return
@@ -415,8 +436,13 @@ func _tick_chop(agent: SimAgent, delta: float, damage: int, only_item: String = 
 	agent.chop_timer = 0.0
 	tree_hit.emit(index, agent)
 	if trees[index].hit(damage):
-		for i in drops_of(trees[index]):
-			agent.stack.push(trees[index].item)
+		if trees[index].glowing:
+			trees[index].glowing = false
+			agent.stack.push("gem")
+			premium_found.emit("gem", trees[index].pos)
+		else:
+			for i in drops_of(trees[index]):
+				agent.stack.push(trees[index].item)
 		tree_felled.emit(index, agent)
 
 
@@ -427,6 +453,8 @@ func tree_at(pos: Vector2) -> int:
 
 ## 나무 한 그루(바위 하나)가 쓰러질 때 나오는 개수
 func drops_of(tree: HarvestTree) -> int:
+	if tree.glowing:
+		return 1
 	return int(balance.tree.logs_dropped) if tree.item == "log" else int(balance.crystal.dropped)
 
 
@@ -514,7 +542,12 @@ func _tick_fish(agent: SimAgent, delta: float) -> void:
 	agent.fish_timer += delta
 	if agent.fish_timer >= float(balance.fish.catch_interval):
 		agent.fish_timer = 0.0
-		agent.stack.push("salmon")
+		# 플레이어가 낚을 때만 가끔 황금 연어가 걸린다(낚시꾼은 못 잡는다).
+		if agent == player and balance.has("premium") and rng.randf() < float(balance.premium.gold_salmon_chance):
+			agent.stack.push("gold_salmon")
+			premium_found.emit("gold_salmon", fishing_holes[hole])
+		else:
+			agent.stack.push("salmon")
 		fish_caught.emit(hole, agent)
 
 
@@ -681,6 +714,27 @@ func _tick_towers(delta: float) -> void:
 			bears_killed += 1
 			_reward_raider_kill(null)
 			raider_killed.emit(target, null)
+
+
+## 광맥을 연 뒤 glow_interval마다, 빛나는 바위가 없으면 서 있는 빙결정 바위 하나가 빛나기 시작한다.
+func _tick_glow(delta: float) -> void:
+	if not balance.has("premium"):
+		return
+	var candidates: Array[int] = []
+	for i in trees.size():
+		if trees[i].glowing:
+			return
+		if trees[i].item == "crystal" and is_tree_ready(trees[i]):
+			candidates.append(i)
+	if candidates.is_empty():
+		return
+	glow_timer += delta
+	if glow_timer < float(balance.premium.glow_interval):
+		return
+	glow_timer = 0.0
+	var pick: int = candidates[rng.randi() % candidates.size()]
+	trees[pick].glowing = true
+	crystal_glowed.emit(pick)
 
 
 ## 작살총: 플레이어가 사거리 안의 가장 가까운 습격 곰을 interval마다 자동으로 쏜다. 기절해 있으면 못 쏜다.
@@ -951,11 +1005,13 @@ func _check_ending() -> void:
 	game_won.emit()
 
 
-func _nearest_standing_tree(pos: Vector2, only_item: String = "") -> int:
+func _nearest_standing_tree(pos: Vector2, only_item: String = "", skip_glowing := false) -> int:
 	var best := -1
 	var best_dist := float(balance.interact.tree_radius)
 	for i in trees.size():
 		var dist := pos.distance_to(trees[i].pos)
+		if skip_glowing and trees[i].glowing:
+			continue
 		if (only_item == "" or trees[i].item == only_item) and is_tree_ready(trees[i]) and dist <= best_dist:
 			best = i
 			best_dist = dist
