@@ -71,7 +71,7 @@ func _choose_target() -> Dictionary:
 	if raider:
 		return {"kind": "bear", "pos": raider.pos}
 	for structure in sim.structures:
-		if structure.is_broken() and sim.money >= structure.repair.remaining():
+		if structure.is_broken() and sim.can_repair() and sim.money >= structure.repair.remaining():
 			return {"kind": "zone", "pos": structure.repair.pos}
 
 	var zone := cheapest_zone()

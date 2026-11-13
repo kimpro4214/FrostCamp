@@ -155,7 +155,7 @@ func _place_structures(repair_name: String) -> void:
 		view.setup(sim, i, target)
 		var zone := ZoneScene.instantiate()
 		$Zones.add_child(zone)
-		zone.setup(sim, structure.repair, repair_name, func() -> bool: return structure.is_broken() and sim.is_structure_active(i))
+		zone.setup(sim, structure.repair, repair_name, func() -> bool: return structure.is_broken() and sim.is_structure_active(i) and sim.can_repair())
 
 
 ## sim 이벤트마다 효과음을 붙인다.

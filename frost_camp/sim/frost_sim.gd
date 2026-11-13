@@ -96,6 +96,8 @@ var _fighting_bears := {}
 var _fighting_raiders := {}
 ## 스폰 지점마다 그 곰들이 노리는 방벽 구간(시설 번호). 없으면 -1.
 var spawn_gates: Array[int] = []
+## 스폰 지점마다 곰이 거쳐 가는 두 점: 길목 바깥 접근점, 길목 안쪽 점. 길목이 없으면 빈 배열.
+var spawn_paths: Array = []
 
 
 func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) -> void:
@@ -174,6 +176,7 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		# [x, y] 또는 {"pos": [x, y], "gate": [a, b]}. gate는 그 스폰의 곰이 노리는 방벽 구간(길목)이다.
 		spawns.append(_vec(p.pos) if p is Dictionary else _vec(p))
 		spawn_gates.append(_wall_between(_vec(p.gate[0]), _vec(p.gate[1])) if p is Dictionary and p.has("gate") else -1)
+		spawn_paths.append(_gate_path(_vec(p.gate[0]), _vec(p.gate[1])) if p is Dictionary and p.has("gate") else [])
 	raid = Raid.new(balance.raid, spawns)
 	for id in layout.zones:
 		zones.append(PurchaseZone.new(id, _vec(layout.zones[id]), balance.zones[id]))
@@ -571,6 +574,7 @@ func _tick_raid(delta: float) -> void:
 		"attack":
 			for bear in raid.bears:
 				bear.gate = spawn_gates[raid.spawn_index]
+				bear.path = spawn_paths[raid.spawn_index].duplicate()
 			raid_started.emit(raid.wave)
 		"cleared":
 			raid_cleared.emit(raid.wave)
@@ -584,6 +588,13 @@ func _tick_raid(delta: float) -> void:
 				bear.breached = true  # 노리던 방벽 구간이 무너졌으니 그 틈으로 들어간다.
 			bear.target = _raid_target(bear)
 			bear.attack_timer = 0.0
+		# 길목 바깥 접근점까지 먼저 걷고, 길목 방벽을 노리지 않으면 길목 안쪽 점도 거친다(서식지 벽 등을 가로지르지 않게).
+		var attacking_gate := bear.target != -1 and bear.target == bear.gate
+		if not bear.path.is_empty() and not (attacking_gate and bear.path.size() == 1):
+			bear.pos = bear.pos.move_toward(bear.path[0], bear.speed * delta)
+			if bear.pos.distance_to(bear.path[0]) < 0.2:
+				bear.path.pop_front()
+			continue
 		if bear.target == -1:
 			# 노릴 시설이 없으면 플레이어에게 달려든다. 닿으면 근접 전투가 시작된다.
 			var reach := float(balance.interact.bear_radius) * 0.8
@@ -689,7 +700,7 @@ func _tick_purchase(agent: SimAgent, delta: float) -> void:
 			return
 	for i in structures.size():
 		var structure := structures[i]
-		if structure.is_broken() and is_structure_active(i) and _pay_into(agent, structure.repair, delta):
+		if structure.is_broken() and is_structure_active(i) and can_repair() and _pay_into(agent, structure.repair, delta):
 			if structure.try_finish_repair():
 				structure_repaired.emit(i)
 			return
@@ -861,6 +872,21 @@ func _nearest_raider(pos: Vector2, max_dist: float = -1.0) -> int:
 			best = i
 			best_dist = dist
 	return best
+
+
+## 길목 구간 a-b의 바깥 접근점과 안쪽 점. 바깥은 기지 중심에서 먼 쪽이다.
+func _gate_path(a: Vector2, b: Vector2) -> Array:
+	var mid := (a + b) / 2.0
+	var normal := (b - a).orthogonal().normalized()
+	if normal.dot(mid - base_rects[""].get_center()) < 0.0:
+		normal = -normal
+	var config: Dictionary = balance.raid
+	return [mid + normal * float(config.get("gate_outside", 2.5)), mid - normal * float(config.get("gate_inside", 2.0))]
+
+
+## 습격 중에는 수리할 수 없다(웨이브가 끝나야 고친다).
+func can_repair() -> bool:
+	return raid.state != Raid.State.ATTACKING
 
 
 ## 두 끝점이 a, b인 방벽 구간의 시설 번호(순서 무관). 없으면 -1.

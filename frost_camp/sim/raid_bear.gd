@@ -13,6 +13,8 @@ var target := -1
 var breached := false
 ## 이 곰이 노리는 길목 방벽 구간(시설 번호). 없으면 -1.
 var gate := -1
+## 아직 거쳐 가야 할 점들(길목 바깥 접근점, 길목 안쪽 점). 비면 목표로 곧장 간다.
+var path: Array = []
 
 
 func _init(spawn_pos: Vector2, bear_hp: int, bear_speed: float) -> void:

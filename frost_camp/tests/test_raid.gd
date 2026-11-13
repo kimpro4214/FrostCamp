@@ -169,3 +169,36 @@ func test_bear_den_adds_habitat_bears() -> void:
 	check_eq(sim.bears[1].pos, Vector2(5, -25), "준비된 자리에 나타난다")
 	sim._apply_effect({"bears": 2})
 	check_eq(sim.bears.size(), 4, "자리가 모자라면 남은 만큼만 는다")
+
+
+## 습격 중에는 수리할 수 없고, 웨이브가 끝나면 고칠 수 있다(5차 QA 10번).
+func test_repair_waits_until_wave_cleared() -> void:
+	var sim := _make_sim()
+	sim.money = 100
+	sim.damage_structure(WOODPILE, 100)
+	_place_raider(sim, Vector2(30, 30), 100, 0.0)
+	sim.player.pos = sim.structures[WOODPILE].repair.pos
+	Fixtures.run(sim, 3.0)
+	check(sim.structures[WOODPILE].is_broken(), "습격 중에는 고쳐지지 않는다")
+	check_eq(sim.money, 100, "돈도 들어가지 않는다")
+	sim.raid.bears[0].hp = 0
+	Fixtures.run(sim, 4.0)
+	check(not sim.structures[WOODPILE].is_broken(), "웨이브가 끝나면 고칠 수 있다")
+
+
+## 습격 곰은 길목 바깥 접근점과 안쪽 점을 거쳐 들어온다(5차 QA 9번).
+func test_raider_walks_through_gate_path() -> void:
+	var layout := Fixtures.layout()
+	layout.raid_spawns = [{"pos": [0, 30], "gate": [[-10, 10], [10, 10]]}]
+	var sim := FrostSim.new(Fixtures.balance(), layout)
+	check_eq(sim.spawn_paths[0], [Vector2(0, 12.5), Vector2(0, 8.0)], "길목 바깥 2.5, 안쪽 2.0")
+	sim._apply_effect({"unlock": "habitat"})
+	Fixtures.run(sim, 15.1)
+	check(sim.raid.bears.size() > 0, "웨이브가 왔다")
+	var bear: RaidBear = sim.raid.bears[0]
+	var passed_gate := false
+	for i in 400:
+		sim.tick(0.05)
+		if bear.pos.distance_to(Vector2(0, 8.0)) < 1.6:
+			passed_gate = true
+	check(passed_gate, "길목 안쪽 점을 지나간다")
