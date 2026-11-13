@@ -1,6 +1,6 @@
 extends Node3D
 ## 구매 존(또는 수리 존)의 겉모습. 낸 돈만큼 안쪽 원판이 차고, 남은 금액을 띄운다.
-## 지금 살 수 없으면 숨는다.
+## 지금 살 수 없으면 숨는다. 모닥불 단계만 모자라면 흐리게 보이며 "모닥불 N단계 필요"를 띄운다.
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 
@@ -31,6 +31,14 @@ func setup(frost_sim: FrostSim, purchase_zone: PurchaseZone, zone_name: String, 
 func _process(_delta: float) -> void:
 	visible = _available.call()
 	if not visible:
+		return
+	var fire := sim.fire_needed(zone)
+	_base.transparency = 0.6 if fire > 0 else 0.0
+	_label.modulate = Color(0.75, 0.8, 0.9) if fire > 0 else Color.WHITE
+	if fire > 0:
+		_fill.visible = false
+		_label.text = "%s
+모닥불 %d단계 필요" % [display_name, fire]
 		return
 	var progress := float(zone.paid) / zone.cost()
 	_fill.scale = Vector3(progress, 1.0, progress)

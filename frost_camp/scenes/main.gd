@@ -63,7 +63,7 @@ func _ready() -> void:
 		$Zones.add_child(zone)
 		var purchase_zone := sim.zones[i]
 		zone.setup(sim, purchase_zone, zone_names.get(purchase_zone.id, purchase_zone.id),
-			func() -> bool: return sim.is_zone_available(purchase_zone))
+			func() -> bool: return sim.is_zone_available(purchase_zone) or sim.fire_needed(purchase_zone) > 0)
 	for i in sim.bears.size():
 		var bear := BearScene.instantiate()
 		$Bears.add_child(bear)
