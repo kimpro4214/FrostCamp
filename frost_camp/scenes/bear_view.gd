@@ -15,6 +15,10 @@ var _fur: CPUParticles3D
 var _dying := false
 var _last_hp := 0
 var _body_scale := Vector3.ONE
+## 걷는 동안 다리를 흔드는 위상
+var _walk := 0.0
+const WALK_SWING := 0.5
+const WALK_RATE := 9.0
 
 @onready var _body: Node3D = $Body
 @onready var _hp_bar: Node3D = $HpBar
@@ -31,8 +35,9 @@ func setup(frost_sim: FrostSim, sim_bear: RefCounted, is_raider: bool) -> void:
 	if raider:
 		var material := StandardMaterial3D.new()
 		material.albedo_color = RAIDER_FUR
-		for part in ["Torso", "Head", "LegFL", "LegFR", "LegBL", "LegBR"]:
-			_body.get_node(part).material_override = material
+		for part in _body.get_children():
+			if not part.name in ["Nose", "EyeL", "EyeR"]:
+				part.material_override = material
 		_body.scale = Vector3.ONE * RAIDER_SCALE
 		sim.raider_hit.connect(func(i: int, _agent: SimAgent) -> void:
 			if sim.raid.bears[i] == bear:
@@ -58,8 +63,15 @@ func _sync(snap: bool) -> void:
 	visible = bear.is_alive()
 	var target := Vector3(bear.pos.x, 0.0, bear.pos.y)
 	var step := target - position
-	if not snap and step.length() > 0.001:
+	var moving := not snap and step.length() > 0.001
+	if moving:
 		_body.rotation.y = atan2(-step.x, -step.z)
+	_walk = _walk + get_process_delta_time() * WALK_RATE if moving else 0.0
+	var swing := sin(_walk) * WALK_SWING if moving else 0.0
+	for leg in ["LegFL", "LegBR"]:
+		_body.get_node(leg).rotation.x = swing
+	for leg in ["LegFR", "LegBL"]:
+		_body.get_node(leg).rotation.x = -swing
 	position = target
 	_hp_bar.visible = bear.hp < bear.max_hp
 	_hp_fill.scale.x = maxf(float(bear.hp) / bear.max_hp, 0.001)

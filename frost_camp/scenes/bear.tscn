@@ -7,22 +7,53 @@ albedo_color = Color(0.96, 0.9, 0.74, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_body"]
 material = SubResource("StandardMaterial3D_fur")
-size = Vector3(1.1, 0.9, 1.8)
+size = Vector3(1.1, 0.85, 1.6)
 
 [sub_resource type="BoxMesh" id="BoxMesh_head"]
 material = SubResource("StandardMaterial3D_fur")
-size = Vector3(0.7, 0.65, 0.7)
+size = Vector3(0.62, 0.55, 0.6)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nose"]
 albedo_color = Color(0.1, 0.1, 0.12, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_nose"]
 material = SubResource("StandardMaterial3D_nose")
-size = Vector3(0.2, 0.15, 0.1)
+size = Vector3(0.18, 0.13, 0.1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_leg"]
 material = SubResource("StandardMaterial3D_fur")
-size = Vector3(0.3, 0.5, 0.3)
+size = Vector3(0.32, 0.6, 0.34)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_snout"]
+albedo_color = Color(0.86, 0.8, 0.66, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hump"]
+material = SubResource("StandardMaterial3D_fur")
+size = Vector3(0.95, 0.5, 0.7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rump"]
+material = SubResource("StandardMaterial3D_fur")
+size = Vector3(1.0, 0.8, 0.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_neck"]
+material = SubResource("StandardMaterial3D_fur")
+size = Vector3(0.6, 0.55, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_snout"]
+material = SubResource("StandardMaterial3D_snout")
+size = Vector3(0.36, 0.3, 0.36)
+
+[sub_resource type="BoxMesh" id="BoxMesh_eye"]
+material = SubResource("StandardMaterial3D_nose")
+size = Vector3(0.08, 0.08, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ear"]
+material = SubResource("StandardMaterial3D_fur")
+size = Vector3(0.16, 0.16, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tail"]
+material = SubResource("StandardMaterial3D_fur")
+size = Vector3(0.2, 0.2, 0.16)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bar_back"]
 shading_mode = 0
@@ -46,31 +77,67 @@ script = ExtResource("1_script")
 [node name="Body" type="Node3D" parent="."]
 
 [node name="Torso" type="MeshInstance3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 mesh = SubResource("BoxMesh_body")
 
+[node name="Hump" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.22, -0.4)
+mesh = SubResource("BoxMesh_hump")
+
+[node name="Rump" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.72)
+mesh = SubResource("BoxMesh_rump")
+
+[node name="Neck" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 0.939373, -0.342898, 0, 0.342898, 0.939373, 0, 1.02, -0.92)
+mesh = SubResource("BoxMesh_neck")
+
 [node name="Head" type="MeshInstance3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, -1.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98, -1.28)
 mesh = SubResource("BoxMesh_head")
 
+[node name="Snout" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -1.66)
+mesh = SubResource("BoxMesh_snout")
+
 [node name="Nose" type="MeshInstance3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -1.48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98, -1.86)
 mesh = SubResource("BoxMesh_nose")
 
+[node name="EyeL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 1.12, -1.59)
+mesh = SubResource("BoxMesh_eye")
+
+[node name="EyeR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 1.12, -1.59)
+mesh = SubResource("BoxMesh_eye")
+
+[node name="EarL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, 1.32, -1.22)
+mesh = SubResource("BoxMesh_ear")
+
+[node name="EarR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 1.32, -1.22)
+mesh = SubResource("BoxMesh_ear")
+
+[node name="Tail" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 1.05)
+mesh = SubResource("BoxMesh_tail")
+
 [node name="LegFL" type="MeshInstance3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.25, -0.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.3, -0.55)
 mesh = SubResource("BoxMesh_leg")
 
 [node name="LegFR" type="MeshInstance3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.25, -0.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.3, -0.55)
 mesh = SubResource("BoxMesh_leg")
 
 [node name="LegBL" type="MeshInstance3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.25, 0.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.3, 0.6)
 mesh = SubResource("BoxMesh_leg")
 
 [node name="LegBR" type="MeshInstance3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.25, 0.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.3, 0.6)
 mesh = SubResource("BoxMesh_leg")
 
 [node name="HpBar" type="Node3D" parent="."]
