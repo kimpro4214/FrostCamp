@@ -109,7 +109,7 @@ static func _hunter(sim: FrostSim, worker: Worker) -> Dictionary:
 	return _go("pile", sim.meat_pile_pos)
 
 
-## 맡은 얼음 구멍(뚫린 구멍을 낚시꾼 순서대로 나눔)에서 낚고, 등이 차면 연어 적치장에 쌓는다.
+## 비어 있는 뚫린 얼음 구멍에서 낚고, 등이 차면 연어 적치장에 쌓는다. 빈 구멍이 없으면 기다린다.
 static func _fisher(sim: FrostSim, worker: Worker) -> Dictionary:
 	var stack := worker.stack
 	if stack.items.is_empty():
@@ -118,13 +118,21 @@ static func _fisher(sim: FrostSim, worker: Worker) -> Dictionary:
 		worker.delivering = true
 	if worker.delivering or sim.holes_open == 0:
 		return _go("pile", sim.pile_pos("salmon"))
-	var order := 0
-	for other in sim.workers:
-		if other == worker:
-			break
-		if other.role == "fisher":
-			order += 1
-	return _go("hole", sim.fishing_holes[order % sim.holes_open])
+	# 아무도 안 쓰고, 다른 낚시꾼이 가는 중도 아닌 가장 가까운 뚫린 구멍. 없으면 적치장 옆에서 기다린다.
+	var best := -1
+	for i in sim.holes_open:
+		var hole: Vector2 = sim.fishing_holes[i]
+		if not sim.is_hole_free(i, worker):
+			continue
+		var claimed := false
+		for other in sim.workers:
+			if other != worker and other.role == "fisher" and other.target.get("kind", "") == "hole" and other.target.pos == hole:
+				claimed = true
+		if not claimed and (best == -1 or worker.pos.distance_to(hole) < worker.pos.distance_to(sim.fishing_holes[best])):
+			best = i
+	if best == -1:
+		return _go("idle", sim.pile_pos("salmon"))
+	return _go("hole", sim.fishing_holes[best])
 
 
 ## 전담 판매대가 있으면 그 돈 더미 자리에 서 있고, 없으면 돈이 가장 많이 쌓인 판매대로 간다.

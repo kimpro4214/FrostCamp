@@ -110,8 +110,9 @@ func _harvest_target(available_only: bool) -> Dictionary:
 func _source_of(item: String, available_only: bool) -> Dictionary:
 	if item == "salmon":
 		var hole := Vector2.INF
-		for p in sim.fishing_holes.slice(0, sim.holes_open):
-			if sim.player.pos.distance_to(p) < sim.player.pos.distance_to(hole):
+		for i in sim.holes_open:
+			var p: Vector2 = sim.fishing_holes[i]
+			if sim.is_hole_free(i, sim.player) and sim.player.pos.distance_to(p) < sim.player.pos.distance_to(hole):
 				hole = p
 		return {} if hole == Vector2.INF else {"kind": "hole", "pos": hole}
 	var hunting := item == "meat"

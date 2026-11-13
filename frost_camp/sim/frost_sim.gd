@@ -57,6 +57,8 @@ var wall_ends := {}
 var fishing_holes: Array[Vector2] = []
 ## 뚫린 얼음 구멍 수. 앞에서부터 이만큼만 낚을 수 있다("얼음 구멍 뚫기"를 살 때마다 하나씩).
 var holes_open := 0
+## 구멍마다 지금 낚고 있는 사람(먼저 선 사람). 비었으면 null. 한 구멍에서는 한 사람만 낚는다.
+var hole_users: Array = []
 ## 원목·고기 말고 다른 품목의 적치장. 품목 → {"count": int, "pos": Vector2, "structure": Structure}
 var extra_piles := {}
 var wall_level := 0
@@ -161,6 +163,7 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 	for p in layout.get("fishing_holes", []):
 		fishing_holes.append(_vec(p))
 	holes_open = mini(int(layout.get("holes_open", 0)), fishing_holes.size())
+	hole_users.resize(fishing_holes.size())
 	for item in layout.get("piles", {}):
 		var pile: Dictionary = layout.piles[item]
 		var pile_structure := _add_structure(item + "_pile", _vec(pile.pos), _vec(pile.repair_pos))
@@ -321,6 +324,7 @@ func tick(delta: float) -> void:
 	_tick_pile_take(player, delta, "meat")
 	for item in extra_piles:
 		_tick_pile_take(player, delta, item)
+	_free_left_holes()
 	_tick_fish(player, delta)
 	_tick_chop(player, delta, stats.axe_damage)
 	_tick_fight(player, delta)
@@ -456,9 +460,27 @@ func fishing_hole_at(pos: Vector2) -> int:
 	return -1
 
 
+## 다른 사람이 낚고 있지 않은 구멍인가(agent 자신이 쓰는 구멍은 빈 것으로 본다).
+func is_hole_free(hole: int, agent: SimAgent) -> bool:
+	return hole_users[hole] == null or hole_users[hole] == agent
+
+
+## 구멍을 떠난 사람의 자리를 비운다.
+func _free_left_holes() -> void:
+	for i in hole_users.size():
+		var user: SimAgent = hole_users[i]
+		if user and user.pos.distance_to(fishing_holes[i]) > float(balance.fish.hole_radius):
+			hole_users[i] = null
+
+
 ## 얼음 구멍 위에 서 있으면 catch_interval마다 연어가 한 마리씩 등에 쌓인다(자리가 있을 때).
+## 한 구멍에서는 먼저 선 한 사람만 낚는다.
 func _tick_fish(agent: SimAgent, delta: float) -> void:
 	var hole := fishing_hole_at(agent.pos)
+	if hole != -1 and is_hole_free(hole, agent):
+		hole_users[hole] = agent
+	elif hole != -1:
+		hole = -1
 	if hole == -1 or agent.stack.free_space() == 0:
 		agent.fish_timer = 0.0
 		return

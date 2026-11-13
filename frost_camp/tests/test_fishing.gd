@@ -43,6 +43,7 @@ func test_fisher_fills_salmon_pile() -> void:
 	var sim := _make_sim()
 	sim._apply_effect({"hire": "fisher"})
 	sim._apply_effect({"hire": "fisher"})
+	sim.workers[0].target = WorkerBrain.choose(sim, sim.workers[0])
 	check_eq(WorkerBrain.choose(sim, sim.workers[1]).pos, sim.fishing_holes[1], "두 번째 낚시꾼은 다른 구멍으로 간다")
 	Fixtures.run_with_workers(sim, 20.0)
 	check(sim.pile_count("salmon") >= 4, "낚시꾼이 연어 적치장을 채운다 (%d)" % sim.pile_count("salmon"))
@@ -85,3 +86,37 @@ func test_fishers_share_open_holes() -> void:
 	sim._apply_effect({"hire": "fisher"})
 	sim._apply_effect({"hire": "fisher"})
 	check_eq(WorkerBrain.choose(sim, sim.workers[1]).pos, sim.fishing_holes[0], "뚫린 구멍이 하나면 둘 다 그 구멍으로 간다")
+
+
+## 한 구멍에서는 먼저 선 한 사람만 낚는다(5차 QA 2번).
+func test_one_person_per_hole() -> void:
+	var layout := Fixtures.layout()
+	layout.holes_open = 1
+	var sim := FrostSim.new(Fixtures.balance(), layout)
+	sim._apply_effect({"unlock": "fish_stall"})
+	sim._apply_effect({"hire": "fisher"})
+	var fisher := sim.workers[0]
+	fisher.pos = sim.fishing_holes[0]
+	sim.player.pos = sim.fishing_holes[0] + Vector2(0.3, 0)
+	Fixtures.run(sim, 0.05)
+	var first: SimAgent = sim.hole_users[0]
+	Fixtures.run(sim, 2.1)
+	var other: SimAgent = sim.player if first == fisher else fisher
+	check(first != null, "누군가 구멍을 차지한다")
+	check_eq(other.stack.items.count("salmon"), 0, "다른 사람은 같은 구멍에서 낚지 못한다")
+	check_eq(first.stack.items.count("salmon"), 2, "차지한 사람만 낚는다")
+
+
+func test_fisher_skips_busy_hole_and_waits() -> void:
+	var layout := Fixtures.layout()
+	layout.holes_open = 1
+	var sim := FrostSim.new(Fixtures.balance(), layout)
+	sim._apply_effect({"unlock": "fish_stall"})
+	sim.player.pos = sim.fishing_holes[0]
+	Fixtures.run(sim, 0.05)
+	sim._apply_effect({"hire": "fisher"})
+	var goal := WorkerBrain.choose(sim, sim.workers[0])
+	check_eq(goal.kind, "idle", "빈 구멍이 없으면 기다린다")
+	sim.holes_open = 2
+	goal = WorkerBrain.choose(sim, sim.workers[0])
+	check_eq(goal.pos, sim.fishing_holes[1], "구멍이 늘면 빈 구멍으로 간다")
