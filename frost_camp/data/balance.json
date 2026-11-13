@@ -187,7 +187,7 @@
 		"haul_crystal": {
 			"costs": [430, 770, 1020],
 			"effect": { "haul": "crystal" },
-			"requires": ["miner"]
+			"requires": ["miner", "expand_2"]
 		},
 		"cashier": {
 			"costs": [540],
@@ -197,6 +197,11 @@
 		"cashier_meat": {
 			"costs": [510],
 			"effect": { "hire": "cashier", "stall": 1 },
+			"requires": ["cashier"]
+		},
+		"cashier_salmon": {
+			"costs": [430],
+			"effect": { "hire": "cashier", "stall": 3 },
 			"requires": ["cashier"]
 		},
 		"cashier_market": {

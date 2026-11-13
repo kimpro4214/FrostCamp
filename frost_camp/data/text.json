@@ -17,7 +17,8 @@
 		"haul_crystal": "빙결정 운반",
 		"cashier": "원목 계산원",
 		"cashier_meat": "고기 계산원",
-		"cashier_market": "장터 계산원",
+		"cashier_market": "빙결정 계산원",
+		"cashier_salmon": "연어 계산원",
 		"fire": "모닥불 키우기",
 		"coat": "방한복",
 		"port": "항구",
@@ -33,6 +34,6 @@
 		"wall": "기지 방벽",
 		"expand_1": "남쪽 빙결정 광맥",
 		"miner": "광부",
-		"expand_2": "남동쪽 장터 넓히기"
+		"expand_2": "빙결정 장터"
 	}
 }

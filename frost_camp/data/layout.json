@@ -28,7 +28,7 @@
 		"log": { "path": [[-3, -5], [-2.6, -4.6], [2.9, -4.6], [2.9, -1], [3.5, -1]], "pos": [1.2, -4.6], "repair_pos": [-0.6, -6], "stall": 0 },
 		"salmon": { "path": [[12.2, 2.6], [7.0, 2.6]], "pos": [9.6, 2.6], "repair_pos": [9.6, 1.4], "stall": 3 },
 		"meat": { "path": [[3.6, -10.6], [3.6, -6.6], [4.2, -6.2]], "pos": [3.6, -8.6], "repair_pos": [2.4, -8.6], "stall": 1 },
-		"crystal": { "path": [[-1.2, 11.8], [-9.6, 11.8], [-9.6, 11.0]], "pos": [-5.4, 11.8], "repair_pos": [-5.4, 12.6], "stall": 4 }
+		"crystal": { "path": [[0.2, 11.8], [8.0, 11.8], [8.0, 12.2]], "pos": [4.0, 11.8], "repair_pos": [4.0, 13.0], "stall": 2 }
 	},
 	"raid_spawns": [[3.5, 24], [-30, 2], [-10, -24]],
 	"base": {
@@ -63,9 +63,8 @@
 	"stalls": [
 		{ "item": "log", "pos": [5, 0], "cash_pos": [5, 2.6], "repair_pos": [3, 1.6], "raid_target": false },
 		{ "item": "meat", "pos": [5, -5], "cash_pos": [5, -7.4], "repair_pos": [3.6, -8.2], "unlock": "meat_stall", "raid_target": false },
-		{ "item": "log", "pos": [9.5, 12.5], "cash_pos": [9.5, 15.1], "repair_pos": [7.3, 14], "unlock": "expand_2", "raid_target": false },
-		{ "item": "salmon", "pos": [6.2, 4.4], "cash_pos": [6.2, 7.0], "repair_pos": [4.4, 5.6], "unlock": "fish_stall", "raid_target": false },
-		{ "item": "crystal", "pos": [-11, 10.6], "cash_pos": [-11, 13.2], "repair_pos": [-13, 10.6], "unlock": "expand_1", "raid_target": false }
+		{ "item": "crystal", "pos": [9.5, 12.5], "cash_pos": [9.5, 15.1], "repair_pos": [7.3, 14], "unlock": "expand_2", "raid_target": false },
+		{ "item": "salmon", "pos": [6.2, 4.4], "cash_pos": [6.2, 7.0], "repair_pos": [4.4, 5.6], "unlock": "fish_stall", "raid_target": false }
 	],
 	"zones": {
 		"backpack": [-1.5, 3.5],
@@ -84,6 +83,7 @@
 		"cashier": [7.4, 2.0],
 		"cashier_meat": [7.4, -8.0],
 		"cashier_market": [11.9, 14.4],
+		"cashier_salmon": [4.0, 6.6],
 		"fire": [-5, -4],
 		"coat": [1.5, -6.5],
 		"tower_1": [0.2, 7.5],
