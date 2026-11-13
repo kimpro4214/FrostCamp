@@ -1,6 +1,6 @@
 extends Node3D
 ## 기지 방벽. 구간마다 충돌체를 붙이고, 방벽 레벨에 따라 모습을 바꾼다.
-## 1단계 나무 울타리, 2단계 돌담, 3단계 철벽. 레벨이 오르면 구간마다 차례로 새 모습이 솟는다.
+## 1단계 나무 울타리, 2단계 철벽, 3단계 두꺼운 돌담. 레벨이 오르면 구간마다 차례로 새 모습이 솟는다.
 ## 방벽을 사면 솟아오르고, 확장으로 안쪽이 된 구간은 땅속으로 꺼지며, 바깥 구간이 새로 솟는다.
 ## 부서진 구간은 지나갈 수 있다.
 
@@ -13,15 +13,15 @@ const STEP := 1.5
 const MODEL_SCALE := 3.0
 const WALL_HEIGHT := 1.6
 const WALL_THICKNESS := 0.6
-const STONE_HEIGHT := 1.5
-const STONE_THICKNESS := 0.8
+const STONE_HEIGHT := 2.0
+const STONE_THICKNESS := 1.1
 const MERLON_GAP := 1.2
 const STONE_COLOR := Color(0.6, 0.6, 0.62)
 const RISE_TIME := 0.5
 ## 레벨이 바뀔 때 구간마다 이만큼 늦게 솟는다(초)
 const STAGGER := 0.05
 ## 레벨 → 모습 노드 이름
-const LOOKS := ["Wood", "Stone", "Metal"]
+const LOOKS := ["Wood", "Metal", "Stone"]
 
 var sim: FrostSim
 ## 시설 번호 → 구간 모델(체력 표시가 기울이고 어둡게 만든다)
@@ -97,12 +97,12 @@ func _stone_wall(length: float) -> Node3D:
 	wall.position.y = STONE_HEIGHT / 2.0
 	root.add_child(wall)
 	var merlon_mesh := BoxMesh.new()
-	merlon_mesh.size = Vector3(0.5, 0.35, STONE_THICKNESS)
+	merlon_mesh.size = Vector3(0.6, 0.45, STONE_THICKNESS)
 	merlon_mesh.material = _stone
 	for i in int(length / MERLON_GAP) + 1:
 		var merlon := MeshInstance3D.new()
 		merlon.mesh = merlon_mesh
-		merlon.position = Vector3(-length / 2.0 + i * MERLON_GAP, STONE_HEIGHT + 0.17, 0.0)
+		merlon.position = Vector3(-length / 2.0 + i * MERLON_GAP, STONE_HEIGHT + 0.22, 0.0)
 		root.add_child(merlon)
 	return root
 
