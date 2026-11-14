@@ -91,7 +91,15 @@ func _process(delta: float) -> void:
 		return
 	var ready := raid.can_start()
 	_portal_fill.scale = Vector3.ONE * maxf(raid.portal_progress(), 0.001)
-	_portal_label.text = "빙하 동굴\n곰왕 레이드" if ready or raid.active else "빙하 동굴\n작살총 필요"
+	if ready or raid.active:
+		_portal_label.text = "빙하 동굴\n곰왕 레이드"
+	elif raid.reopen_left > 0.0:
+		var left := ceili(raid.reopen_left)
+		_portal_label.text = "빙하 동굴\n다시 열리기까지 %d:%02d" % [left / 60, left % 60]
+	elif sim.gun_level == 0:
+		_portal_label.text = "빙하 동굴\n작살총 필요"
+	else:
+		_portal_label.text = "빙하 동굴\n습격을 막은 뒤"
 	_portal_label.modulate = Color.WHITE if ready else Color(0.7, 0.78, 0.9)
 	_aim.visible = raid.active and _mouse_seen
 	if not raid.active:

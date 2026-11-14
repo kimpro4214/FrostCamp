@@ -90,6 +90,7 @@
 	},
 	"boss": {
 		"portal_delay": 1.5,
+		"reopen_delay": 180.0,
 		"hp": 450,
 		"hp_growth": 0.6,
 		"radius": 1.6,

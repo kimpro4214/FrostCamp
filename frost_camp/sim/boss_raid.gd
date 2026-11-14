@@ -41,6 +41,8 @@ var slams: Array = []
 ## 지금 고른 무기와 다음 사격까지 남은 시간
 var weapon := "harpoon"
 var cooldown := 0.0
+## 레이드가 끝난 뒤(이기든 지든) 입구가 다시 열리기까지 남은 초
+var reopen_left := 0.0
 var _portal_wait := 0.0
 var _slam_timer := 0.0
 var _summon_timer := 0.0
@@ -66,9 +68,9 @@ func is_available() -> bool:
 	return not config.is_empty() and portal_pos != Vector2.ZERO
 
 
-## 출발 조건: 작살총이 있고, 기지에 습격이 오는 중이 아니며, 이미 레이드 중이 아니다.
+## 출발 조건: 작살총이 있고, 기지에 습격이 오는 중이 아니며, 이미 레이드 중이 아니고, 지난 레이드 뒤 입구가 다시 열렸다.
 func can_start() -> bool:
-	return is_available() and not active and sim.gun_level > 0 and sim.raid.state != Raid.State.ATTACKING
+	return is_available() and not active and reopen_left <= 0.0 and sim.gun_level > 0 and sim.raid.state != Raid.State.ATTACKING
 
 
 ## 가진 무기인가(작살총은 작살총 존, 나머지는 각 무기 존을 사야 한다).
@@ -102,6 +104,7 @@ func mercs() -> Array[int]:
 
 ## 입구 위에 portal_delay초 서 있으면 출발한다.
 func tick_portal(delta: float) -> void:
+	reopen_left = maxf(reopen_left - delta, 0.0)
 	if not can_start() or sim.player.pos.distance_to(portal_pos) > float(sim.balance.purchase.zone_radius):
 		_portal_wait = 0.0
 		return
@@ -348,6 +351,7 @@ func _clamp_arena(p: Vector2) -> Vector2:
 ## 레이드를 끝내고 기지 입구 옆으로 돌아온다. 이기면 돈과 보석을 받고 곰왕이 다음엔 더 강해진다.
 func _finish(won: bool) -> void:
 	active = false
+	reopen_left = float(config.get("reopen_delay", 0.0))
 	var reward := 0
 	if won:
 		reward = int(float(config.reward) * (1.0 + float(config.reward_growth) * wins))
