@@ -9,6 +9,11 @@ const OUTLINE := Color(0.06, 0.08, 0.14)
 
 
 ## 둥근 모서리와 얇은 테두리가 있는 반투명 패널
+## 핸드폰·태블릿(웹 포함)이면 true. 안내 문구를 끌기·톡 치기와 키보드·클릭으로 나눌 때 쓴다.
+static func is_touch() -> bool:
+	return OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+
+
 static func panel(radius := 18, margin := 18.0, color := PANEL_COLOR) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.bg_color = color

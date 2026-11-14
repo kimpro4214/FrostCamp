@@ -236,7 +236,9 @@ func _build_raid_ui() -> void:
 		button.pressed.connect(func() -> void: sim.boss_raid.select_weapon(weapon))
 		bottom.add_child(button)
 		_weapon_buttons[weapon] = button
-	var hint := UiStyle.label("화면을 클릭하면 그쪽으로 쏜다. 빨간 원을 피하자!", 22, Color(0.85, 0.9, 1.0))
+	var hint := UiStyle.label(
+		"화면을 톡 치면 그쪽으로 쏜다. 빨간 원을 피하자!" if UiStyle.is_touch()
+		else "이동은 WASD, 조준 표시를 클릭하면 쏜다. 빨간 원을 피하자!", 22, Color(0.85, 0.9, 1.0))
 	hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	hint.offset_top = -132.0
 	hint.offset_bottom = -102.0
