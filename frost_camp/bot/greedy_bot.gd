@@ -40,15 +40,10 @@ func step(delta: float) -> void:
 	time += delta
 
 
-## 살 수 있는 존 중 남은 금액이 가장 적은 것. 없으면 null.
+## 살 수 있는 존 중 남은 금액이 가장 적은 것(화면의 다음 목표와 같다). 없으면 null.
+## 레이드용 존(용병, 무기)은 봇이 레이드를 가지 않으니 사지 않는다.
 func cheapest_zone() -> PurchaseZone:
-	var best: PurchaseZone = null
-	for zone in sim.zones:
-		if zone.optional:
-			continue  # 레이드용 존(용병, 무기)은 봇이 레이드를 가지 않으니 사지 않는다.
-		if sim.is_zone_available(zone) and (best == null or zone.remaining() < best.remaining()):
-			best = zone
-	return best
+	return sim.next_goal()
 
 
 func is_done() -> bool:

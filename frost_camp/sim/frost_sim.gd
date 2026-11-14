@@ -322,6 +322,18 @@ func is_zone_available(zone: PurchaseZone) -> bool:
 	return true
 
 
+## 다음 목표: 지금 살 수 있는 존 중 남은 금액이 가장 적은 것(레이드용 선택 존은 뺀다). 없으면 null.
+## 화면의 "다음 목표" 안내와 탐욕 봇이 같은 규칙을 쓴다.
+func next_goal() -> PurchaseZone:
+	var best: PurchaseZone = null
+	for zone in zones:
+		if zone.optional:
+			continue
+		if is_zone_available(zone) and (best == null or zone.remaining() < best.remaining()):
+			best = zone
+	return best
+
+
 ## 모닥불 단계만 모자라 못 사는 존이면 필요한 모닥불 단계, 아니면 0(화면이 "모닥불 N단계 필요"를 띄운다).
 func fire_needed(zone: PurchaseZone) -> int:
 	if zone.is_maxed():
