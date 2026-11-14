@@ -105,18 +105,34 @@ static func _flat(color: Color) -> StandardMaterial3D:
 	return material
 
 
-## 모델 한 칸을 구간 길이에 맞춰 줄지어 세운다.
+## 모델 한 칸을 구간 길이에 맞춰 줄지어 세운다. 칸마다 노드를 두지 않고 MultiMesh 하나로 그린다(그리기 횟수 절약).
 func _tiled(look: String, scene: PackedScene, width: float, length: float) -> Node3D:
 	var root := Node3D.new()
 	root.name = look
 	var count := maxi(ceili(length / STEP), 1)
 	var step := length / count
+	var pieces: Array[Transform3D] = []
 	for i in count:
-		var piece: Node3D = scene.instantiate()
-		piece.scale = Vector3(step / width, MODEL_HEIGHT_SCALE, MODEL_SCALE)
-		piece.position = Vector3(-length / 2.0 + (i + 0.5) * step, 0.0, 0.0)
-		root.add_child(piece)
+		var basis := Basis.from_scale(Vector3(step / width, MODEL_HEIGHT_SCALE, MODEL_SCALE))
+		pieces.append(Transform3D(basis, Vector3(-length / 2.0 + (i + 0.5) * step, 0.0, 0.0)))
+	var model: Node3D = scene.instantiate()
+	for source: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
+		var local := source.transform
+		root.add_child(_multi(source.mesh, pieces.map(func(t: Transform3D) -> Transform3D: return t * local)))
+	model.free()
 	return root
+
+
+static func _multi(mesh: Mesh, transforms: Array) -> MultiMeshInstance3D:
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.mesh = mesh
+	multi.instance_count = transforms.size()
+	for i in transforms.size():
+		multi.set_instance_transform(i, transforms[i])
+	var instance := MultiMeshInstance3D.new()
+	instance.multimesh = multi
+	return instance
 
 
 ## 돌담: 긴 돌 벽 위에 톱니(성가퀴)를 일정 간격으로 올린다.
@@ -133,11 +149,10 @@ func _stone_wall(length: float) -> Node3D:
 	var merlon_mesh := BoxMesh.new()
 	merlon_mesh.size = Vector3(0.6, 0.3, STONE_THICKNESS)
 	merlon_mesh.material = _stone
+	var merlons: Array[Transform3D] = []
 	for i in int(length / MERLON_GAP) + 1:
-		var merlon := MeshInstance3D.new()
-		merlon.mesh = merlon_mesh
-		merlon.position = Vector3(-length / 2.0 + i * MERLON_GAP, STONE_HEIGHT + 0.15, 0.0)
-		root.add_child(merlon)
+		merlons.append(Transform3D(Basis.IDENTITY, Vector3(-length / 2.0 + i * MERLON_GAP, STONE_HEIGHT + 0.15, 0.0)))
+	root.add_child(_multi(merlon_mesh, merlons))
 	return root
 
 

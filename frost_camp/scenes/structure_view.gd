@@ -134,5 +134,5 @@ func _on_repaired(repaired_index: int) -> void:
 
 
 func _set_dark(dark: bool) -> void:
-	for mesh in _target.find_children("*", "MeshInstance3D", true, false):
+	for mesh in _target.find_children("*", "GeometryInstance3D", true, false):
 		mesh.material_overlay = _dark if dark else null
