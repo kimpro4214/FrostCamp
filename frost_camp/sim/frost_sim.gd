@@ -79,6 +79,8 @@ var gun_level := 0
 var gun_timer := 0.0
 ## 다음 빛나는 빙결정까지 쌓인 시간
 var glow_timer := 0.0
+## 보스 레이드(빙하 곰왕). 레이드 중에는 플레이어와 용병이 레이드 영역에 있다.
+var boss_raid: BossRaid
 ## 원목·고기 말고 다른 품목의 적치장. 품목 → {"count": int, "pos": Vector2, "structure": Structure}
 var extra_piles := {}
 var wall_level := 0
@@ -218,6 +220,7 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 			"per_log": float(source.get("per_log", 0.0)), "auto_level": int(source.get("auto_level", 99)),
 			"feed_timer": 0.0,
 		})
+	boss_raid = BossRaid.new(self, balance, layout)
 	stats = {
 		"move_speed": float(balance.player.move_speed),
 		"axe_damage": int(balance.player.axe_damage),
@@ -367,17 +370,27 @@ func tick(delta: float) -> void:
 	_free_left_holes()
 	_tick_fish(player, delta)
 	_tick_chop(player, delta, stats.axe_damage)
-	_tick_fight(player, delta)
+	# 레이드 중에는 동굴의 곰왕과만 싸운다(기지 근접 전투와 체력 회복은 멈춘다).
+	if not boss_raid.active:
+		_tick_fight(player, delta)
 	_tick_collect_cash(player)
 	_tick_purchase(player, delta)
 	_tick_fuel(delta)
 	_tick_glow(delta)
-	_tick_cold(player, delta, stats.cold_drain)
+	# 레이드 중에는 동굴 안이라 춥지 않고, 기지 습격도 멈춘다.
+	if boss_raid.active:
+		boss_raid.tick(delta)
+	else:
+		boss_raid.tick_portal(delta)
+		_tick_cold(player, delta, stats.cold_drain)
 	# 일꾼은 추위를 타지 않는다(3차 QA: 일꾼이 계속 어는 것이 불편했다).
 	for worker in workers:
 		if worker.retired:
 			worker.target = {"kind": "idle", "pos": worker_spawn, "stop": 0.3}
 			continue
+		if worker.role == "merc" and boss_raid.active:
+			worker.target = {"kind": "idle", "pos": worker.pos, "stop": 0.3}
+			continue  # 레이드 중 용병은 boss_raid가 움직인다.
 		worker.target = WorkerBrain.choose(self, worker)
 		# 습격 곰이 가까이 오면 겁에 질려 그 자리에 멈춘다(사냥꾼은 맞서 싸운다). 지켜 주지 않으면 쓰러진다.
 		if worker.role != "hunter" and _nearest_raider(worker.pos, float(balance.raid.get("worker_reach", 0.0))) != -1:
@@ -400,10 +413,13 @@ func tick(delta: float) -> void:
 				_tick_unload(worker, delta)
 			"cashier":
 				_tick_collect_cash(worker)
+			"merc":
+				_tick_merc_guard(worker, delta)
 	# 싸우는 곰은 이번 프레임에 싸운 모든 사람(플레이어, 사냥꾼)을 본 뒤에 움직인다.
 	for i in bears.size():
 		bears[i].tick(delta, _fighting_bears.has(i), rng)
-	_tick_raid(delta)
+	if not boss_raid.active:
+		_tick_raid(delta)
 	_tick_towers(delta)
 	_tick_gun(delta)
 
@@ -757,6 +773,23 @@ func _tick_glow(delta: float) -> void:
 	var pick: int = candidates[rng.randi() % candidates.size()]
 	trees[pick].glowing = true
 	crystal_glowed.emit(pick)
+
+
+## 기지에 있는 용병은 사거리 안의 습격 곰을 쏴서 막는다(레이드에 가지 않을 때도 쓸모가 있다).
+func _tick_merc_guard(merc: Worker, delta: float) -> void:
+	var config: Dictionary = balance.mercs
+	merc.attack_timer = minf(merc.attack_timer + delta, float(config.interval))
+	if merc.attack_timer < float(config.interval):
+		return
+	var target := _nearest_raider(merc.pos, float(config.range))
+	if target == -1:
+		return
+	merc.attack_timer = 0.0
+	raider_hit.emit(target, merc)
+	if raid.bears[target].take_hit(int(config.damage)):
+		bears_killed += 1
+		_reward_raider_kill(null)
+		raider_killed.emit(target, merc)
 
 
 ## 작살총: 플레이어가 사거리 안의 가장 가까운 습격 곰을 interval마다 자동으로 쏜다. 기절해 있으면 못 쏜다.

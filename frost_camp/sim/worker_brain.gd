@@ -19,6 +19,8 @@ static func choose(sim: FrostSim, worker: Worker) -> Dictionary:
 			return _fisher(sim, worker)
 		"cashier":
 			return _cashier(sim, worker)
+		"merc":
+			return _merc(sim, worker)
 	return _go("idle", worker.pos)
 
 
@@ -144,6 +146,17 @@ static func _cashier(sim: FrostSim, worker: Worker) -> Dictionary:
 		if sim.is_stall_open(stall) and (best == null or stall.cash > best.cash):
 			best = stall
 	return _go("cash", best.cash_pos)
+
+
+## 용병은 빙하 동굴 입구 둘레에 둥글게 모여 기다린다.
+static func _merc(sim: FrostSim, worker: Worker) -> Dictionary:
+	var order := 0
+	for other in sim.workers:
+		if other == worker:
+			break
+		if other.role == "merc" and not other.retired:
+			order += 1
+	return _go("idle", sim.boss_raid.portal_pos + Vector2.from_angle(order * 1.05 + 0.5) * 2.2)
 
 
 static func _go(kind: String, pos: Vector2) -> Dictionary:

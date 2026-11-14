@@ -8,6 +8,8 @@ var pos: Vector2
 var costs: Array
 var effect: Dictionary
 var requires: Array
+## 선택 콘텐츠(보스 레이드)용 존. 봇은 사지 않는다.
+var optional := false
 var level := 0
 var paid := 0
 var _carry := 0.0
@@ -19,6 +21,7 @@ func _init(zone_id: String, zone_pos: Vector2, config: Dictionary) -> void:
 	costs = config.costs
 	effect = config.get("effect", {})
 	requires = config.get("requires", [])
+	optional = config.get("optional", false)
 
 
 func is_maxed() -> bool:
