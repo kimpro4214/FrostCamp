@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## 규칙 설명 슬라이드. 시작하기를 누른 뒤 5장을 "다음"으로 넘기고, 마지막 장의 "시작"으로 게임이 흐른다.
-## "건너뛰기"로 바로 시작할 수도 있다. Enter·Space는 "다음"과 같다.
+## "이전"으로 앞 장으로 돌아가고, "건너뛰기"로 바로 시작할 수도 있다. Enter·Space는 "다음"과 같다.
 
 signal finished
 
@@ -22,6 +22,7 @@ var _icon_slot: CenterContainer
 var _body: Label
 var _dots: HBoxContainer
 var _next: Button
+var _prev: Button
 
 
 func _ready() -> void:
@@ -66,18 +67,31 @@ func _ready() -> void:
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override("separation", 24)
 	box.add_child(buttons)
-	var skip := Button.new()
-	skip.text = "건너뛰기"
-	skip.custom_minimum_size = Vector2(200, 64)
-	UiStyle.style_button(skip, 26)
-	skip.modulate = Color(0.8, 0.85, 0.95)
-	skip.pressed.connect(_finish)
-	buttons.add_child(skip)
+	_prev = Button.new()
+	_prev.text = "이전"
+	_prev.custom_minimum_size = Vector2(200, 64)
+	UiStyle.style_button(_prev, 28)
+	_prev.modulate = Color(0.8, 0.85, 0.95)
+	_prev.pressed.connect(func() -> void:
+		if _index > 0:
+			_show(_index - 1))
+	buttons.add_child(_prev)
 	_next = Button.new()
 	_next.custom_minimum_size = Vector2(240, 64)
 	UiStyle.style_button(_next, 30)
 	_next.pressed.connect(_advance)
 	buttons.add_child(_next)
+	var skip := Button.new()
+	skip.text = "건너뛰기"
+	skip.flat = true
+	skip.focus_mode = Control.FOCUS_NONE
+	skip.add_theme_font_size_override("font_size", 22)
+	skip.add_theme_color_override("font_color", Color(0.75, 0.82, 0.95))
+	skip.add_theme_color_override("font_hover_color", Color.WHITE)
+	skip.size_flags_horizontal = Control.SIZE_SHRINK_END
+	skip.pressed.connect(_finish)
+	box.add_child(skip)
+	box.move_child(skip, 0)
 	_show(0)
 	_next.grab_focus.call_deferred()
 
@@ -118,6 +132,8 @@ func _show(i: int) -> void:
 	for d in _dots.get_child_count():
 		(_dots.get_child(d) as ColorRect).color = UiStyle.GOLD if d == i else Color(0.35, 0.42, 0.55)
 	_next.text = "시작!" if i + 1 >= SLIDES.size() else "다음"
+	_prev.disabled = i == 0
+	_prev.modulate.a = 0.35 if i == 0 else 1.0
 
 
 func _finish() -> void:
