@@ -16,6 +16,7 @@ const WallView := preload("res://frost_camp/scenes/wall_view.gd")
 const FishingView := preload("res://frost_camp/scenes/fishing_view.gd")
 const GunView := preload("res://frost_camp/scenes/gun_view.gd")
 const Title := preload("res://frost_camp/ui/title.gd")
+const Graphics := preload("res://frost_camp/scenes/graphics.gd")
 const Tutorial := preload("res://frost_camp/ui/tutorial.gd")
 const PauseMenu := preload("res://frost_camp/ui/pause_menu.gd")
 const Music := preload("res://frost_camp/scenes/music.gd")
@@ -190,8 +191,13 @@ func _ready() -> void:
 	sim.boss_raid.shot.connect(func(_f: Vector2, _t: Vector2, weapon: String) -> void:
 		if weapon != "merc":
 			_sfx.play("shoot"))
+	var graphics := Graphics.new()
+	add_child(graphics)
+	graphics.setup(self)
+	graphics.auto_lowered.connect(func() -> void: _hud.show_toast("화면이 느려 그래픽을 낮췄다"))
 	_pause = PauseMenu.new()
 	add_child(_pause)
+	_pause.setup_graphics(graphics)
 	_pause.opened.connect(_save)
 	_show_title()
 
