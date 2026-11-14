@@ -17,6 +17,7 @@ const FishingView := preload("res://frost_camp/scenes/fishing_view.gd")
 const GunView := preload("res://frost_camp/scenes/gun_view.gd")
 const Title := preload("res://frost_camp/ui/title.gd")
 const Music := preload("res://frost_camp/scenes/music.gd")
+const PartCutscene := preload("res://frost_camp/scenes/part_cutscene.gd")
 const Ending := preload("res://frost_camp/scenes/ending.gd")
 const ConveyorView := preload("res://frost_camp/scenes/conveyor_view.gd")
 ## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
@@ -42,6 +43,8 @@ var _raid_arrow: Node3D
 var skip_title := false
 ## 시작 화면에서 "시작하기"를 누르기 전에는 시간이 흐르지 않는다.
 var started := false
+## 구매 존 id → 화면에 보일 이름(text.json)
+var _zone_names := {}
 
 @onready var _player: CharacterBody3D = $Player
 @onready var _camera: Camera3D = $Camera3D
@@ -69,6 +72,7 @@ func _ready() -> void:
 		$Stalls.add_child(stall)
 		stall.setup(sim, i)
 	var zone_names: Dictionary = GameData.load_json(GameData.TEXT_PATH).zones
+	_zone_names = zone_names
 	for i in sim.zones.size():
 		var zone := ZoneScene.instantiate()
 		$Zones.add_child(zone)
@@ -346,7 +350,12 @@ func _hit_stop(duration: float) -> void:
 
 
 ## 구매로 판매대가 열리거나 얼음벽이 사라지면 길이 바뀌므로 한 프레임 뒤 길찾기 메시를 다시 굽는다.
-func _on_zone_purchased(_id: String, _level: int) -> void:
+func _on_zone_purchased(id: String, _level: int) -> void:
+	# 쇄빙선 부품을 사면 "두둥" 컷신. 마지막 부품은 엔딩이 대신한다.
+	if id in sim.balance.ending.ship_parts and not sim.won:
+		var cutscene := PartCutscene.new()
+		add_child(cutscene)
+		cutscene.play(self, sim, id, _zone_names.get(id, id))
 	await get_tree().process_frame
 	_bake_navigation()
 
