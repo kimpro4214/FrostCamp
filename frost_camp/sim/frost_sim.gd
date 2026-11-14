@@ -134,6 +134,7 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		var r: Dictionary = layout.regions[region_name]
 		regions[region_name] = {
 			"rect": Rect2(r.rect[0], r.rect[1], r.rect[2], r.rect[3]), "gate": _vec(r.gate), "open": r.get("open", false),
+			"openings": r.get("openings", []).map(func(p: Array) -> Vector2: return _vec(p)),
 		}
 		for p in r.get("trees", []):
 			var tree := HarvestTree.new(_vec(p), balance.tree)

@@ -28,8 +28,10 @@ func setup(frost_sim: FrostSim, name_in_sim: String) -> void:
 	var gate: Vector2 = sim.regions[region_name].gate
 	_open = sim.regions[region_name].open
 	var corners := [rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)]
+	# 입구(얼음벽)와, 늘 뚫려 있는 통로(openings, 예: 항구의 부두 자리) 자리는 벽을 비운다.
+	var gaps: Array = [gate] + sim.regions[region_name].openings
 	for i in 4:
-		_build_edge(corners[i], corners[(i + 1) % 4], gate)
+		_build_edge(corners[i], corners[(i + 1) % 4], gaps)
 	_ice = _ice_template.duplicate()
 	_ice.visible = true
 	add_child(_ice)
@@ -66,15 +68,23 @@ func _sink_walls() -> void:
 	_walls.clear()
 
 
-## a→b 변 위에 벽을 세운다. 입구가 이 변 위에 있으면 입구 폭만큼 비운다.
-func _build_edge(a: Vector2, b: Vector2, gate: Vector2) -> void:
+## a→b 변 위에 벽을 세운다. 이 변 위에 있는 틈(입구, 통로)마다 GATE_WIDTH만큼 비운다.
+func _build_edge(a: Vector2, b: Vector2, gaps: Array) -> void:
 	var dir := (b - a).normalized()
-	var on_edge := absf((gate - a).cross(dir)) < 0.01 and (gate - a).dot(dir) > 0.0 and (gate - a).dot(dir) < a.distance_to(b)
-	if not on_edge:
-		_add_wall(a, b)
-		return
-	_add_wall(a, gate - dir * GATE_WIDTH / 2.0)
-	_add_wall(gate + dir * GATE_WIDTH / 2.0, b)
+	var length := a.distance_to(b)
+	var cuts: Array[float] = []
+	for gap: Vector2 in gaps:
+		var along := (gap - a).dot(dir)
+		if absf((gap - a).cross(dir)) < 0.01 and along > 0.0 and along < length:
+			cuts.append(along)
+	cuts.sort()
+	var from := 0.0
+	for along in cuts:
+		if along - GATE_WIDTH / 2.0 > from:
+			_add_wall(a + dir * from, a + dir * (along - GATE_WIDTH / 2.0))
+		from = along + GATE_WIDTH / 2.0
+	if from < length:
+		_add_wall(a + dir * from, b)
 
 
 func _add_wall(a: Vector2, b: Vector2) -> void:
