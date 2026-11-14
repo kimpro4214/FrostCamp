@@ -26,6 +26,10 @@ const ConveyorView := preload("res://frost_camp/scenes/conveyor_view.gd")
 ## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
 const ARROW_RADIUS := 2.4
 const ARROW_HIDE_DIST := 8.0
+## 다음 목표 존에 이만큼 가까워지면 금색 화살표를 숨긴다
+const GOAL_HIDE_DIST := 4.0
+const RAID_ARROW_COLOR := Color(1.0, 0.3, 0.25)
+const GOAL_ARROW_COLOR := Color(1.0, 0.84, 0.3)
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const Sfx := preload("res://frost_camp/scenes/sfx.gd")
 const MAX_FLYING_COINS := 10
@@ -41,6 +45,7 @@ var _last_money := 0
 var _last_stack := 0
 var _step_timer := 0.0
 var _raid_arrow: Node3D
+var _goal_arrow: Node3D
 
 ## true면 시작 화면 없이 바로 시작한다(화면 확인용 스크립트가 쓴다).
 var skip_title := false
@@ -129,7 +134,8 @@ func _ready() -> void:
 		$Bears.add_child(bear)
 		bear.setup(sim, sim.bears[i], false)
 		Juice.pop(bear, Vector3(0.3, 1.6, 0.3), 0.4))
-	_raid_arrow = _make_arrow()
+	_raid_arrow = _make_arrow(RAID_ARROW_COLOR)
+	_goal_arrow = _make_arrow(GOAL_ARROW_COLOR)
 	var walls := WallView.new()
 	walls.name = "Walls"
 	add_child(walls)
@@ -263,15 +269,16 @@ func _on_raid_started(_wave: int) -> void:
 		Juice.pop(view, Vector3(0.3, 1.6, 0.3), 0.35)
 
 
-## 땅에 눕힌 빨간 삼각형. 경고 중에는 곰이 나올 곳을, 습격 중에는 가장 가까운 곰을 가리킨다.
-func _make_arrow() -> Node3D:
+## 땅에 눕힌 삼각형. 빨간 것은 경고 중에는 곰이 나올 곳을, 습격 중에는 가장 가까운 곰을 가리킨다.
+## 금색 것은 다음 목표 존을 가리키고, 빨간 화살표가 보일 때는 숨는다.
+func _make_arrow(color: Color) -> Node3D:
 	var pivot := Node3D.new()
 	var arrow := MeshInstance3D.new()
 	var mesh := PrismMesh.new()
 	mesh.size = Vector3(0.8, 1.0, 0.08)
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = Color(1.0, 0.3, 0.25)
+	material.albedo_color = color
 	mesh.material = material
 	arrow.mesh = mesh
 	arrow.rotation.x = -PI / 2.0  # 꼭짓점(+Y)이 앞(-Z)을 보게 눕힌다
@@ -293,9 +300,17 @@ func _update_arrow() -> void:
 				target = raider.pos
 	_raid_arrow.visible = target != Vector2.INF and here.distance_to(target) > ARROW_HIDE_DIST and not sim.boss_raid.active
 	if _raid_arrow.visible:
-		var dir := target - here
-		_raid_arrow.position = _player.position
-		_raid_arrow.rotation.y = atan2(-dir.x, -dir.y)
+		_point_arrow(_raid_arrow, target - here)
+	var goal := sim.next_goal()
+	_goal_arrow.visible = started and goal != null and not _raid_arrow.visible and not sim.boss_raid.active \
+		and not sim.won and here.distance_to(goal.pos) > GOAL_HIDE_DIST
+	if _goal_arrow.visible:
+		_point_arrow(_goal_arrow, goal.pos - here)
+
+
+func _point_arrow(arrow: Node3D, dir: Vector2) -> void:
+	arrow.position = _player.position
+	arrow.rotation.y = atan2(-dir.x, -dir.y)
 
 
 ## 일꾼이 쓰러지면 알리고, 다시 고용해야 한다고 덧붙인다.

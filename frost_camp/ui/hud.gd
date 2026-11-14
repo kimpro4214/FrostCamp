@@ -6,6 +6,7 @@ const UiStyle := preload("res://frost_camp/ui/ui_style.gd")
 const HudIcon := preload("res://frost_camp/ui/hud_icon.gd")
 const BasketIcon := preload("res://frost_camp/assets/icons/shoppingBasket.png")
 const WarningIcon := preload("res://frost_camp/assets/icons/warning.png")
+const TargetIcon := preload("res://frost_camp/assets/icons/target.png")
 const WARNING_COLOR := Color(1.0, 0.45, 0.35)
 const CALM_COLOR := Color(0.85, 0.9, 1.0)
 const CLEAR_COLOR := Color(0.5, 1.0, 0.55)
@@ -31,6 +32,10 @@ var _raid_label: Label
 var _toast: Label
 var _clear_left := 0.0
 var _raid_ui: Control
+var _goal_chip: PanelContainer
+var _goal_label: Label
+## 구매 존 id → 화면 이름(text.json)
+var _zone_names := {}
 var _boss_bar: ProgressBar
 var _merc_label: Label
 var _weapon_buttons := {}
@@ -41,6 +46,7 @@ const WEAPON_NAMES := {"harpoon": "1  작살총", "spread": "2  산탄 작살", 
 
 func setup(frost_sim: FrostSim) -> void:
 	sim = frost_sim
+	_zone_names = GameData.load_json(GameData.TEXT_PATH).zones
 	_build_chips()
 	_build_raid_banner()
 	_build_toast()
@@ -74,6 +80,7 @@ func _process(delta: float) -> void:
 		_fire_label.text = "모닥불이 꺼졌다! 원목을 넣자" if fire.fuel <= 0.0 else "모닥불이 꺼져 간다"
 	_update_raid(delta)
 	_update_boss_raid()
+	_update_goal()
 
 
 ## 왼쪽 위 칩 네 개: 돈, 등짐, 체력, 온기. 그 아래 모닥불 알림 한 줄.
@@ -101,6 +108,16 @@ func _build_chips() -> void:
 	_warmth_bar = _bar(WARMTH_COLOR)
 	_warmth_text = UiStyle.label("100%", 24)
 	row.add_child(_chip(HudIcon.new("snow"), [_warmth_bar, _warmth_text]))
+	var target := TextureRect.new()
+	target.texture = TargetIcon
+	target.custom_minimum_size = Vector2(30, 30)
+	target.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	target.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	target.modulate = UiStyle.GOLD
+	_goal_label = UiStyle.label("", 24)
+	_goal_chip = _chip(target, [_goal_label])
+	_goal_chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	column.add_child(_goal_chip)
 	_fire_label = UiStyle.label("", 26, Color(1.0, 0.6, 0.3))
 	_fire_label.visible = false
 	column.add_child(_fire_label)
@@ -198,6 +215,18 @@ func _update_raid(delta: float) -> void:
 				_raid_label.modulate = CALM_COLOR
 		_:
 			_raid_panel.visible = false
+
+
+## 다음 목표(sim.next_goal) 한 줄: "다음 목표: 모닥불 2단계 $320". 레이드 중이나 엔딩 뒤에는 숨긴다.
+func _update_goal() -> void:
+	var goal := sim.next_goal()
+	_goal_chip.visible = goal != null and not sim.boss_raid.active and not sim.won
+	if not _goal_chip.visible:
+		return
+	var name: String = _zone_names.get(goal.id, goal.id)
+	if goal.costs.size() > 1:
+		name = "%s %d단계" % [name, goal.level + 1]
+	_goal_label.text = "다음 목표: %s  $%d" % [name, goal.remaining()]
 
 
 ## 레이드 화면: 위쪽 곰왕 체력 막대와 남은 용병, 아래쪽 무기 버튼
