@@ -5,6 +5,7 @@ extends Node3D
 ## - 곰왕(북극곰 모델 2.5배, 짙은 청회색, 얼음 뿔 왕관)과 작은 곰, 바닥의 빨간 경고 원, 작살·포탄.
 ## - 출발·귀환 때 흰 섬광과 함께 플레이어를 옮긴다.
 ## - 레이드 중 마우스 클릭(또는 짧게 톡 친 터치)한 바닥 자리로 쏜다.
+## - 마우스를 쓰면 레이드 중 마우스 자리 바닥에 조준 표시를 띄운다(쏠 수 있으면 금색, 재장전 중이면 회색).
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const BearScene := preload("res://frost_camp/scenes/bear.tscn")
@@ -19,6 +20,8 @@ const FLOOR_COLOR := Color(0.32, 0.42, 0.58)
 const PILLARS := 14
 const TAP_TIME := 0.25
 const TAP_MOVE := 20.0
+const AIM_READY := Color(1.0, 0.84, 0.3, 0.9)
+const AIM_WAIT := Color(0.6, 0.65, 0.72, 0.6)
 ## 무기별 작살 색과 굵기
 const SHOT_LOOK := {
 	"harpoon": [Color(0.75, 0.8, 0.88), 0.05], "spread": [Color(0.6, 0.95, 1.0), 0.04],
@@ -40,6 +43,9 @@ var _portal_label: Label3D
 var _flash: ColorRect
 var _walk := 0.0
 var _touch_start := {}
+var _aim: Node3D
+var _aim_material: StandardMaterial3D
+var _mouse_seen := false
 
 
 func setup(main: Node3D, frost_sim: FrostSim) -> void:
@@ -59,6 +65,7 @@ func setup(main: Node3D, frost_sim: FrostSim) -> void:
 	_boss.get_node("HpBar").scale = Vector3(2.5, 1.5, 1.0)
 	_add_crown(_boss_body)
 	_boss.visible = false
+	_build_aim()
 	var layer := CanvasLayer.new()
 	layer.layer = 12
 	add_child(layer)
@@ -86,8 +93,14 @@ func _process(delta: float) -> void:
 	_portal_fill.scale = Vector3.ONE * maxf(raid.portal_progress(), 0.001)
 	_portal_label.text = "빙하 동굴\n곰왕 레이드" if ready or raid.active else "빙하 동굴\n작살총 필요"
 	_portal_label.modulate = Color.WHITE if ready else Color(0.7, 0.78, 0.9)
+	_aim.visible = raid.active and _mouse_seen
 	if not raid.active:
 		return
+	if _aim.visible:
+		var at: Variant = _ground_at(get_viewport().get_mouse_position())
+		if at != null:
+			_aim.position = Vector3(at.x, 0.06, at.y)
+		_aim_material.albedo_color = AIM_READY if raid.cooldown <= 0.0 else AIM_WAIT
 	# 플레이어가 영역 밖으로 나가지 못하게 붙잡는다.
 	var here := Vector2(_player.position.x, _player.position.z)
 	var clamped := raid._clamp_arena(here)
@@ -113,7 +126,13 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if raid == null or not raid.active:
 		return
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+	# 터치가 흉내 낸 마우스 이벤트는 건너뛴다(터치는 아래 톡 치기로만 쏜다).
+	if event is InputEventMouse and event.device == InputEvent.DEVICE_ID_EMULATION:
+		return
+	if event is InputEventMouseMotion:
+		_mouse_seen = true
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_mouse_seen = true
 		_shoot_at(event.position)
 	elif event is InputEventScreenTouch:
 		if event.pressed:
@@ -127,15 +146,45 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _shoot_at(screen_pos: Vector2) -> void:
+	var target: Variant = _ground_at(screen_pos)
+	if target != null and raid.shoot(target):
+		_player.call("aim_and_shoot", target)
+
+
+## 화면 자리에서 바닥(y = 0)에 닿는 자리. 바닥과 나란하면 null.
+func _ground_at(screen_pos: Vector2) -> Variant:
 	var camera := get_viewport().get_camera_3d()
 	var origin := camera.project_ray_origin(screen_pos)
 	var direction := camera.project_ray_normal(screen_pos)
 	if absf(direction.y) < 0.001:
-		return
+		return null
 	var hit := origin + direction * (-origin.y / direction.y)
-	var target := Vector2(hit.x, hit.z)
-	if raid.shoot(target):
-		_player.call("aim_and_shoot", target)
+	return Vector2(hit.x, hit.z)
+
+
+## 바닥에 눕힌 고리와 십자 조준 표시
+func _build_aim() -> void:
+	_aim = Node3D.new()
+	_aim.visible = false
+	add_child(_aim)
+	_aim_material = _material(AIM_READY, true)
+	_aim_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_aim_material.no_depth_test = true
+	var ring := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.55
+	torus.outer_radius = 0.7
+	torus.material = _aim_material
+	ring.mesh = torus
+	_aim.add_child(ring)
+	for angle in [0.0, PI / 2.0]:
+		var bar := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3(1.0, 0.04, 0.1)
+		box.material = _aim_material
+		bar.mesh = box
+		bar.rotation.y = angle
+		_aim.add_child(bar)
 
 
 func _on_started() -> void:
