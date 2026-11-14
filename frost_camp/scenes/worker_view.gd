@@ -37,7 +37,8 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	if worker.role == "fisher":
 		_model.set_tool("res://frost_camp/scenes/fishing_rod.tscn")
 	if worker.role == "hunter":
-		_model.set_tool("res://frost_camp/assets/models/survival/tool-axe-upgraded.glb")
+		_model.set_tool(_model.GUN)
+		_model.set_holding(true)
 		sim.bear_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.bears[i].pos))
 		sim.raider_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.raid.bears[i].pos))
 
@@ -73,11 +74,11 @@ func _on_tree_hit(tree_index: int, agent: SimAgent) -> void:
 	_pivot.rotation.y = atan2(-dir.x, -dir.y)
 
 
-## 내가 친 것이면 휘두르고 맞은 쪽을 바라본다(사냥꾼).
+## 내가 쏜 것이면 총을 쏘는 동작을 하고 맞은 쪽을 바라본다(사냥꾼).
 func _on_hit(agent: SimAgent, target: Vector2) -> void:
 	if agent != sim.workers[index]:
 		return
-	_model.play_action()
+	_model.play_action(_model.SHOOT)
 	var dir := target - agent.pos
 	_pivot.rotation.y = atan2(-dir.x, -dir.y)
 
