@@ -7,6 +7,7 @@ signal started
 signal continued
 
 const UiStyle := preload("res://frost_camp/ui/ui_style.gd")
+const Records := preload("res://frost_camp/ui/records.gd")
 
 var _root: Control
 
@@ -33,6 +34,11 @@ func _ready() -> void:
 	var subtitle := UiStyle.label("곰을 잡고, 물건을 팔고, 쇄빙선을 완성해 섬을 탈출하자", 28)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(subtitle)
+	var records := Records.read()
+	if records.best_time > 0.0:
+		var best := UiStyle.label("최고 기록 %s, 탈출 %d번" % [Records.format_time(records.best_time), int(records.clears)], 24, UiStyle.GOLD)
+		best.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		box.add_child(best)
 	var gap := Control.new()
 	gap.custom_minimum_size.y = 12
 	box.add_child(gap)

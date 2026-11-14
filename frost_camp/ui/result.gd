@@ -1,7 +1,9 @@
 extends CanvasLayer
-## 엔딩 결과 화면. 탈출 시간에 따른 별 등급과 플레이 기록(시간, 번 돈, 잡은 곰, 일꾼)을 줄마다 보여 주고 다시 시작할 수 있다.
+## 엔딩 결과 화면. 탈출 시간에 따른 별 등급과 플레이 기록(시간, 번 돈, 잡은 곰, 일꾼, 곰왕 처치)을 줄마다 보여 주고 다시 시작할 수 있다.
+## 최고 기록(가장 빠른 탈출)을 남기고, 더 빠르면 "새 기록!"을 띄운다.
 
 const UiStyle := preload("res://frost_camp/ui/ui_style.gd")
+const Records := preload("res://frost_camp/ui/records.gd")
 const StarIcon := preload("res://frost_camp/assets/icons/star.png")
 const EMPTY_STAR := Color(0.3, 0.34, 0.45)
 ## 이 시간(분) 안에 탈출하면 별 3개, 다음 값 안이면 2개, 아니면 1개
@@ -44,6 +46,8 @@ func _ready() -> void:
 
 
 func show_result(sim: FrostSim) -> void:
+	var best_before: float = Records.read().best_time
+	var is_new := Records.add_clear(sim.time)
 	var seconds := int(sim.time)
 	var minutes := sim.time / 60.0
 	var stars := 3 if minutes <= STAR_MINUTES[0] else (2 if minutes <= STAR_MINUTES[1] else 1)
@@ -56,9 +60,11 @@ func show_result(sim: FrostSim) -> void:
 		["번 돈", "$%d" % sim.total_earned],
 		["잡은 곰", "%d마리" % sim.bears_killed],
 		["고용한 일꾼", "%d명" % sim.workers.size()],
+		["곰왕 처치", "%d번" % sim.boss_raid.wins],
+		["최고 기록", "새 기록!" if is_new else Records.format_time(best_before)],
 	]:
 		var key := UiStyle.label(row[0], 30, Color(0.8, 0.88, 1.0))
-		var value := UiStyle.label(row[1], 34, Color.WHITE)
+		var value := UiStyle.label(row[1], 34, UiStyle.GOLD if row[1] == "새 기록!" else Color.WHITE)
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_rows.add_child(key)
