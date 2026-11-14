@@ -373,6 +373,7 @@
 		}
 	},
 	"ending": {
-		"ship_parts": ["ship_hull", "ship_engine", "ship_blade", "ship_mast", "ship_fuel"]
+		"ship_parts": ["ship_hull", "ship_engine", "ship_blade", "ship_mast", "ship_fuel"],
+		"star_minutes": [30.0, 40.0]
 	}
 }

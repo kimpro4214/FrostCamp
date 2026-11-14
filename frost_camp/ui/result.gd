@@ -6,8 +6,6 @@ const UiStyle := preload("res://frost_camp/ui/ui_style.gd")
 const Records := preload("res://frost_camp/ui/records.gd")
 const StarIcon := preload("res://frost_camp/assets/icons/star.png")
 const EMPTY_STAR := Color(0.3, 0.34, 0.45)
-## 이 시간(분) 안에 탈출하면 별 3개, 다음 값 안이면 2개, 아니면 1개
-const STAR_MINUTES := [25.0, 30.0]
 
 var _rows: GridContainer
 var _stars: HBoxContainer
@@ -50,7 +48,9 @@ func show_result(sim: FrostSim) -> void:
 	var is_new := Records.add_clear(sim.time)
 	var seconds := int(sim.time)
 	var minutes := sim.time / 60.0
-	var stars := 3 if minutes <= STAR_MINUTES[0] else (2 if minutes <= STAR_MINUTES[1] else 1)
+	# balance.ending.star_minutes: 이 시간(분) 안에 탈출하면 별 3개, 다음 값 안이면 2개, 아니면 1개
+	var star_minutes: Array = sim.balance.ending.star_minutes
+	var stars := 3 if minutes <= star_minutes[0] else (2 if minutes <= star_minutes[1] else 1)
 	for i in 3:
 		_stars.get_child(i).modulate = UiStyle.GOLD if i < stars else EMPTY_STAR
 	for child in _rows.get_children():
