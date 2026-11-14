@@ -1,8 +1,10 @@
 extends CanvasLayer
-## 시작 화면. 캠프 위에 제목과 시작·종료 버튼, 조작 안내를 띄운다. 시작을 누르면(또는 Enter·Space) 사라지고 규칙 슬라이드로 넘어간다.
+## 시작 화면. 캠프 위에 제목과 (저장이 있으면 이어하기,) 시작·종료 버튼, 조작 안내를 띄운다. 시작을 누르면(또는 Enter·Space) 사라지고 규칙 슬라이드로 넘어간다.
 ## 웹에서는 창을 닫을 수 없으니 종료 버튼을 숨긴다.
 
 signal started
+## 저장이 있을 때 "이어하기"를 눌렀다
+signal continued
 
 const UiStyle := preload("res://frost_camp/ui/ui_style.gd")
 
@@ -34,8 +36,19 @@ func _ready() -> void:
 	var gap := Control.new()
 	gap.custom_minimum_size.y = 12
 	box.add_child(gap)
+	var save := SaveGame.read()
+	var resume: Button = null
+	if not save.is_empty():
+		var seconds := int(save.sim.time)
+		resume = Button.new()
+		resume.text = "이어하기  %d:%02d" % [seconds / 60, seconds % 60]
+		resume.custom_minimum_size = Vector2(320, 76)
+		resume.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		UiStyle.style_button(resume, 34)
+		resume.pressed.connect(_continue)
+		box.add_child(resume)
 	var start := Button.new()
-	start.text = "시작하기"
+	start.text = "새로 시작" if resume else "시작하기"
 	start.custom_minimum_size = Vector2(320, 76)
 	start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	UiStyle.style_button(start, 36)
@@ -59,7 +72,7 @@ func _ready() -> void:
 		+ "\n멈춰 서 있으면 베고, 낚고, 사고, 판다", 24)
 	tips.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help.add_child(tips)
-	start.grab_focus.call_deferred()
+	(resume if resume else start).grab_focus.call_deferred()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -73,3 +86,11 @@ func _start() -> void:
 	visible = false
 	started.emit()
 	queue_free()
+
+
+func _continue() -> void:
+	if not visible:
+		return
+	visible = false
+	continued.emit()
+

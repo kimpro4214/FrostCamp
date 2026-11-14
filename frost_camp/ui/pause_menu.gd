@@ -2,6 +2,9 @@ extends CanvasLayer
 ## 게임 중 오른쪽 위 일시정지 버튼(또는 Esc). 누르면 게임이 멈추고 패널이 뜬다: 계속하기, 처음으로, 종료.
 ## 웹에서는 창을 닫을 수 없으니 종료 버튼을 숨긴다.
 
+## 메뉴가 열렸다(main이 이때 저장한다)
+signal opened
+
 const UiStyle := preload("res://frost_camp/ui/ui_style.gd")
 const PauseIcon := preload("res://frost_camp/assets/icons/pause.png")
 
@@ -50,6 +53,7 @@ func open() -> void:
 	if not _button.visible:
 		return
 	_overlay.visible = true
+	opened.emit()
 	get_tree().paused = true
 	_overlay.find_child("Resume", true, false).grab_focus()
 

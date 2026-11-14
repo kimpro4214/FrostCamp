@@ -56,6 +56,11 @@ var _goal_arrow: Node3D
 var _storm := 0.0
 var _storm_veil: ColorRect
 
+## 시작 화면의 "이어하기"가 켜고 씬을 다시 불러온다. 다시 불러온 _ready가 저장을 되살리고 끈다.
+static var _continue_next := false
+## 30초마다 자동 저장한다(일시정지 메뉴를 열 때, 창을 떠날 때도).
+const AUTOSAVE_EVERY := 30.0
+
 ## true면 시작 화면 없이 바로 시작한다(화면 확인용 스크립트가 쓴다).
 var skip_title := false
 ## 시작 화면에서 "시작하기"를 누르기 전에는 시간이 흐르지 않는다.
@@ -63,6 +68,9 @@ var started := false
 ## 구매 존 id → 화면에 보일 이름(text.json)
 var _zone_names := {}
 var _pause: CanvasLayer
+## 이번 판이 저장에서 되살린 판이면 true(시작 화면과 규칙 슬라이드를 건너뛴다)
+var _resuming := false
+var _save_timer := 0.0
 
 @onready var _player: CharacterBody3D = $Player
 @onready var _camera: Camera3D = $Camera3D
@@ -72,6 +80,13 @@ var _pause: CanvasLayer
 
 func _ready() -> void:
 	sim = FrostSim.new(GameData.load_json(GameData.BALANCE_PATH), GameData.load_json(GameData.LAYOUT_PATH))
+	# 이어하기: 화면을 만들기 전에 sim을 되살린다. 화면은 되살린 상태를 보고 만들어진다.
+	if _continue_next:
+		_continue_next = false
+		var data := SaveGame.read()
+		if not data.is_empty():
+			SaveGame.restore(sim, data)
+			_resuming = true
 	_player.setup(sim, _hud.joystick)
 	_sfx = Sfx.new()
 	add_child(_sfx)
@@ -152,6 +167,8 @@ func _ready() -> void:
 	walls.setup(sim, GameData.load_json(GameData.LAYOUT_PATH).base.walls)
 	_place_structures(zone_names.get("repair", "repair"))
 	$Ship.setup(sim)
+	for i in sim.workers.size():
+		_add_worker_view(i)
 	sim.worker_hired.connect(_on_worker_hired)
 	sim.zone_purchased.connect(_on_zone_purchased)
 	sim.game_won.connect(_on_game_won)
@@ -175,6 +192,7 @@ func _ready() -> void:
 			_sfx.play("shoot"))
 	_pause = PauseMenu.new()
 	add_child(_pause)
+	_pause.opened.connect(_save)
 	_show_title()
 
 
@@ -340,10 +358,15 @@ static func _subject_particle(word: String) -> String:
 
 
 func _on_worker_hired(index: int) -> void:
+	var worker := _add_worker_view(index)
+	Juice.pop(worker.get_node("Pivot"), Vector3(0.2, 1.6, 0.2), 0.4)
+
+
+func _add_worker_view(index: int) -> Node3D:
 	var worker := WorkerScene.instantiate()
 	$Workers.add_child(worker)
 	worker.setup(sim, index)
-	Juice.pop(worker.get_node("Pivot"), Vector3(0.2, 1.6, 0.2), 0.4)
+	return worker
 
 
 ## 플레이어가 친 한 방마다 화면을 살짝 흔들고 아주 짧게 멈춘다. 일꾼이 친 것은 흔들지 않는다.
@@ -419,6 +442,7 @@ func _on_zone_purchased(id: String, _level: int) -> void:
 
 ## 탈출 컷신을 틀고, 끝나면 컷신이 결과 화면을 띄운다.
 func _on_game_won() -> void:
+	SaveGame.delete()
 	var ending := Ending.new()
 	add_child(ending)
 	ending.play(self, sim)
@@ -435,14 +459,20 @@ func _physics_process(delta: float) -> void:
 
 ## 시작 화면을 띄우고, 누르기 전까지 플레이어와 HUD를 멈춰 둔다.
 func _show_title() -> void:
-	if skip_title:
+	if skip_title or _resuming:
 		_on_started()
 		return
 	_hud.visible = false
 	_player.set_physics_process(false)
 	var title := Title.new()
 	add_child(title)
-	title.started.connect(_show_tutorial)
+	# 새로 시작하면 지난 저장을 지운다.
+	title.started.connect(func() -> void:
+		SaveGame.delete()
+		_show_tutorial())
+	title.continued.connect(func() -> void:
+		_continue_next = true
+		get_tree().reload_current_scene())
 
 
 ## 시작하기 다음에 규칙 슬라이드를 넘기고, 다 넘기면(또는 건너뛰면) 게임이 흐른다.
@@ -462,6 +492,10 @@ func _on_started() -> void:
 func _process(delta: float) -> void:
 	# 게임이 흐르는 동안에만 일시정지 버튼을 보인다(시작 화면·슬라이드·컷신에서는 숨김).
 	_pause.set_available(started and not sim.won)
+	if started and not sim.won:
+		_save_timer += delta
+		if _save_timer >= AUTOSAVE_EVERY:
+			_save()
 	_play_player_sounds(delta)
 	_update_arrow()
 	# 눈은 플레이어 위 하늘에서 내린다(입자는 월드 좌표라 걸어도 같이 미끄러지지 않는다).
@@ -488,4 +522,18 @@ func _update_storm(delta: float) -> void:
 	_storm_veil.color.a = STORM_VEIL * _storm
 	$Snow.speed_scale = lerpf(1.0, STORM_SNOW_SPEED, _storm)
 	$Snow.direction = Vector3(lerpf(0.2, 1.4, _storm), -1.0, 0.0)
+
+
+## 저장할 수 없는 때(레이드, 습격 중, 엔딩 뒤)면 SaveGame이 건너뛴다.
+func _save() -> void:
+	_save_timer = 0.0
+	if started:
+		SaveGame.write(sim)
+
+
+## 창을 닫거나 다른 탭으로 떠날 때도 저장한다(웹에서 새로고침해도 이어할 수 있게).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		if sim:
+			_save()
 
