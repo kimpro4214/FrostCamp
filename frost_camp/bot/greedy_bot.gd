@@ -71,7 +71,7 @@ func _choose_target() -> Dictionary:
 	var fuel := _fuel_target()
 	if not fuel.is_empty():
 		return fuel
-	if _warming and warm_up:
+	if _warming and warm_up and _any_heat_lit():
 		return {"kind": "heat", "pos": _nearest_heat()}
 
 	# 습격 곰이 있으면 먼저 막고, 부서진 시설은 돈이 되면 바로 고친다.
@@ -193,7 +193,17 @@ func _fuel_target() -> Dictionary:
 			var tree := _source_of("log", true)
 			if not tree.is_empty():
 				return tree
+		elif not sim.player.stack.items.is_empty():
+			# 등이 차서 원목을 못 구하면 먼저 팔아 자리를 만든다(꺼진 불 앞에서 멈추지 않게).
+			return {"kind": "stall", "pos": _delivery_stall().pos}
 	return {}
+
+
+func _any_heat_lit() -> bool:
+	for source in sim.heat_sources:
+		if sim.is_heat_active(source):
+			return true
+	return false
 
 
 func _nearest_heat() -> Vector2:
