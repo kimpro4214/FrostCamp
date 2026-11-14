@@ -81,7 +81,8 @@ light_energy = 1.0
 shadow_enabled = true
 shadow_opacity = 0.75
 shadow_blur = 1.5
-directional_shadow_max_distance = 60.0
+directional_shadow_mode = 0
+directional_shadow_max_distance = 40.0
 
 [node name="Ground" type="MeshInstance3D" parent="." groups=["nav_source"]]
 mesh = SubResource("PlaneMesh_ground")
