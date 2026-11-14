@@ -866,7 +866,6 @@ func _add_bears(count: int) -> void:
 		bear_added.emit(bears.size() - 1)
 
 
-## 열원 안에서는 온기가 차고, 밖에서는 drain만큼 준다.
 ## 눈보라 시계. 레이드 중(동굴 안)에는 멈춘다.
 func _tick_blizzard(delta: float) -> void:
 	var ready := _requirement_met(str(blizzard.config.get("start_after", ""))) if not blizzard.config.is_empty() else false
@@ -879,6 +878,7 @@ func _tick_blizzard(delta: float) -> void:
 			blizzard_ended.emit()
 
 
+## 열원 안에서는 온기가 차고, 밖에서는 drain만큼 준다.
 func _tick_cold(agent: SimAgent, delta: float, drain: float) -> void:
 	if is_warm(agent.pos):
 		agent.warmth = minf(agent.warmth + float(balance.cold.recover) * delta, agent.max_warmth)
