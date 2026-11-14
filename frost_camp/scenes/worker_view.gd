@@ -36,6 +36,12 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	_hit_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_hit_overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	sim.worker_hit.connect(_on_worker_hit)
+	if worker.dead or worker.retired:
+		# 이어하기: 이미 쓰러지거나 물러난 일꾼은 연출 없이 숨긴다.
+		_leaving = true
+		visible = false
+		set_physics_process(false)
+		return
 	if worker.role == "miner":
 		_model.set_tool("res://frost_camp/assets/models/survival/tool-pickaxe.glb")
 		sim.tree_hit.connect(_on_tree_hit)

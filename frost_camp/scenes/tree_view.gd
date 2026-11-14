@@ -64,6 +64,10 @@ func setup(frost_sim: FrostSim, tree_index: int) -> void:
 	_snow.initial_velocity_max = 2.0
 	sim.tree_hit.connect(_on_tree_hit)
 	sim.tree_felled.connect(_on_tree_felled)
+	if not tree.is_standing():
+		# 이어하기: 쓰러진 채 저장된 나무는 밑동만 보인다.
+		_standing = false
+		_crown.visible = false
 	if crystal:
 		_star = Sprite3D.new()
 		_star.texture = preload("res://frost_camp/assets/icons/star.png")

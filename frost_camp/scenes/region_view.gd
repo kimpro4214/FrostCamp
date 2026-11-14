@@ -43,6 +43,7 @@ func setup(frost_sim: FrostSim, name_in_sim: String) -> void:
 	remove_child(templates)
 	templates.queue_free()
 	sim.zone_purchased.connect(_on_zone_purchased)
+	_on_zone_purchased("", 0)  # 이어하기: 이미 산 지역이면 바로 연다.
 
 
 ## 구매 즉시 얼음벽을 떼어 내야 메인 씬이 다시 굽는 길찾기 메시에 입구가 열린다.

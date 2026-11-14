@@ -41,6 +41,8 @@ func setup(frost_sim: FrostSim, structure_index: int, target: Node3D) -> void:
 	sim.structure_hit.connect(_on_hit)
 	sim.structure_broken.connect(_on_broken)
 	sim.structure_repaired.connect(_on_repaired)
+	if structure.is_broken():
+		_on_broken(index)  # 이어하기: 부서진 채 저장된 시설
 
 
 func _process(_delta: float) -> void:
