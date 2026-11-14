@@ -71,6 +71,7 @@
 		"damage": 3,
 		"attack_interval": 1.0,
 		"attack_radius": 1.8,
+		"worker_reach": 3.0,
 		"reward": 10,
 		"meat_dropped": 2
 	},
@@ -99,12 +100,12 @@
 		"damage_add": 2
 	},
 	"workers": {
-		"lumberjack": { "speed": 3.5, "capacity": 6, "damage": 1 },
-		"porter": { "speed": 4.0, "capacity": 8 },
-		"cashier": { "speed": 4.0 },
+		"lumberjack": { "speed": 3.5, "capacity": 6, "damage": 1, "hp": 6 },
+		"porter": { "speed": 4.0, "capacity": 8, "hp": 6 },
+		"cashier": { "speed": 4.0, "hp": 6 },
 		"hunter": { "speed": 3.8, "capacity": 6, "damage": 2, "hp": 10 },
-		"fisher": { "speed": 3.5, "capacity": 6 },
-		"miner": { "speed": 3.5, "capacity": 6, "damage": 1 }
+		"fisher": { "speed": 3.5, "capacity": 6, "hp": 6 },
+		"miner": { "speed": 3.5, "capacity": 6, "damage": 1, "hp": 6 }
 	},
 	"items": {
 		"log": { "price": 5 },

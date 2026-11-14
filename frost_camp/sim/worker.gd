@@ -18,6 +18,10 @@ var carry_item := "log"
 var line := ""
 ## 컨베이어로 바뀌어 물러난 운반꾼. 아무 일도 하지 않고 나간다.
 var retired := false
+## 습격 곰에게 쓰러졌다. 물러난 일꾼처럼 아무 일도 하지 않는다(화면은 넘어져 사라진다).
+var dead := false
+## 이 일꾼을 고용한 구매 존 id. 쓰러지면 그 존 단계가 하나 내려가 다시 고용해야 한다.
+var zone_id := ""
 
 
 func _init(worker_role: String, start_pos: Vector2, config: Dictionary) -> void:

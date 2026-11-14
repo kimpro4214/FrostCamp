@@ -36,6 +36,9 @@ signal premium_sold(stall_index: int, item: String)
 ## 얼음 구멍 하나를 새로 뚫었다(구멍 번호).
 signal hole_drilled(hole: int)
 signal worker_retired(index: int)
+## 일꾼이 습격 곰에게 맞았다 / 쓰러졌다(일꾼 번호).
+signal worker_hit(index: int)
+signal worker_died(index: int)
 signal game_won
 
 var balance: Dictionary
@@ -244,7 +247,7 @@ func is_fire_auto(source: Dictionary) -> bool:
 	if source.level < source.auto_level:
 		return false
 	for worker in workers:
-		if worker.role == "lumberjack":
+		if worker.role == "lumberjack" and not worker.retired:
 			return true
 	return false
 
@@ -376,6 +379,9 @@ func tick(delta: float) -> void:
 			worker.target = {"kind": "idle", "pos": worker_spawn, "stop": 0.3}
 			continue
 		worker.target = WorkerBrain.choose(self, worker)
+		# 습격 곰이 가까이 오면 겁에 질려 그 자리에 멈춘다(사냥꾼은 맞서 싸운다). 지켜 주지 않으면 쓰러진다.
+		if worker.role != "hunter" and _nearest_raider(worker.pos, float(balance.raid.get("worker_reach", 0.0))) != -1:
+			worker.target = {"kind": "idle", "pos": worker.pos, "stop": 0.3}
 		match worker.role:
 			"lumberjack":
 				_tick_chop(worker, delta, worker.damage, "log")
@@ -660,6 +666,9 @@ func _tick_raid(delta: float) -> void:
 				bear.path = spawn_paths[raid.spawn_index].duplicate()
 			raid_started.emit(raid.wave)
 		"cleared":
+			for w in workers:
+				if not w.dead:
+					w.hp = w.max_hp
 			raid_cleared.emit(raid.wave)
 	var config: Dictionary = balance.raid
 	for i in raid.bears.size():
@@ -671,6 +680,18 @@ func _tick_raid(delta: float) -> void:
 				bear.breached = true  # 노리던 방벽 구간이 무너졌으니 그 틈으로 들어간다.
 			bear.target = _raid_target(bear)
 			bear.attack_timer = 0.0
+		# 가는 길에 worker_reach 안에 일꾼이 있으면 그 일꾼부터 친다.
+		var victim := _nearest_worker(bear.pos, float(config.get("worker_reach", 0.0)))
+		if victim != -1:
+			var prey := workers[victim]
+			if bear.pos.distance_to(prey.pos) > float(config.attack_radius) * 0.6:
+				bear.pos = bear.pos.move_toward(prey.pos, bear.speed * delta)
+			else:
+				bear.attack_timer += delta
+				if bear.attack_timer >= float(config.attack_interval):
+					bear.attack_timer = 0.0
+					_hurt_worker(victim, float(config.damage))
+			continue
 		# 길목 바깥 접근점까지 먼저 걷고, 길목 방벽을 노리지 않으면 길목 안쪽 점도 거친다(서식지 벽 등을 가로지르지 않게).
 		var attacking_gate := bear.target != -1 and bear.target == bear.gate
 		if not bear.path.is_empty() and not (attacking_gate and bear.path.size() == 1):
@@ -853,7 +874,10 @@ func _tick_purchase(agent: SimAgent, delta: float) -> void:
 	for zone in zones:
 		if is_zone_available(zone) and _pay_into(agent, zone, delta):
 			if zone.try_complete():
+				var hired_before := workers.size()
 				_apply_effect(zone.effect)
+				for w in range(hired_before, workers.size()):
+					workers[w].zone_id = zone.id
 				zone_purchased.emit(zone.id, zone.level)
 			return
 	for i in structures.size():
@@ -1031,6 +1055,40 @@ func _nearest_raider(pos: Vector2, max_dist: float = -1.0) -> int:
 			best = i
 			best_dist = dist
 	return best
+
+
+## pos에서 reach 안의 가장 가까운 일하는 일꾼 번호. 없으면 -1.
+func _nearest_worker(pos: Vector2, reach: float) -> int:
+	var best := -1
+	var best_dist := reach
+	for i in workers.size():
+		var w := workers[i]
+		var dist := pos.distance_to(w.pos)
+		if not w.retired and dist <= best_dist:
+			best = i
+			best_dist = dist
+	return best
+
+
+## 일꾼이 맞는다. 체력이 다하면 쓰러지고, 고용한 존 단계가 하나 내려가 다시 사야 한다.
+## 라인 운반꾼이면 그 라인 운반 단계도 하나 내려간다(컨베이어 단계에서는 운반꾼이 없다).
+func _hurt_worker(index: int, damage: float) -> void:
+	var w := workers[index]
+	w.hp -= damage
+	worker_hit.emit(index)
+	if w.hp > 0.0:
+		return
+	w.hp = 0.0
+	w.dead = true
+	w.retired = true
+	w.stack.items.clear()
+	var zone := find_zone(w.zone_id)
+	if zone and zone.level > 0:
+		zone.level -= 1
+		zone.paid = 0
+	if w.line != "" and haul_levels.get(w.line, 0) == 1:
+		haul_levels[w.line] = 0
+	worker_died.emit(index)
 
 
 ## 길목 구간 a-b의 바깥 접근점과 안쪽 점. 바깥은 기지 중심에서 먼 쪽이다.
