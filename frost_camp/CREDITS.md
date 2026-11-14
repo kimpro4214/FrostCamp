@@ -5,7 +5,7 @@
 | 에셋 | 쓰는 곳 | 출처 | 라이선스 |
 |---|---|---|---|
 | Jua (Copyright 2018 The Jua Project Authors) | 기본 UI 폰트 `assets/fonts/Jua-Regular.ttf` | Google Fonts, `github.com/google/fonts` 의 `ofl/jua` | SIL Open Font License 1.1 (`assets/fonts/OFL.txt`) |
-| Mini Characters (Kenney) | 플레이어·일꾼·손님 `assets/models/characters/` | kenney.nl/assets/mini-characters | CC0 1.0 |
+| Mini Characters (Kenney) | 플레이어·일꾼·손님, 작살총(weapon-shooter) `assets/models/characters/` | kenney.nl/assets/mini-characters | CC0 1.0 |
 | Nature Kit (Kenney) | 나무·그루터기 `assets/models/nature/` | kenney.nl/assets/nature-kit | CC0 1.0 |
 | Survival Kit (Kenney) | 모닥불·판매대 상자·텐트·통·울타리·철벽·도끼·곡괭이 `assets/models/survival/` | kenney.nl/assets/survival-kit | CC0 1.0 |
 | Pirate Kit (Kenney) | 항구 상자·통·부두 `assets/models/pirate/` | kenney.nl/assets/pirate-kit | CC0 1.0 |
