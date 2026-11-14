@@ -78,6 +78,15 @@ func _ready() -> void:
 		+ "\n멈춰 서 있으면 베고, 낚고, 사고, 판다", 24)
 	tips.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help.add_child(tips)
+	# 오른쪽 아래 작은 버전 표시(project.godot의 application/config/version)
+	var version := UiStyle.label("v" + str(ProjectSettings.get_setting("application/config/version", "")), 20, Color(0.8, 0.86, 0.95, 0.8))
+	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	version.offset_left = -120.0
+	version.offset_top = -40.0
+	version.offset_right = -16.0
+	version.offset_bottom = -12.0
+	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_root.add_child(version)
 	(resume if resume else start).grab_focus.call_deferred()
 
 
