@@ -9,6 +9,7 @@ const WarningIcon := preload("res://frost_camp/assets/icons/warning.png")
 const TargetIcon := preload("res://frost_camp/assets/icons/target.png")
 const WARNING_COLOR := Color(1.0, 0.45, 0.35)
 const CALM_COLOR := Color(0.85, 0.9, 1.0)
+const STORM_COLOR := Color(0.75, 0.92, 1.0)
 const CLEAR_COLOR := Color(0.5, 1.0, 0.55)
 const HP_COLOR := Color(1.0, 0.36, 0.38)
 const WARMTH_COLOR := Color(0.45, 0.8, 1.0)
@@ -26,6 +27,8 @@ var _hp_text: Label
 var _warmth_bar: ProgressBar
 var _warmth_text: Label
 var _fire_label: Label
+var _storm_label: Label
+var _storm_chip: PanelContainer
 var _raid_panel: PanelContainer
 var _raid_icon: TextureRect
 var _raid_label: Label
@@ -59,6 +62,8 @@ func setup(frost_sim: FrostSim) -> void:
 	sim.raid_cleared.connect(func(_wave: int) -> void:
 		_clear_left = CLEAR_SHOW_TIME
 		_punch(_raid_panel))
+	sim.blizzard_warning.connect(func() -> void: _show_toast("눈보라가 몰려온다! 모닥불 곁으로"))
+	sim.blizzard_ended.connect(func() -> void: _show_toast("눈보라가 그쳤다"))
 	sim.premium_found.connect(func(item: String, _pos: Vector2) -> void: _show_toast(PREMIUM_TEXT.get(item, item)))
 	sim.crystal_glowed.connect(func(_i: int) -> void: _show_toast("광맥에 빛나는 빙결정이 나타났다!"))
 
@@ -78,6 +83,10 @@ func _process(delta: float) -> void:
 	_fire_label.visible = low
 	if low:
 		_fire_label.text = "모닥불이 꺼졌다! 원목을 넣자" if fire.fuel <= 0.0 else "모닥불이 꺼져 간다"
+	var storm := sim.blizzard
+	_storm_chip.visible = not sim.boss_raid.active and (storm.state == Blizzard.State.WARNING or storm.state == Blizzard.State.ACTIVE)
+	if _storm_chip.visible:
+		_storm_label.text = ("눈보라 %d초 뒤" if storm.state == Blizzard.State.WARNING else "눈보라! 추위가 빨리 온다 %d") % ceili(storm.time_left)
 	_update_raid(delta)
 	_update_boss_raid()
 	_update_goal()
@@ -121,6 +130,11 @@ func _build_chips() -> void:
 	_fire_label = UiStyle.label("", 26, Color(1.0, 0.6, 0.3))
 	_fire_label.visible = false
 	column.add_child(_fire_label)
+	_storm_label = UiStyle.label("", 24, STORM_COLOR)
+	_storm_chip = _chip(HudIcon.new("snow"), [_storm_label])
+	_storm_chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_storm_chip.visible = false
+	column.add_child(_storm_chip)
 
 
 func _chip(icon: Control, parts: Array) -> PanelContainer:

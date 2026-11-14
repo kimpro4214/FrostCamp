@@ -34,6 +34,12 @@ const Juice := preload("res://frost_camp/scenes/juice.gd")
 const Sfx := preload("res://frost_camp/scenes/sfx.gd")
 const MAX_FLYING_COINS := 10
 const SNOW_OFFSET := Vector3(0.0, 8.0, 2.0)
+## 눈보라 화면: 안개 짙기(평소 → 눈보라), 하얀 막 투명도, 눈 속도, 바뀌는 데 걸리는 초
+const FOG_CALM := 0.0018
+const FOG_STORM := 0.012
+const STORM_VEIL := 0.22
+const STORM_SNOW_SPEED := 2.5
+const STORM_FADE := 2.0
 const DECOR_DIR := "res://frost_camp/assets/models/"
 ## 걸을 때 발소리 간격(초)
 const STEP_INTERVAL := 0.3
@@ -46,6 +52,9 @@ var _last_stack := 0
 var _step_timer := 0.0
 var _raid_arrow: Node3D
 var _goal_arrow: Node3D
+## 0(맑음)~1(눈보라). 화면 효과가 천천히 따라간다.
+var _storm := 0.0
+var _storm_veil: ColorRect
 
 ## true면 시작 화면 없이 바로 시작한다(화면 확인용 스크립트가 쓴다).
 var skip_title := false
@@ -134,6 +143,7 @@ func _ready() -> void:
 		$Bears.add_child(bear)
 		bear.setup(sim, sim.bears[i], false)
 		Juice.pop(bear, Vector3(0.3, 1.6, 0.3), 0.4))
+	_build_storm_veil()
 	_raid_arrow = _make_arrow(RAID_ARROW_COLOR)
 	_goal_arrow = _make_arrow(GOAL_ARROW_COLOR)
 	var walls := WallView.new()
@@ -456,3 +466,26 @@ func _process(delta: float) -> void:
 	_update_arrow()
 	# 눈은 플레이어 위 하늘에서 내린다(입자는 월드 좌표라 걸어도 같이 미끄러지지 않는다).
 	$Snow.position = _player.position + SNOW_OFFSET
+	_update_storm(delta)
+
+
+func _build_storm_veil() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 0  # HUD(1)보다 아래, 3D 화면 위
+	add_child(layer)
+	_storm_veil = ColorRect.new()
+	_storm_veil.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_storm_veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_storm_veil.color = Color(0.92, 0.96, 1.0, 0.0)
+	layer.add_child(_storm_veil)
+
+
+## 눈보라가 불면 안개가 짙어지고, 화면에 하얀 막이 끼고, 눈이 옆으로 빠르게 날린다. 레이드(동굴) 중에는 맑다.
+func _update_storm(delta: float) -> void:
+	var target := 1.0 if sim.blizzard.state == Blizzard.State.ACTIVE and not sim.boss_raid.active else 0.0
+	_storm = move_toward(_storm, target, delta / STORM_FADE)
+	$WorldEnvironment.environment.fog_density = lerpf(FOG_CALM, FOG_STORM, _storm)
+	_storm_veil.color.a = STORM_VEIL * _storm
+	$Snow.speed_scale = lerpf(1.0, STORM_SNOW_SPEED, _storm)
+	$Snow.direction = Vector3(lerpf(0.2, 1.4, _storm), -1.0, 0.0)
+
