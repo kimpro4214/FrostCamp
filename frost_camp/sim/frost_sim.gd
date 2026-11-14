@@ -392,8 +392,8 @@ func tick(delta: float) -> void:
 			worker.target = {"kind": "idle", "pos": worker.pos, "stop": 0.3}
 			continue  # 레이드 중 용병은 boss_raid가 움직인다.
 		worker.target = WorkerBrain.choose(self, worker)
-		# 습격 곰이 가까이 오면 겁에 질려 그 자리에 멈춘다(사냥꾼은 맞서 싸운다). 지켜 주지 않으면 쓰러진다.
-		if worker.role != "hunter" and _nearest_raider(worker.pos, float(balance.raid.get("worker_reach", 0.0))) != -1:
+		# 습격 곰이 가까이 오면 겁에 질려 그 자리에 멈춘다(사냥꾼과 용병은 맞서 싸운다). 지켜 주지 않으면 쓰러진다.
+		if not worker.role in ["hunter", "merc"] and _nearest_raider(worker.pos, float(balance.raid.get("worker_reach", 0.0))) != -1:
 			worker.target = {"kind": "idle", "pos": worker.pos, "stop": 0.3}
 		match worker.role:
 			"lumberjack":
@@ -907,6 +907,8 @@ func _tick_purchase(agent: SimAgent, delta: float) -> void:
 	for zone in zones:
 		if is_zone_available(zone) and _pay_into(agent, zone, delta):
 			if zone.try_complete():
+				# 한 단계를 산 뒤에는 기다리는 시간을 처음부터(repeat_delay만큼 더) 다시 센다. 서 있기만 해도 다음 단계에 돈이 새지 않게.
+				agent.zone_wait = -float(balance.purchase.get("repeat_delay", 0.0))
 				var hired_before := workers.size()
 				_apply_effect(zone.effect)
 				for w in range(hired_before, workers.size()):

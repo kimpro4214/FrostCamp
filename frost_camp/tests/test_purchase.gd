@@ -106,3 +106,22 @@ func test_fire_hint_only_when_fire_is_the_last_gap() -> void:
 	check_eq(sim.fire_needed(sim.find_zone("coat")), 0, "다른 선행 조건도 모자라면 숨긴다")
 	sim.find_zone("habitat").level = 1
 	check_eq(sim.fire_needed(sim.find_zone("coat")), 1, "모닥불만 남으면 안내한다")
+
+
+## 한 단계를 산 뒤에는 repeat_delay를 더 기다려야 다음 단계에 돈이 들어간다(7차 QA 3번).
+func test_repeat_delay_after_each_level() -> void:
+	var balance := Fixtures.balance()
+	balance.purchase.repeat_delay = 1.5
+	var sim := FrostSim.new(balance, Fixtures.layout())
+	sim.money = 100
+	sim.player.pos = sim.find_zone("backpack").pos
+	var t := 0.0
+	while sim.find_zone("backpack").level == 0 and t < 5.0:
+		sim.tick(0.05)
+		t += 0.05
+	check_eq(sim.find_zone("backpack").level, 1, "첫 단계를 산다")
+	var money_after := sim.money
+	Fixtures.run(sim, 1.5)
+	check_eq(sim.money, money_after, "산 뒤 pay_delay + repeat_delay 동안은 돈이 나가지 않는다")
+	Fixtures.run(sim, 0.8)
+	check(sim.money < money_after, "그 뒤에는 다음 단계에 돈이 들어간다")

@@ -160,6 +160,7 @@
 	"purchase": {
 		"zone_radius": 1.2,
 		"pay_delay": 0.6,
+		"repeat_delay": 1.5,
 		"fill_time": 1.5,
 		"min_rate": 10
 	},
@@ -247,12 +248,12 @@
 			"requires": ["backpack"]
 		},
 		"haul_log": {
-			"costs": [420, 600, 850],
+			"costs": [340, 580, 820],
 			"effect": { "haul": "log" },
 			"requires": ["lumberjack"]
 		},
 		"haul_salmon": {
-			"costs": [260, 600, 850],
+			"costs": [380, 640, 880],
 			"effect": { "haul": "salmon" },
 			"requires": ["fisher"]
 		},
