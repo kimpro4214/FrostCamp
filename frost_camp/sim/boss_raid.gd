@@ -359,7 +359,7 @@ func _finish(won: bool) -> void:
 				sim.money += int(sim.balance.items.gem.price)
 	minions.clear()
 	slams.clear()
-	var back := portal_pos + Vector2(0.0, 2.0)
+	var back := portal_pos + Vector2(2.0, -0.6)  # 입구 옆, 남쪽 방벽 안쪽
 	sim.player.pos = back
 	sim.player.hp = sim.player.max_hp
 	sim.player.dazed_left = 0.0
