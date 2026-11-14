@@ -148,15 +148,31 @@ static func _cashier(sim: FrostSim, worker: Worker) -> Dictionary:
 	return _go("cash", best.cash_pos)
 
 
-## 용병은 빙하 동굴 입구 둘레에 둥글게 모여 기다린다.
+## 용병은 빙하 동굴 입구 북쪽(기지 안쪽)에 한 줄로 서서 기다린다.
+## 기지에 습격 곰이 오면 가장 가까운 곰 쪽으로 나가 MERC_KEEP 거리에서 쏘고(쏘는 규칙은 sim), 끝나면 돌아온다.
+const MERC_KEEP := 4.0
+const MERC_ROW := Vector2(1.2, -2.0)  # 입구 아치를 피해 북동쪽
+const MERC_GAP := 0.8
+
+
 static func _merc(sim: FrostSim, worker: Worker) -> Dictionary:
+	if sim.raid.state == Raid.State.ATTACKING:
+		var best: RaidBear = null
+		for bear in sim.raid.bears:
+			if bear.is_alive() and (best == null or worker.pos.distance_to(bear.pos) < worker.pos.distance_to(best.pos)):
+				best = bear
+		if best:
+			var away := (worker.pos - best.pos).normalized()
+			if away == Vector2.ZERO:
+				away = Vector2.DOWN
+			return _go("idle", best.pos + away * MERC_KEEP)
 	var order := 0
 	for other in sim.workers:
 		if other == worker:
 			break
 		if other.role == "merc" and not other.retired:
 			order += 1
-	return _go("idle", sim.boss_raid.portal_pos + Vector2.from_angle(order * 1.05 + 0.5) * 2.2)
+	return _go("idle", sim.boss_raid.portal_pos + MERC_ROW + Vector2(order * MERC_GAP, 0.0))
 
 
 static func _go(kind: String, pos: Vector2) -> Dictionary:

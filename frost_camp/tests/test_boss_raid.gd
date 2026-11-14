@@ -121,3 +121,18 @@ func test_merc_follows_and_dies() -> void:
 	sim.boss_raid._hurt_merc(0, 99.0)
 	check(merc.dead, "용병도 쓰러진다")
 	check_eq(sim.find_zone("merc").level, 0, "용병 존 단계가 내려간다")
+
+
+## 기지 용병은 입구 북쪽 한 줄에 서고, 습격 중에는 곰 쪽으로 나간다(7차 QA 4, 5번).
+func test_merc_posts_and_sortie() -> void:
+	var sim := _make_sim()
+	for k in 3:
+		sim._apply_effect({"hire": "merc"})
+	for w in sim.workers:
+		var post: Vector2 = WorkerBrain.choose(sim, w).pos
+		check(post.y < PORTAL.y, "용병 대기 자리는 입구 북쪽(기지 안쪽)이다 (%s)" % post)
+	var bear := RaidBear.new(Vector2(-15, -10), 100, 0.0)
+	sim.raid.state = Raid.State.ATTACKING
+	sim.raid.bears.append(bear)
+	var goal: Vector2 = WorkerBrain.choose(sim, sim.workers[0]).pos
+	check(absf(goal.distance_to(bear.pos) - 4.0) < 0.01, "습격 중에는 곰에게서 4m 떨어진 자리로 나간다")
