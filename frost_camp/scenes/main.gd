@@ -198,6 +198,8 @@ func _connect_sounds() -> void:
 	sim.raider_killed.connect(func(i: int, _a: SimAgent) -> void: _sfx.play_at("punch_heavy", sim.raid.bears[i].pos))
 	sim.tower_fired.connect(func(t: int, _r: int) -> void: _sfx.play_at("shoot", sim.towers[t].pos))
 	sim.gun_fired.connect(func(_r: int) -> void: _sfx.play("shoot"))
+	sim.worker_hit.connect(func(i: int) -> void: _sfx.play_at("punch", sim.workers[i].pos))
+	sim.worker_died.connect(_on_worker_died)
 	sim.premium_found.connect(func(_item: String, _pos: Vector2) -> void: _sfx.play("win"))
 	sim.raid_warning.connect(func(_wave: int, _pos: Vector2) -> void: _sfx.play("raid"))
 	sim.raid_cleared.connect(func(_wave: int) -> void: _sfx.play("hire"))
@@ -285,6 +287,22 @@ func _update_arrow() -> void:
 		var dir := target - here
 		_raid_arrow.position = _player.position
 		_raid_arrow.rotation.y = atan2(-dir.x, -dir.y)
+
+
+## 일꾼이 쓰러지면 알리고, 다시 고용해야 한다고 덧붙인다.
+func _on_worker_died(index: int) -> void:
+	var worker := sim.workers[index]
+	var name: String = _zone_names.get(worker.zone_id, worker.role)
+	_sfx.play_at("break", worker.pos)
+	_hud.show_toast("%s%s 쓰러졌다! 다시 고용하자" % [name, _subject_particle(name)])
+
+
+## 받침이 있으면 "이", 없으면 "가"
+static func _subject_particle(word: String) -> String:
+	var code := word.unicode_at(word.length() - 1)
+	if code < 0xAC00 or code > 0xD7A3:
+		return "이"
+	return "이" if (code - 0xAC00) % 28 != 0 else "가"
 
 
 func _on_worker_hired(index: int) -> void:

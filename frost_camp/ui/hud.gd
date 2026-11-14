@@ -187,6 +187,10 @@ func _update_raid(delta: float) -> void:
 
 
 ## 화면 가운데 위에 금빛 알림을 잠깐 띄운다.
+func show_toast(text: String) -> void:
+	_show_toast(text)
+
+
 func _show_toast(text: String) -> void:
 	_toast.text = text
 	_toast.modulate.a = 1.0
