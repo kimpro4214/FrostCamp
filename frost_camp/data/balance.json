@@ -75,6 +75,14 @@
 		"reward": 10,
 		"meat_dropped": 2
 	},
+	"blizzard": {
+		"start_after": "fire",
+		"start_delay": 120.0,
+		"interval": 240.0,
+		"warning": 10.0,
+		"duration": 40.0,
+		"cold_mult": 2.5
+	},
 	"fish": {
 		"catch_interval": 1.2,
 		"hole_radius": 1.0

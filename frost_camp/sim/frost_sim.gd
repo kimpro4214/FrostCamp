@@ -39,6 +39,10 @@ signal worker_retired(index: int)
 ## 일꾼이 습격 곰에게 맞았다 / 쓰러졌다(일꾼 번호).
 signal worker_hit(index: int)
 signal worker_died(index: int)
+## 눈보라 경고, 시작, 끝(8차 QA 다음 개발)
+signal blizzard_warning
+signal blizzard_started
+signal blizzard_ended
 signal game_won
 
 var balance: Dictionary
@@ -102,6 +106,7 @@ var stats := {}
 var rng := RandomNumberGenerator.new()
 ## 습격 웨이브와 습격 곰들
 var raid: Raid
+var blizzard: Blizzard
 ## 자원 라인별 컨베이어(품목 → Conveyor). 적치장에서 그 품목 판매대로 나른다. 깔기 전에는 level 0이다.
 var conveyors := {}
 ## 라인별 운반 레벨(품목 → 0~3). 1은 전담 운반꾼, 2부터는 운반꾼이 물러나고 컨베이어.
@@ -207,6 +212,7 @@ func _init(balance_data: Dictionary, layout: Dictionary, seed_value: int = 1) ->
 		spawn_gates.append(_wall_between(_vec(p.gate[0]), _vec(p.gate[1])) if p is Dictionary and p.has("gate") else -1)
 		spawn_paths.append(_gate_path(_vec(p.gate[0]), _vec(p.gate[1])) if p is Dictionary and p.has("gate") else [])
 	raid = Raid.new(balance.raid, spawns)
+	blizzard = Blizzard.new(balance.get("blizzard", {}))
 	for id in layout.zones:
 		zones.append(PurchaseZone.new(id, _vec(layout.zones[id]), balance.zones[id]))
 	for id in layout.heat:
@@ -394,7 +400,8 @@ func tick(delta: float) -> void:
 		boss_raid.tick(delta)
 	else:
 		boss_raid.tick_portal(delta)
-		_tick_cold(player, delta, stats.cold_drain)
+		_tick_blizzard(delta)
+		_tick_cold(player, delta, stats.cold_drain * blizzard.cold_mult())
 	# 일꾼은 추위를 타지 않는다(3차 QA: 일꾼이 계속 어는 것이 불편했다).
 	for worker in workers:
 		if worker.retired:
@@ -860,6 +867,18 @@ func _add_bears(count: int) -> void:
 
 
 ## 열원 안에서는 온기가 차고, 밖에서는 drain만큼 준다.
+## 눈보라 시계. 레이드 중(동굴 안)에는 멈춘다.
+func _tick_blizzard(delta: float) -> void:
+	var ready := _requirement_met(str(blizzard.config.get("start_after", ""))) if not blizzard.config.is_empty() else false
+	match blizzard.tick(delta, ready):
+		"warning":
+			blizzard_warning.emit()
+		"started":
+			blizzard_started.emit()
+		"ended":
+			blizzard_ended.emit()
+
+
 func _tick_cold(agent: SimAgent, delta: float, drain: float) -> void:
 	if is_warm(agent.pos):
 		agent.warmth = minf(agent.warmth + float(balance.cold.recover) * delta, agent.max_warmth)
