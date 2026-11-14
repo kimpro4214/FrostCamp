@@ -16,6 +16,8 @@ const WallView := preload("res://frost_camp/scenes/wall_view.gd")
 const FishingView := preload("res://frost_camp/scenes/fishing_view.gd")
 const GunView := preload("res://frost_camp/scenes/gun_view.gd")
 const Title := preload("res://frost_camp/ui/title.gd")
+const Tutorial := preload("res://frost_camp/ui/tutorial.gd")
+const PauseMenu := preload("res://frost_camp/ui/pause_menu.gd")
 const Music := preload("res://frost_camp/scenes/music.gd")
 const PartCutscene := preload("res://frost_camp/scenes/part_cutscene.gd")
 const Ending := preload("res://frost_camp/scenes/ending.gd")
@@ -45,6 +47,7 @@ var skip_title := false
 var started := false
 ## 구매 존 id → 화면에 보일 이름(text.json)
 var _zone_names := {}
+var _pause: CanvasLayer
 
 @onready var _player: CharacterBody3D = $Player
 @onready var _camera: Camera3D = $Camera3D
@@ -145,6 +148,8 @@ func _ready() -> void:
 	_camera.target = _player
 	_camera.snap()
 	_bake_navigation()
+	_pause = PauseMenu.new()
+	add_child(_pause)
 	_show_title()
 
 
@@ -385,7 +390,14 @@ func _show_title() -> void:
 	_player.set_physics_process(false)
 	var title := Title.new()
 	add_child(title)
-	title.started.connect(_on_started)
+	title.started.connect(_show_tutorial)
+
+
+## 시작하기 다음에 규칙 슬라이드를 넘기고, 다 넘기면(또는 건너뛰면) 게임이 흐른다.
+func _show_tutorial() -> void:
+	var tutorial := Tutorial.new()
+	add_child(tutorial)
+	tutorial.finished.connect(_on_started)
 
 
 func _on_started() -> void:
@@ -396,6 +408,8 @@ func _on_started() -> void:
 
 
 func _process(delta: float) -> void:
+	# 게임이 흐르는 동안에만 일시정지 버튼을 보인다(시작 화면·슬라이드·컷신에서는 숨김).
+	_pause.set_available(started and not sim.won)
 	_play_player_sounds(delta)
 	_update_arrow()
 	# 눈은 플레이어 위 하늘에서 내린다(입자는 월드 좌표라 걸어도 같이 미끄러지지 않는다).
