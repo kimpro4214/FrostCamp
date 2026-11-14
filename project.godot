@@ -26,7 +26,7 @@ theme/custom_font="res://frost_camp/assets/fonts/Jua-Regular.ttf"
 
 [input_devices]
 
-pointing/emulate_touch_from_mouse=true
+pointing/emulate_touch_from_mouse=false
 
 [physics]
 
