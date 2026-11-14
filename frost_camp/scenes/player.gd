@@ -79,6 +79,15 @@ func _on_shot(agent: SimAgent, target: Vector2) -> void:
 		_face(target)
 
 
+## 레이드에서 클릭한 쪽으로 쏠 때 부른다(움직이는 중에도 그쪽을 본다).
+func aim_and_shoot(target: Vector2) -> void:
+	_gun_left = GUN_HOLD_TIME
+	_model.set_tool(_model.GUN)
+	_model.set_holding(true)
+	_model.play_action(_model.SHOOT)
+	_face(target)
+
+
 func _face(target: Vector2) -> void:
 	var dir := target - sim.player.pos
 	_pivot.rotation.y = atan2(-dir.x, -dir.y)

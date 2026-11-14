@@ -47,6 +47,9 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	if worker.role == "merc":
 		_model.set_tool(_model.GUN)
 		_model.set_holding(true)
+		sim.boss_raid.shot.connect(func(from: Vector2, _to: Vector2, weapon: String) -> void:
+			if weapon == "merc" and from.distance_to(sim.workers[index].pos) < 0.05:
+				_on_hit(sim.workers[index], _to))
 		sim.raider_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.raid.bears[i].pos))
 	if worker.role == "hunter":
 		_model.set_tool(_model.GUN)
@@ -61,6 +64,14 @@ func _physics_process(_delta: float) -> void:
 		_fall()
 	elif worker.retired and not _leaving:
 		_leave()
+	if worker.role == "merc" and sim.boss_raid.active and not worker.retired:
+		# 레이드 영역에는 길찾기 메시가 없으니 sim이 정한 자리로 바로 옮긴다.
+		var step := Vector3(worker.pos.x, 0.0, worker.pos.y) - position
+		if step.length() > 0.01:
+			_pivot.rotation.y = atan2(-step.x, -step.z)
+		position = Vector3(worker.pos.x, 0.0, worker.pos.y)
+		_model.set_moving(step.length() > 0.01)
+		return
 	var goal: Vector2 = worker.target.pos
 	if goal != _goal:
 		_goal = goal

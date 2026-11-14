@@ -20,6 +20,7 @@ const Tutorial := preload("res://frost_camp/ui/tutorial.gd")
 const PauseMenu := preload("res://frost_camp/ui/pause_menu.gd")
 const Music := preload("res://frost_camp/scenes/music.gd")
 const PartCutscene := preload("res://frost_camp/scenes/part_cutscene.gd")
+const RaidView := preload("res://frost_camp/scenes/raid_view.gd")
 const Ending := preload("res://frost_camp/scenes/ending.gd")
 const ConveyorView := preload("res://frost_camp/scenes/conveyor_view.gd")
 ## 습격 방향 화살표가 플레이어에서 떨어진 거리, 이보다 가까운 곰은 가리키지 않는다
@@ -148,6 +149,14 @@ func _ready() -> void:
 	_camera.target = _player
 	_camera.snap()
 	_bake_navigation()
+	var raid_view := RaidView.new()
+	add_child(raid_view)
+	raid_view.setup(self, sim)
+	sim.boss_raid.started.connect(func() -> void: _sfx.play("raid"))
+	sim.boss_raid.ended.connect(func(won: bool, _reward: int) -> void: _sfx.play("win" if won else "break"))
+	sim.boss_raid.shot.connect(func(_f: Vector2, _t: Vector2, weapon: String) -> void:
+		if weapon != "merc":
+			_sfx.play("shoot"))
 	_pause = PauseMenu.new()
 	add_child(_pause)
 	_show_title()
