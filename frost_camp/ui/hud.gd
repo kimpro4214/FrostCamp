@@ -1,5 +1,6 @@
 extends CanvasLayer
 ## 화면 위 정보: 왼쪽 위에 둥근 칩(돈, 등짐, 체력 막대, 온기 막대), 가운데 위에 습격 배너, 가운데에 고급 자원 알림.
+## 보스 레이드 중에는 습격 배너 대신 곰왕 체력 막대와 남은 용병, 아래쪽에 무기 버튼 3개(1, 2, 3 키)를 띄운다.
 
 const UiStyle := preload("res://frost_camp/ui/ui_style.gd")
 const HudIcon := preload("res://frost_camp/ui/hud_icon.gd")
@@ -29,6 +30,11 @@ var _raid_icon: TextureRect
 var _raid_label: Label
 var _toast: Label
 var _clear_left := 0.0
+var _raid_ui: Control
+var _boss_bar: ProgressBar
+var _merc_label: Label
+var _weapon_buttons := {}
+const WEAPON_NAMES := {"harpoon": "1  작살총", "spread": "2  산탄 작살", "cannon": "3  얼음 대포"}
 
 @onready var joystick: Control = $Joystick
 
@@ -38,6 +44,7 @@ func setup(frost_sim: FrostSim) -> void:
 	_build_chips()
 	_build_raid_banner()
 	_build_toast()
+	_build_raid_ui()
 	sim.cash_collected.connect(func(_stall: int, _amount: int, _agent: SimAgent) -> void: _punch(_money_label))
 	sim.raid_warning.connect(func(_wave: int, _pos: Vector2) -> void: _punch(_raid_panel))
 	sim.raid_cleared.connect(func(_wave: int) -> void:
@@ -63,6 +70,7 @@ func _process(delta: float) -> void:
 	if low:
 		_fire_label.text = "모닥불이 꺼졌다! 원목을 넣자" if fire.fuel <= 0.0 else "모닥불이 꺼져 간다"
 	_update_raid(delta)
+	_update_boss_raid()
 
 
 ## 왼쪽 위 칩 네 개: 돈, 등짐, 체력, 온기. 그 아래 모닥불 알림 한 줄.
@@ -184,6 +192,83 @@ func _update_raid(delta: float) -> void:
 				_raid_label.modulate = CALM_COLOR
 		_:
 			_raid_panel.visible = false
+
+
+## 레이드 화면: 위쪽 곰왕 체력 막대와 남은 용병, 아래쪽 무기 버튼
+func _build_raid_ui() -> void:
+	_raid_ui = Control.new()
+	_raid_ui.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_raid_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_raid_ui.visible = false
+	add_child(_raid_ui)
+	var top := PanelContainer.new()
+	top.add_theme_stylebox_override("panel", UiStyle.panel(20, 10.0))
+	top.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	top.offset_top = 82.0
+	top.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_raid_ui.add_child(top)
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	top.add_child(box)
+	var title := UiStyle.label("빙하 곰왕", 26, Color(0.7, 0.88, 1.0))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+	_boss_bar = _bar(Color(0.55, 0.75, 1.0))
+	_boss_bar.custom_minimum_size = Vector2(320, 20)
+	_boss_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	box.add_child(_boss_bar)
+	_merc_label = UiStyle.label("", 20)
+	_merc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_merc_label)
+	var bottom := HBoxContainer.new()
+	bottom.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	bottom.offset_top = -96.0
+	bottom.offset_bottom = -20.0
+	bottom.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	bottom.add_theme_constant_override("separation", 14)
+	_raid_ui.add_child(bottom)
+	for weapon in BossRaid.WEAPONS:
+		var button := Button.new()
+		button.text = WEAPON_NAMES[weapon]
+		button.custom_minimum_size = Vector2(200, 64)
+		button.focus_mode = Control.FOCUS_NONE
+		UiStyle.style_button(button, 24)
+		button.pressed.connect(func() -> void: sim.boss_raid.select_weapon(weapon))
+		bottom.add_child(button)
+		_weapon_buttons[weapon] = button
+	var hint := UiStyle.label("화면을 클릭하면 그쪽으로 쏜다. 빨간 원을 피하자!", 22, Color(0.85, 0.9, 1.0))
+	hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	hint.offset_top = -132.0
+	hint.offset_bottom = -102.0
+	hint.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_raid_ui.add_child(hint)
+
+
+func _update_boss_raid() -> void:
+	var raid := sim.boss_raid
+	_raid_ui.visible = raid.active
+	if not raid.active:
+		return
+	_raid_panel.visible = false
+	_boss_bar.value = float(raid.boss.hp) / raid.boss.max_hp * 100.0
+	_merc_label.text = "용병 %d" % raid.mercs().size()
+	for weapon in _weapon_buttons:
+		var button: Button = _weapon_buttons[weapon]
+		var owned := raid.has_weapon(weapon)
+		button.disabled = not owned
+		button.text = WEAPON_NAMES[weapon] if owned else WEAPON_NAMES[weapon] + " (잠김)"
+		var chosen: bool = raid.weapon == weapon
+		var ready: bool = not chosen or raid.cooldown <= 0.0
+		button.modulate = Color(1, 1, 1, 1) if chosen and ready else (Color(1, 1, 1, 0.65) if chosen else Color(0.65, 0.7, 0.8, 0.85))
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not sim or not sim.boss_raid.active or not event.pressed:
+		return
+	var keys := {KEY_1: "harpoon", KEY_2: "spread", KEY_3: "cannon"}
+	if event is InputEventKey and keys.has(event.keycode):
+		sim.boss_raid.select_weapon(keys[event.keycode])
 
 
 ## 화면 가운데 위에 금빛 알림을 잠깐 띄운다.

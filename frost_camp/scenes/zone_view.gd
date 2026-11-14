@@ -90,6 +90,8 @@ func _process(_delta: float) -> void:
 func _icon_name() -> String:
 	if zone.id.begins_with("repair"):
 		return "wrench"
+	if zone.id.begins_with("weapon_"):
+		return "target"
 	for key in zone.effect:
 		if EFFECT_ICONS.has(key):
 			return EFFECT_ICONS[key]
