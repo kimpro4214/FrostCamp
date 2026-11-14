@@ -377,7 +377,7 @@ func tick(delta: float) -> void:
 	_tick_purchase(player, delta)
 	_tick_fuel(delta)
 	_tick_glow(delta)
-	# 레이드 중에는 동굴 안이라 춥지 않고, 기지 습격도 멈춘다.
+	# 레이드 중에는 동굴 안이라 춥지 않다. 기지 습격은 그대로 온다(8차 QA 2번).
 	if boss_raid.active:
 		boss_raid.tick(delta)
 	else:
@@ -418,8 +418,7 @@ func tick(delta: float) -> void:
 	# 싸우는 곰은 이번 프레임에 싸운 모든 사람(플레이어, 사냥꾼)을 본 뒤에 움직인다.
 	for i in bears.size():
 		bears[i].tick(delta, _fighting_bears.has(i), rng)
-	if not boss_raid.active:
-		_tick_raid(delta)
+	_tick_raid(delta)
 	_tick_towers(delta)
 	_tick_gun(delta)
 
@@ -717,6 +716,9 @@ func _tick_raid(delta: float) -> void:
 			continue
 		if bear.target == -1:
 			# 노릴 시설이 없으면 플레이어에게 달려든다. 닿으면 근접 전투가 시작된다.
+			# 플레이어가 레이드에 가 있으면 그 자리에서 기다린다.
+			if boss_raid.active:
+				continue
 			var reach := float(balance.interact.bear_radius) * 0.8
 			if bear.pos.distance_to(player.pos) > reach:
 				bear.pos = bear.pos.move_toward(player.pos, bear.speed * delta)

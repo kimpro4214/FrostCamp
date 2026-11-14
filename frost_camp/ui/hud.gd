@@ -46,7 +46,10 @@ func setup(frost_sim: FrostSim) -> void:
 	_build_toast()
 	_build_raid_ui()
 	sim.cash_collected.connect(func(_stall: int, _amount: int, _agent: SimAgent) -> void: _punch(_money_label))
-	sim.raid_warning.connect(func(_wave: int, _pos: Vector2) -> void: _punch(_raid_panel))
+	sim.raid_warning.connect(func(_wave: int, _pos: Vector2) -> void:
+		_punch(_raid_panel)
+		if sim.boss_raid.active:
+			_show_toast("기지에 북극곰이 몰려온다!"))
 	sim.raid_cleared.connect(func(_wave: int) -> void:
 		_clear_left = CLEAR_SHOW_TIME
 		_punch(_raid_panel))
@@ -173,15 +176,18 @@ func _build_toast() -> void:
 ## 습격 경고와 남은 곰, 방어 성공, 다음 습격까지 남은 시간을 배너 한 줄로 보여 준다. 경고·습격 중에만 경고 아이콘을 띄운다.
 func _update_raid(delta: float) -> void:
 	var raid := sim.raid
+	var away := sim.boss_raid.active
 	_clear_left = maxf(_clear_left - delta, 0.0)
-	_raid_panel.visible = true
+	# 레이드 중에는 곰왕 막대 아래에, 기지가 위험할 때만 보인다.
+	_raid_panel.offset_top = 140.0 if away else 84.0
+	_raid_panel.visible = not away or raid.state == Raid.State.WARNING or raid.state == Raid.State.ATTACKING
 	_raid_icon.visible = raid.state == Raid.State.WARNING or raid.state == Raid.State.ATTACKING
 	match raid.state:
 		Raid.State.WARNING:
-			_raid_label.text = "북극곰이 몰려온다! %d" % ceili(raid.time_left)
+			_raid_label.text = ("기지에 북극곰이 몰려온다! %d" if away else "북극곰이 몰려온다! %d") % ceili(raid.time_left)
 			_raid_label.modulate = WARNING_COLOR
 		Raid.State.ATTACKING:
-			_raid_label.text = "습격 %d웨이브, 남은 곰 %d" % [raid.wave, raid.alive_count()]
+			_raid_label.text = ("기지 습격 %d웨이브, 남은 곰 %d" if away else "습격 %d웨이브, 남은 곰 %d") % [raid.wave, raid.alive_count()]
 			_raid_label.modulate = WARNING_COLOR
 		Raid.State.WAITING:
 			if _clear_left > 0.0:
@@ -252,7 +258,6 @@ func _update_boss_raid() -> void:
 	_raid_ui.visible = raid.active
 	if not raid.active:
 		return
-	_raid_panel.visible = false
 	_boss_bar.value = float(raid.boss.hp) / raid.boss.max_hp * 100.0
 	_merc_label.text = "용병 %d" % raid.mercs().size()
 	for weapon in _weapon_buttons:

@@ -136,3 +136,35 @@ func test_merc_posts_and_sortie() -> void:
 	sim.raid.bears.append(bear)
 	var goal: Vector2 = WorkerBrain.choose(sim, sim.workers[0]).pos
 	check(absf(goal.distance_to(bear.pos) - 4.0) < 0.01, "습격 중에는 곰에게서 4m 떨어진 자리로 나간다")
+
+
+## 레이드가 끝나면 reopen_delay초 동안 입구가 닫힌다(8차 QA 1번).
+func test_portal_reopens_after_delay() -> void:
+	var sim := _make_sim()
+	sim.balance.boss.reopen_delay = 5.0
+	_start(sim)
+	sim.boss_raid._finish(false)
+	check(not sim.boss_raid.can_start(), "끝난 직후에는 다시 갈 수 없다")
+	sim.player.pos = PORTAL
+	Fixtures.run(sim, 3.0)
+	check(not sim.boss_raid.active, "기다리는 동안 입구에 서 있어도 출발하지 않는다")
+	Fixtures.run(sim, 2.1)
+	check(sim.boss_raid.can_start(), "기다린 뒤에는 다시 갈 수 있다")
+
+
+## 레이드 중에도 기지 습격 시계가 돌고 곰이 시설을 친다. 플레이어를 쫓지는 않는다(8차 QA 2번).
+func test_base_raid_continues_during_boss_raid() -> void:
+	var sim := _make_sim()
+	sim._apply_effect({"unlock": "habitat"})
+	_start(sim)
+	check(sim.boss_raid.active, "레이드 중")
+	sim.raid.time_left = 0.1
+	Fixtures.run(sim, 0.2)
+	check_eq(sim.raid.state, Raid.State.WARNING, "레이드 중에도 습격 경고가 온다")
+	Fixtures.run(sim, float(sim.balance.raid.warning) + 0.1)
+	check_eq(sim.raid.state, Raid.State.ATTACKING, "레이드 중에도 곰이 쳐들어온다")
+	var bear := sim.raid.bears[0]
+	var start := bear.pos
+	Fixtures.run(sim, 1.0)
+	check(bear.pos.distance_to(start) > 0.5, "곰이 기지 쪽으로 움직인다")
+	check(bear.pos.distance_to(sim.player.pos) > 20.0, "레이드에 간 플레이어를 쫓지 않는다")

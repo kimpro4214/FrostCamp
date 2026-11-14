@@ -291,7 +291,7 @@ func _update_arrow() -> void:
 		for raider in sim.raid.bears:
 			if raider.is_alive() and (target == Vector2.INF or here.distance_to(raider.pos) < here.distance_to(target)):
 				target = raider.pos
-	_raid_arrow.visible = target != Vector2.INF and here.distance_to(target) > ARROW_HIDE_DIST
+	_raid_arrow.visible = target != Vector2.INF and here.distance_to(target) > ARROW_HIDE_DIST and not sim.boss_raid.active
 	if _raid_arrow.visible:
 		var dir := target - here
 		_raid_arrow.position = _player.position
