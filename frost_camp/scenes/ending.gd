@@ -4,6 +4,8 @@ extends CanvasLayer
 
 const BAR_HEIGHT := 90.0
 const DOCK_START := Vector3(26.0, 0.0, -3.0)
+## 처음 카메라 자리(발판과 부두가 벽에 가리지 않게 조금 안쪽, 낮게)
+const CAMERA_START := Vector3(25.0, 5.5, 5.0)
 ## 배 기준 자리들. 선체는 x -3.5~3.5, z -1.3~1.3, 갑판 높이 1.0이다(ship.tscn).
 ## 고물(뒤쪽) 옆 갑판 가장자리에서 기관실(x -3.7~-1.1, z -0.6~0.6)을 비켜 올라탄다.
 ## 부두(pirate/structure-platform-dock)는 x -6.95~-4.45에 있고 바닥 높이는 0.7이다.
@@ -56,12 +58,17 @@ func play(main: Node3D, sim: FrostSim) -> void:
 	# 1. 띠가 내려오고 카메라가 부두를 잡는다.
 	_camera = Camera3D.new()
 	main.add_child(_camera)
-	_camera.global_position = Vector3(22.0, 7.0, 9.0)
+	_camera.global_position = CAMERA_START
 	_camera.look_at(Vector3(29.0, 0.5, -3.0))
 	_camera.make_current()
 	var bars := create_tween().set_parallel()
 	bars.tween_property(_top, "offset_bottom", BAR_HEIGHT, 0.6)
 	bars.tween_property(_bottom, "offset_top", -BAR_HEIGHT, 0.6)
+
+	# 항구 바위벽이 발판을 가리지 않게 땅속으로 꺼뜨린다.
+	for region in main.get_node("Regions").get_children():
+		if region.region_name == "port":
+			region.call("_sink_walls")
 
 	# 2. 플레이어가 부두 끝까지 걷고, 발판을 밟아 갑판 가장자리로 오른 뒤 갑판 가운데로 걸어간다.
 	var plank := _make_plank(_ship.global_position + PLANK_FOOT, _ship.global_position + PLANK_TOP)
@@ -83,7 +90,7 @@ func play(main: Node3D, sim: FrostSim) -> void:
 	sfx.play("raid")
 	var swing := create_tween()
 	swing.tween_method(func(t: float) -> void:
-		_camera.global_position = Vector3(22.0, 7.0, 9.0).lerp(_ship.global_position + Vector3(-2.0, 2.5, 10.0), t)
+		_camera.global_position = CAMERA_START.lerp(_ship.global_position + Vector3(-2.0, 2.5, 10.0), t)
 		_camera.look_at(_ship.global_position + Vector3(1.0, 1.5, 0.0)), 0.0, 1.0, 1.4) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await swing.finished
