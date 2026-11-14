@@ -44,6 +44,8 @@ func step(delta: float) -> void:
 func cheapest_zone() -> PurchaseZone:
 	var best: PurchaseZone = null
 	for zone in sim.zones:
+		if zone.optional:
+			continue  # 레이드용 존(용병, 무기)은 봇이 레이드를 가지 않으니 사지 않는다.
 		if sim.is_zone_available(zone) and (best == null or zone.remaining() < best.remaining()):
 			best = zone
 	return best

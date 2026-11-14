@@ -31,6 +31,7 @@
 		"meat": { "path": [[3.6, -10.6], [3.6, -6.6], [4.2, -6.2]], "pos": [3.6, -8.6], "repair_pos": [2.4, -8.6], "stall": 1 },
 		"crystal": { "path": [[0.2, 11.8], [8.0, 11.8], [8.0, 12.2]], "pos": [4.0, 11.8], "repair_pos": [4.0, 13.0], "stall": 2 }
 	},
+	"raid_arena": { "portal": [-16, 7.2], "center": [-70, 40], "radius": 12, "player_start": [-70, 48], "boss_start": [-70, 33] },
 	"raid_spawns": [
 		{ "pos": [24, 6.5], "gate": [[14, 9], [14, 4]] },
 		{ "pos": [-30, 5], "gate": [[-23, 1], [-23, 9]] },
@@ -79,6 +80,9 @@
 		"meat_stall": [5, -5],
 		"harpoon": [9, -11],
 		"harpoon_gun": [-1.0, -7.6],
+		"merc": [-13.4, 7.6],
+		"weapon_spread": [-18.6, 7.6],
+		"weapon_cannon": [-19.6, 2.4],
 		"bear_den": [11.5, -12],
 		"hunter": [6.6, -11.4],
 		"lumberjack": [-7, 0],

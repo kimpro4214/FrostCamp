@@ -88,6 +88,41 @@
 		"gold_salmon_chance": 0.125,
 		"glow_interval": 45.0
 	},
+	"boss": {
+		"portal_delay": 1.5,
+		"hp": 160,
+		"hp_growth": 0.6,
+		"radius": 1.6,
+		"speed": 1.4,
+		"contact_radius": 2.2,
+		"contact_interval": 1.0,
+		"contact_damage": 2,
+		"slam_interval": 4.5,
+		"slam_count": 3,
+		"slam_radius": 2.0,
+		"slam_warning": 1.1,
+		"slam_damage": 4,
+		"summon_interval": 14.0,
+		"summon_count": 2,
+		"minion_hp": 6,
+		"minion_speed": 2.4,
+		"minion_damage": 1,
+		"reward": 1500,
+		"reward_growth": 0.5,
+		"gems": 2
+	},
+	"weapons": {
+		"harpoon": { "cooldown": 0.35, "damage": [3, 4, 6], "range": 12.0 },
+		"spread": { "cooldown": 0.7, "damage": 3, "shots": 3, "angle": 0.3, "range": 9.0 },
+		"cannon": { "cooldown": 1.8, "damage": 14, "range": 14.0, "splash": 2.5 }
+	},
+	"mercs": {
+		"damage": 2,
+		"interval": 0.9,
+		"range": 9.0,
+		"speed": 3.5,
+		"keep_distance": 5.0
+	},
 	"gun": {
 		"interval": 0.8,
 		"range": [5.5, 7.0, 8.5],
@@ -105,7 +140,8 @@
 		"cashier": { "speed": 4.0, "hp": 6 },
 		"hunter": { "speed": 3.8, "capacity": 6, "damage": 2, "hp": 10 },
 		"fisher": { "speed": 3.5, "capacity": 6, "hp": 6 },
-		"miner": { "speed": 3.5, "capacity": 6, "damage": 1, "hp": 6 }
+		"miner": { "speed": 3.5, "capacity": 6, "damage": 1, "hp": 6 },
+		"merc": { "speed": 3.8, "hp": 8 }
 	},
 	"items": {
 		"log": { "price": 5 },
@@ -176,6 +212,24 @@
 			"costs": [340, 680],
 			"effect": { "bears": 3 },
 			"requires": ["meat_stall"]
+		},
+		"merc": {
+			"costs": [300, 350, 400, 450, 500, 550],
+			"effect": { "hire": "merc" },
+			"requires": ["harpoon_gun"],
+			"optional": true
+		},
+		"weapon_spread": {
+			"costs": [700],
+			"effect": { "unlock": "weapon_spread" },
+			"requires": ["harpoon_gun"],
+			"optional": true
+		},
+		"weapon_cannon": {
+			"costs": [1400],
+			"effect": { "unlock": "weapon_cannon" },
+			"requires": ["weapon_spread"],
+			"optional": true
 		},
 		"harpoon_gun": {
 			"costs": [250, 500, 900],
