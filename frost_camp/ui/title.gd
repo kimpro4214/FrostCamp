@@ -1,5 +1,6 @@
 extends CanvasLayer
-## 시작 화면. 캠프 위에 제목과 시작 버튼, 조작 안내를 띄운다. 시작을 누르면(또는 Enter·Space) 사라지며 게임이 흐른다.
+## 시작 화면. 캠프 위에 제목과 시작·종료 버튼, 조작 안내를 띄운다. 시작을 누르면(또는 Enter·Space) 사라지고 규칙 슬라이드로 넘어간다.
+## 웹에서는 창을 닫을 수 없으니 종료 버튼을 숨긴다.
 
 signal started
 
@@ -40,6 +41,15 @@ func _ready() -> void:
 	UiStyle.style_button(start, 36)
 	start.pressed.connect(_start)
 	box.add_child(start)
+	if not OS.has_feature("web"):
+		var quit := Button.new()
+		quit.text = "종료"
+		quit.custom_minimum_size = Vector2(200, 56)
+		quit.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		UiStyle.style_button(quit, 26)
+		quit.modulate = Color(0.8, 0.85, 0.95)
+		quit.pressed.connect(func() -> void: get_tree().quit())
+		box.add_child(quit)
 	var help := PanelContainer.new()
 	help.add_theme_stylebox_override("panel", UiStyle.panel(14, 16.0))
 	help.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
