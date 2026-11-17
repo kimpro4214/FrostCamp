@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b6jvfl0ahy50t"
-path="res://.godot/imported/character-female-a.glb-e568b64bf3f979fb7907d4ae5f65d59c.scn"
+uid="uid://dgmd7lnrsldoi"
+path="res://.godot/imported/customer-blue.glb-a8eecd571a695f6e00ea113bfb59ac80.scn"
 
 [deps]
 
-source_file="res://frost_camp/assets/models/characters/character-female-a.glb"
-dest_files=["res://.godot/imported/character-female-a.glb-e568b64bf3f979fb7907d4ae5f65d59c.scn"]
+source_file="res://frost_camp/assets/models/winter/customer-blue.glb"
+dest_files=["res://.godot/imported/customer-blue.glb-a8eecd571a695f6e00ea113bfb59ac80.scn"]
 
 [params]
 

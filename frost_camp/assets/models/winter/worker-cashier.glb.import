@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://buk60itbl26vd"
-path="res://.godot/imported/character-soldier.glb-28074fe63802a66633b15b61b61baa0c.scn"
+uid="uid://ckxxtj0visowj"
+path="res://.godot/imported/worker-cashier.glb-925ca47c973e50fe0b52e7298af843c2.scn"
 
 [deps]
 
-source_file="res://frost_camp/assets/models/characters/character-soldier.glb"
-dest_files=["res://.godot/imported/character-soldier.glb-28074fe63802a66633b15b61b61baa0c.scn"]
+source_file="res://frost_camp/assets/models/winter/worker-cashier.glb"
+dest_files=["res://.godot/imported/worker-cashier.glb-925ca47c973e50fe0b52e7298af843c2.scn"]
 
 [params]
 

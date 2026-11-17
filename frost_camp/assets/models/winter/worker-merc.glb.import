@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://d0v1trq1gdyxt"
-path="res://.godot/imported/character-female-d.glb-27570d55024040c306cf5821879678bc.scn"
+uid="uid://cbb6ic5sa4ohf"
+path="res://.godot/imported/worker-merc.glb-3adb05a45cc088fe43500ef2fc69283c.scn"
 
 [deps]
 
-source_file="res://frost_camp/assets/models/characters/character-female-d.glb"
-dest_files=["res://.godot/imported/character-female-d.glb-27570d55024040c306cf5821879678bc.scn"]
+source_file="res://frost_camp/assets/models/winter/worker-merc.glb"
+dest_files=["res://.godot/imported/worker-merc.glb-3adb05a45cc088fe43500ef2fc69283c.scn"]
 
 [params]
 

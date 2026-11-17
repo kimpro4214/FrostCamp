@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cgfx3rwbp4v5c"
-path="res://.godot/imported/character-worker.glb-0ab7da005e2620df9632ec348a9c35d8.scn"
+uid="uid://c0deh5vwos8tf"
+path="res://.godot/imported/worker-hunter.glb-960160aee0623f6c5438e183e38794e1.scn"
 
 [deps]
 
-source_file="res://frost_camp/assets/models/characters/character-worker.glb"
-dest_files=["res://.godot/imported/character-worker.glb-0ab7da005e2620df9632ec348a9c35d8.scn"]
+source_file="res://frost_camp/assets/models/winter/worker-hunter.glb"
+dest_files=["res://.godot/imported/worker-hunter.glb-960160aee0623f6c5438e183e38794e1.scn"]
 
 [params]
 

@@ -3,13 +3,13 @@ extends CharacterBody3D
 
 ## 역할마다 다른 캐릭터를 써서 한눈에 구분되게 한다.
 const ROLE_MODELS := {
-	"lumberjack": "res://frost_camp/assets/models/characters/character-worker.glb",
-	"porter": "res://frost_camp/assets/models/characters/character-male-c.glb",
-	"hunter": "res://frost_camp/assets/models/characters/character-male-e.glb",
-	"fisher": "res://frost_camp/assets/models/characters/character-female-d.glb",
-	"miner": "res://frost_camp/assets/models/characters/character-female-a.glb",
-	"cashier": "res://frost_camp/assets/models/characters/character-female-b.glb",
-	"merc": "res://frost_camp/assets/models/characters/character-soldier.glb",
+	"lumberjack": "res://frost_camp/assets/models/winter/worker-lumberjack.glb",
+	"porter": "res://frost_camp/assets/models/winter/worker-porter.glb",
+	"hunter": "res://frost_camp/assets/models/winter/worker-hunter.glb",
+	"fisher": "res://frost_camp/assets/models/winter/worker-fisher.glb",
+	"miner": "res://frost_camp/assets/models/winter/worker-miner.glb",
+	"cashier": "res://frost_camp/assets/models/winter/worker-cashier.glb",
+	"merc": "res://frost_camp/assets/models/winter/worker-merc.glb",
 }
 
 var sim: FrostSim

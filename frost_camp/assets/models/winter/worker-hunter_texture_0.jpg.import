@@ -2,21 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://fgop5wovbtwg"
-path.s3tc="res://.godot/imported/player-coat-1_Image_0.jpg-a7635bc03e85a7141e41e2f4584b78b8.s3tc.ctex"
-path.etc2="res://.godot/imported/player-coat-1_Image_0.jpg-a7635bc03e85a7141e41e2f4584b78b8.etc2.ctex"
+uid="uid://csupk1emofhwa"
+path.s3tc="res://.godot/imported/worker-hunter_texture_0.jpg-eb7ec60cea307200bc6f1670f3c05028.s3tc.ctex"
+path.etc2="res://.godot/imported/worker-hunter_texture_0.jpg-eb7ec60cea307200bc6f1670f3c05028.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "cdc065b5c5ac54edd2e3025cae8d09cd"
+"md5": "d8cf19094529a08534a8d78813c42a0f"
 }
 
 [deps]
 
-source_file="res://frost_camp/assets/models/winter/player-coat-1_Image_0.jpg"
-dest_files=["res://.godot/imported/player-coat-1_Image_0.jpg-a7635bc03e85a7141e41e2f4584b78b8.s3tc.ctex", "res://.godot/imported/player-coat-1_Image_0.jpg-a7635bc03e85a7141e41e2f4584b78b8.etc2.ctex"]
+source_file="res://frost_camp/assets/models/winter/worker-hunter_texture_0.jpg"
+dest_files=["res://.godot/imported/worker-hunter_texture_0.jpg-eb7ec60cea307200bc6f1670f3c05028.s3tc.ctex", "res://.godot/imported/worker-hunter_texture_0.jpg-eb7ec60cea307200bc6f1670f3c05028.etc2.ctex"]
 
 [params]
 

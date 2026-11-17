@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cx0h6y0rspsfd"
-path="res://.godot/imported/character-male-c.glb-ef3637c06932319b079f6a41a6f6ef54.scn"
+uid="uid://bm6ix3ia3fco3"
+path="res://.godot/imported/customer-yellow.glb-0268c44849e3172064d8af69ceb4380d.scn"
 
 [deps]
 
-source_file="res://frost_camp/assets/models/characters/character-male-c.glb"
-dest_files=["res://.godot/imported/character-male-c.glb-ef3637c06932319b079f6a41a6f6ef54.scn"]
+source_file="res://frost_camp/assets/models/winter/customer-yellow.glb"
+dest_files=["res://.godot/imported/customer-yellow.glb-0268c44849e3172064d8af69ceb4380d.scn"]
 
 [params]
 
