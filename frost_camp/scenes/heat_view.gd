@@ -1,7 +1,8 @@
 extends Node3D
 ## 모닥불의 겉모습. 따뜻한 범위를 바닥 원판으로 보여 준다.
 ## "모닥불 키우기"를 사면 원판이 부드럽게 넓어지고 불꽃도 커진다.
-## 위에 연료 막대를 띄우고, 연료가 다 떨어지면 불꽃과 원판이 사라지고 연기만 난다.
+## 위에 연료 막대를 띄우고, 연료가 다 떨어지면 불꽃과 원판(그리고 불빛)이 사라지고 연기만 난다.
+## 타는 동안 주황 불빛이 따뜻한 범위만큼 둘레를 물들이고 조금씩 일렁인다.
 
 const GROW_TIME := 0.6
 ## 레벨마다 불꽃이 이만큼 더 커진다
@@ -14,6 +15,14 @@ const FUEL_COLOR := Color(1.0, 0.65, 0.2)
 const LOW_COLOR := Color(0.95, 0.25, 0.2)
 ## 연료가 이 비율 밑이면 막대가 빨개진다
 const LOW_FUEL := 0.3
+const LIGHT_COLOR := Color(1.0, 0.62, 0.3)
+const LIGHT_ENERGY := 3.0
+const LIGHT_HEIGHT := 1.2
+## 불빛 반지름 = 따뜻한 범위 반지름 × 이 값
+const LIGHT_REACH := 1.3
+## 일렁임 세기와 빠르기
+const FLICKER := 0.25
+const FLICKER_SPEED := 9.0
 
 var sim: FrostSim
 var index: int
@@ -23,6 +32,7 @@ var _fill: MeshInstance3D
 var _fill_material: StandardMaterial3D
 var _smoke: CPUParticles3D
 var _lit := true
+var _light: OmniLight3D
 
 @onready var _flame: Node3D = $Flame
 @onready var _range: Node3D = $Range
@@ -35,6 +45,12 @@ func setup(frost_sim: FrostSim, source_index: int) -> void:
 	position = Vector3(source.pos.x, 0.0, source.pos.y)
 	_range.scale = Vector3(source.radius, 1.0, source.radius)
 	$Stove.queue_free()
+	_light = OmniLight3D.new()
+	_light.light_color = LIGHT_COLOR
+	_light.light_energy = LIGHT_ENERGY
+	_light.omni_range = source.radius * LIGHT_REACH
+	_light.position.y = LIGHT_HEIGHT
+	add_child(_light)
 	_build_bar()
 	_smoke = Juice.make_burst(self, Color(0.35, 0.35, 0.38), 6, 0.3)
 	_smoke.one_shot = false
@@ -52,9 +68,12 @@ func setup(frost_sim: FrostSim, source_index: int) -> void:
 func _process(_delta: float) -> void:
 	var source := sim.heat_sources[index]
 	_update_fuel(source)
+	var t := Time.get_ticks_msec() / 1000.0
+	_light.light_energy = LIGHT_ENERGY + FLICKER * (sin(t * FLICKER_SPEED) + 0.5 * sin(t * FLICKER_SPEED * 2.3))
 	if source.level == _shown_level:
 		return
 	_shown_level = source.level
+	create_tween().tween_property(_light, "omni_range", source.radius * LIGHT_REACH, GROW_TIME)
 	create_tween().tween_property(_range, "scale", Vector3(source.radius, 1.0, source.radius), GROW_TIME) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	var size: Vector3 = Vector3.ONE * (1.0 + FLAME_GROWTH * source.level)
@@ -80,6 +99,7 @@ func _update_fuel(source: Dictionary) -> void:
 	_lit = lit
 	_flame.visible = lit
 	_range.visible = lit
+	_light.visible = lit
 	_smoke.emitting = not lit
 	if lit:
 		# Juice.pop은 크기를 1로 되돌리므로 원래 반경으로 직접 키운다.
