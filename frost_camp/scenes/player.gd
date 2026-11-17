@@ -1,7 +1,13 @@
 extends CharacterBody3D
 ## 플레이어 몸. 입력으로 움직이고, 위치를 sim에 넘긴다. 등 뒤 스택은 StackAnchor가 그린다.
 
-const MODEL := "res://frost_camp/assets/models/characters/character-male-a.glb"
+## 방한복 레벨별 몸 모델(Meshy로 만들고 tools/meshy_to_kenney_rig.py로 Kenney 뼈대를 붙였다)
+const COAT_MODELS := [
+	"res://frost_camp/assets/models/winter/player-coat-0.glb",
+	"res://frost_camp/assets/models/winter/player-coat-1.glb",
+	"res://frost_camp/assets/models/winter/player-coat-2.glb",
+]
+const Juice := preload("res://frost_camp/scenes/juice.gd")
 ## 도끼 레벨별로 손에 드는 모델. 0레벨은 맨주먹이다.
 const ROD := "res://frost_camp/scenes/fishing_rod.tscn"
 const PICKAXE := "res://frost_camp/assets/models/survival/tool-pickaxe.glb"
@@ -27,11 +33,19 @@ func setup(frost_sim: FrostSim, virtual_joystick: Node) -> void:
 	joystick = virtual_joystick
 	position = Vector3(sim.player.pos.x, 0.0, sim.player.pos.y)
 	$Pivot/StackAnchor.setup(sim.player.stack)
-	_model.setup(MODEL)
+	_model.setup(_coat_model())
+	sim.zone_purchased.connect(func(id: String, _level: int) -> void:
+		if id == "coat":
+			_model.set_body(_coat_model())
+			Juice.pop(_model))
 	sim.tree_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.trees[i].pos))
 	sim.bear_hit.connect(func(i: int, agent: SimAgent) -> void: _on_shot(agent, sim.bears[i].pos))
 	sim.raider_hit.connect(func(i: int, agent: SimAgent) -> void: _on_shot(agent, sim.raid.bears[i].pos))
 	sim.gun_fired.connect(func(i: int) -> void: _on_shot(sim.player, sim.raid.bears[i].pos))
+
+
+func _coat_model() -> String:
+	return COAT_MODELS[mini(sim.find_zone("coat").level, COAT_MODELS.size() - 1)]
 
 
 func _physics_process(delta: float) -> void:
