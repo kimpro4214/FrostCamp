@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://fgop5wovbtwg"
-path="res://.godot/imported/player-coat-1_Image_0.jpg-a7635bc03e85a7141e41e2f4584b78b8.ctex"
+path.s3tc="res://.godot/imported/player-coat-1_Image_0.jpg-a7635bc03e85a7141e41e2f4584b78b8.s3tc.ctex"
+path.etc2="res://.godot/imported/player-coat-1_Image_0.jpg-a7635bc03e85a7141e41e2f4584b78b8.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "cdc065b5c5ac54edd2e3025cae8d09cd"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://frost_camp/assets/models/winter/player-coat-1_Image_0.jpg"
-dest_files=["res://.godot/imported/player-coat-1_Image_0.jpg-a7635bc03e85a7141e41e2f4584b78b8.ctex"]
+dest_files=["res://.godot/imported/player-coat-1_Image_0.jpg-a7635bc03e85a7141e41e2f4584b78b8.s3tc.ctex", "res://.godot/imported/player-coat-1_Image_0.jpg-a7635bc03e85a7141e41e2f4584b78b8.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +42,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0
