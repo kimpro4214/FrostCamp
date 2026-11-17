@@ -72,6 +72,10 @@ static func restore(sim: FrostSim, data: Dictionary) -> void:
 		_put_agent(worker, d)
 		_put(worker, d, WORKER_FIELDS)
 		sim.workers.append(worker)
+	# 예전 판에서 레이드 뒤 방벽 밖에 갇힌 용병은 기지 안으로 데려온다(base_rects는 unlocked를 읽은 뒤라야 맞다).
+	for worker in sim.workers:
+		if worker.role == "merc" and not sim.is_in_base(worker.pos):
+			worker.pos = sim.worker_spawn
 	for i in sim.zones.size():
 		_put(sim.zones[i], data.zones[i])
 	for i in sim.structures.size():

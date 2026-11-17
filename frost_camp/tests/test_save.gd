@@ -56,3 +56,11 @@ func test_no_save_during_raids_or_after_ending() -> void:
 	sim.boss_raid.active = false
 	sim.won = true
 	check(not SaveGame.can_save(sim), "엔딩 뒤에는 저장하지 않는다")
+
+
+func test_merc_stuck_outside_walls_comes_back_inside() -> void:
+	var sim := _real_sim()
+	sim._apply_effect({"hire": "merc"})
+	sim.workers[0].pos = Vector2(-70, 40)  # 예전 판: 레이드가 끝난 뒤 방벽 밖에 갇힌 자리
+	var copy := _reloaded(sim)
+	check(copy.is_in_base(copy.workers[0].pos), "이어하면 방벽 밖 용병이 기지 안에서 시작한다")

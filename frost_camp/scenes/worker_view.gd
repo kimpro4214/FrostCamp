@@ -11,6 +11,8 @@ const ROLE_MODELS := {
 	"cashier": "res://frost_camp/assets/models/winter/worker-cashier.glb",
 	"merc": "res://frost_camp/assets/models/winter/worker-merc.glb",
 }
+## 몸과 sim 위치가 이만큼 넘게 벌어지면 sim이 순간이동시킨 것으로 본다
+const TELEPORT_DISTANCE := 3.0
 
 var sim: FrostSim
 var index: int
@@ -78,6 +80,9 @@ func _physics_process(_delta: float) -> void:
 		position = Vector3(worker.pos.x, 0.0, worker.pos.y)
 		_model.set_moving(step.length() > 0.01)
 		return
+	if Vector2(position.x, position.z).distance_to(worker.pos) > TELEPORT_DISTANCE:
+		# sim이 순간이동시켰다(곰왕 레이드가 끝나 입구로 돌아옴). 걸어오지 말고 그 자리로 옮긴다.
+		position = Vector3(worker.pos.x, 0.0, worker.pos.y)
 	var goal: Vector2 = worker.target.pos
 	if goal != _goal:
 		_goal = goal
