@@ -9,7 +9,7 @@ const MAX_SHOWN_CASH := 20
 const QUEUE_START := 1.5
 const QUEUE_GAP := 1.1
 const CUSTOMER_MODELS := [
-	preload("res://frost_camp/assets/models/characters/character-female-a.glb"),
+	preload("res://frost_camp/assets/models/winter/customer-red.glb"),
 	preload("res://frost_camp/assets/models/characters/character-male-e.glb"),
 	preload("res://frost_camp/assets/models/characters/character-female-d.glb"),
 ]
