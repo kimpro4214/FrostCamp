@@ -8,6 +8,8 @@ const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
 ## 판매대에 놓이는 물건 하나의 크기
 const ITEM_SIZE := Vector3(0.5, 0.2, 0.3)
 const COIN_SIZE := Vector3(0.32, 0.1, 0.32)
+## 산 물건을 드는 높이(손님 모델 비율 기준, 모델 키는 0.67)
+const CARRY_HEIGHT := 0.76
 const MAX_SHOWN_STOCK := 12
 const MAX_SHOWN_CASH := 20
 const QUEUE_START := 1.5
@@ -123,7 +125,7 @@ func _walk_toward(customer: Node3D, target: Vector3, delta: float) -> void:
 func _leave(customer: Node3D, stall: Stall) -> void:
 	var item: Node3D = _item_template.duplicate()
 	item.visible = true
-	item.position = Vector3(0.0, 0.5, 0.0)  # 머리 위(모델 비율 기준)
+	item.position = Vector3(0.0, CARRY_HEIGHT, 0.0)
 	item.scale = Vector3.ONE / CUSTOMER_SCALE
 	customer.add_child(item)
 	Juice.pop(item, Vector3(0.3, 0.3, 0.3), 0.25)
