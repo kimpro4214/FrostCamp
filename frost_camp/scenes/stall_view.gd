@@ -10,8 +10,9 @@ const QUEUE_START := 1.5
 const QUEUE_GAP := 1.1
 const CUSTOMER_MODELS := [
 	preload("res://frost_camp/assets/models/winter/customer-red.glb"),
-	preload("res://frost_camp/assets/models/characters/character-male-e.glb"),
-	preload("res://frost_camp/assets/models/characters/character-female-d.glb"),
+	preload("res://frost_camp/assets/models/winter/player-coat-0.glb"),
+	preload("res://frost_camp/assets/models/winter/player-coat-1.glb"),
+	preload("res://frost_camp/assets/models/winter/player-coat-2.glb"),
 ]
 const CUSTOMER_SCALE := 2.3
 const WALK_SPEED := 3.5
