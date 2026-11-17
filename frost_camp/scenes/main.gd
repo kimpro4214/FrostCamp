@@ -17,6 +17,7 @@ const FishingView := preload("res://frost_camp/scenes/fishing_view.gd")
 const GunView := preload("res://frost_camp/scenes/gun_view.gd")
 const Title := preload("res://frost_camp/ui/title.gd")
 const Graphics := preload("res://frost_camp/scenes/graphics.gd")
+const SnowCap := preload("res://frost_camp/scenes/snow_cap.gd")
 const Tutorial := preload("res://frost_camp/ui/tutorial.gd")
 const PauseMenu := preload("res://frost_camp/ui/pause_menu.gd")
 const Music := preload("res://frost_camp/scenes/music.gd")
@@ -44,6 +45,8 @@ const STORM_FADE := 2.0
 const DECOR_DIR := "res://frost_camp/assets/models/"
 ## 걸을 때 발소리 간격(초)
 const STEP_INTERVAL := 0.3
+## 나무에 눈이 쌓이는 면의 기울기 기준(세계 법선 y)
+const TREE_SNOW_FROM := 0.38
 
 var sim: FrostSim
 var _hit_stop_id := 0
@@ -167,6 +170,10 @@ func _ready() -> void:
 	add_child(walls)
 	walls.setup(sim, GameData.load_json(GameData.LAYOUT_PATH).base.walls)
 	_place_structures(zone_names.get("repair", "repair"))
+	# 소나무 가지는 비탈이 가팔라서 더 기울어진 면에도 눈을 얹는다.
+	SnowCap.apply($Trees, TREE_SNOW_FROM)
+	for root: Node in [$Stalls, $Regions, $Decor, $Heat, walls]:
+		SnowCap.apply(root)
 	$Ship.setup(sim)
 	for i in sim.workers.size():
 		_add_worker_view(i)
