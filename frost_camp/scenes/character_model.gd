@@ -19,6 +19,10 @@ const GUN_POSITION := Vector3(-0.3, 0.0, 0.0)
 const GUN_SCALE := 1.0
 ## 위 도구 위치를 맞춘 Kenney 모델의 어깨~손끝 길이. 팔 길이가 다른 모델은 이 비율로 도구 위치를 늘이거나 줄인다.
 const KENNEY_REACH := 0.284
+## 등에 멘 가방의 높이(모델 좌표, 발=0)와, 등 표면에서 가방 앞면까지 거리(가방 크기에 곱한다).
+## 가방은 멜빵이 몸쪽으로 튀어나와 있어 가운데가 아니라 앞면으로 자리를 잡는다.
+const BACKPACK_Y := 0.31
+const BACKPACK_THICKNESS := 0.42
 
 var _player: AnimationPlayer
 var _meshes: Array[Node] = []
@@ -34,6 +38,12 @@ var _body_path := ""
 var _reach_scale := 1.0
 ## 오른팔 뼈의 방향. 다른 도구로 다시 내보낸 모델은 뼈 축이 Kenney와 달라, 도구를 이만큼 되돌려 붙인다.
 var _hand_turn := Basis()
+var _back: BoneAttachment3D
+var _backpack_path := ""
+var _backpack_size := 0.0
+## 몸통 뼈의 쉼 자세(모델 좌표)와 등 표면의 z
+var _torso_rest := Transform3D()
+var _back_z := 0.0
 
 
 func setup(model_path: String) -> void:
@@ -63,22 +73,26 @@ func set_body(model_path: String) -> void:
 	_hand = BoneAttachment3D.new()
 	_hand.bone_name = "arm-right"
 	skeleton.add_child(_hand)
-	# get_bone_global_rest()를 부르면 이 뒤로 자세가 메시에 반영되지 않아, 부모를 따라 직접 곱한다.
-	var arm := Transform3D()
-	var bone := skeleton.find_bone("arm-right")
-	while bone != -1:
-		arm = skeleton.get_bone_rest(bone) * arm
-		bone = skeleton.get_bone_parent(bone)
+	var arm := _bone_rest(skeleton, "arm-right")
 	var shoulder := absf(arm.origin.x)
 	_hand_turn = arm.basis.orthonormalized().inverse()
+	_torso_rest = _bone_rest(skeleton, "torso")
+	_back = BoneAttachment3D.new()
+	_back.bone_name = "torso"
+	skeleton.add_child(_back)
 	var half_span := 0.0
+	_back_z = 0.0
 	for mesh: MeshInstance3D in _meshes:
 		var box := mesh.mesh.get_aabb()
 		half_span = maxf(half_span, maxf(box.end.x, -box.position.x))
+		_back_z = minf(_back_z, box.position.z)
 	_reach_scale = (half_span - shoulder) / KENNEY_REACH
 	var tool := _tool_path
 	_tool_path = ""
 	set_tool(tool)
+	var backpack := _backpack_path
+	_backpack_path = ""
+	set_backpack(backpack, _backpack_size)
 	if _frozen:
 		_frozen = false
 		set_frozen(true)
@@ -125,12 +139,44 @@ func set_tool(model_path: String) -> void:
 	_hand.add_child(tool)
 
 
+## 등에 가방 모델을 멘다. size는 가방 키(모델 좌표). 빈 문자열이면 가방을 벗는다.
+## 가방 모델은 키 1, 가운데가 원점, 앞주머니가 +Z를 보는 것으로 본다(tools/meshy_prop.py로 만든 모델).
+func set_backpack(model_path: String, size: float) -> void:
+	if model_path == _backpack_path and size == _backpack_size:
+		return
+	_backpack_path = model_path
+	_backpack_size = size
+	for child in _back.get_children():
+		child.queue_free()
+	if model_path == "":
+		return
+	var backpack: Node3D = load(model_path).instantiate()
+	var front := 0.0
+	for mesh: MeshInstance3D in backpack.find_children("*", "MeshInstance3D", true, false):
+		front = maxf(front, mesh.mesh.get_aabb().end.z)
+	# 캐릭터는 +Z를 보므로 등은 -Z다. 앞주머니가 바깥(-Z)을 보게 돌린다.
+	var z := _back_z - (BACKPACK_THICKNESS - front) * size
+	var place := Transform3D(Basis(Vector3.UP, PI).scaled(Vector3.ONE * size), Vector3(0.0, BACKPACK_Y, z))
+	backpack.transform = _torso_rest.affine_inverse() * place
+	_back.add_child(backpack)
+
+
 func set_frozen(frozen: bool) -> void:
 	if frozen == _frozen:
 		return
 	_frozen = frozen
 	for mesh in _meshes:
 		mesh.material_overlay = FrozenOverlay if frozen else null
+
+
+## 뼈의 쉼 자세를 모델 좌표로. get_bone_global_rest()를 부르면 이 뒤로 자세가 메시에 반영되지 않아, 부모를 따라 직접 곱한다.
+static func _bone_rest(skeleton: Skeleton3D, bone_name: String) -> Transform3D:
+	var rest := Transform3D()
+	var bone := skeleton.find_bone(bone_name)
+	while bone != -1:
+		rest = skeleton.get_bone_rest(bone) * rest
+		bone = skeleton.get_bone_parent(bone)
+	return rest
 
 
 func _rest_animation() -> String:

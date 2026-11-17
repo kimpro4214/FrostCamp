@@ -7,6 +7,13 @@ const COAT_MODELS := [
 	"res://frost_camp/assets/models/winter/player-coat-1.glb",
 	"res://frost_camp/assets/models/winter/player-coat-2.glb",
 ]
+## 배낭 레벨별로 등에 메는 가방 [모델, 키]. 0레벨은 가방이 없다.
+const BACKPACKS := [
+	["", 0.0],
+	["res://frost_camp/assets/models/winter/backpack-small.glb", 0.19],
+	["res://frost_camp/assets/models/winter/backpack-large.glb", 0.24],
+	["res://frost_camp/assets/models/winter/backpack-large.glb", 0.27],
+]
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 ## 도끼 레벨별로 손에 드는 모델. 0레벨은 맨주먹이다.
 const ROD := "res://frost_camp/scenes/fishing_rod.tscn"
@@ -34,9 +41,13 @@ func setup(frost_sim: FrostSim, virtual_joystick: Node) -> void:
 	position = Vector3(sim.player.pos.x, 0.0, sim.player.pos.y)
 	$Pivot/StackAnchor.setup(sim.player.stack)
 	_model.setup(_coat_model())
+	_wear_backpack()
 	sim.zone_purchased.connect(func(id: String, _level: int) -> void:
 		if id == "coat":
 			_model.set_body(_coat_model())
+			Juice.pop(_model)
+		elif id == "backpack":
+			_wear_backpack()
 			Juice.pop(_model))
 	sim.tree_hit.connect(func(i: int, agent: SimAgent) -> void: _on_hit(agent, sim.trees[i].pos))
 	sim.bear_hit.connect(func(i: int, agent: SimAgent) -> void: _on_shot(agent, sim.bears[i].pos))
@@ -46,6 +57,11 @@ func setup(frost_sim: FrostSim, virtual_joystick: Node) -> void:
 
 func _coat_model() -> String:
 	return COAT_MODELS[mini(sim.find_zone("coat").level, COAT_MODELS.size() - 1)]
+
+
+func _wear_backpack() -> void:
+	var backpack: Array = BACKPACKS[mini(sim.find_zone("backpack").level, BACKPACKS.size() - 1)]
+	_model.set_backpack(backpack[0], backpack[1])
 
 
 func _physics_process(delta: float) -> void:
