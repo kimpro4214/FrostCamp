@@ -81,3 +81,19 @@ func test_stall_cashier_only_collects_own_stall() -> void:
 	Fixtures.run_with_workers(sim, 8.0)
 	check_eq(sim.money, 45, "맡은 판매대의 돈만 넣는다")
 	check_eq(sim.stalls[0].cash, 30, "다른 판매대 돈은 그대로다")
+
+
+func test_mercs_spread_around_raid_bear() -> void:
+	var sim := FrostSim.new(GameData.load_json(GameData.BALANCE_PATH), GameData.load_json(GameData.LAYOUT_PATH), 3)
+	for k in 4:
+		sim._apply_effect({"hire": "merc"})
+	sim.raid.state = Raid.State.ATTACKING
+	var bear_pos := Vector2(10, 4)
+	sim.raid.bears.append(RaidBear.new(bear_pos, 99, 1.0))
+	var goals: Array[Vector2] = []
+	for worker in sim.workers:
+		goals.append(WorkerBrain.choose(sim, worker).pos)
+	for i in goals.size():
+		check(absf(goals[i].distance_to(bear_pos) - WorkerBrain.MERC_KEEP) < 0.01, "곰에서 MERC_KEEP만큼 떨어져 선다")
+		for j in range(i + 1, goals.size()):
+			check(goals[i].distance_to(goals[j]) > 1.5, "용병끼리 겹치지 않게 벌려 선다")

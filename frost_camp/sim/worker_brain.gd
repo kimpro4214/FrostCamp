@@ -150,28 +150,34 @@ static func _cashier(sim: FrostSim, worker: Worker) -> Dictionary:
 
 ## 용병은 빙하 동굴 입구 북쪽(기지 안쪽)에 한 줄로 서서 기다린다.
 ## 기지에 습격 곰이 오면 가장 가까운 곰 쪽으로 나가 MERC_KEEP 거리에서 쏘고(쏘는 규칙은 sim), 끝나면 돌아온다.
+## 여럿이면 곰을 가운데 두고 부채꼴로 MERC_SPREAD 라디안씩 벌려 서서, 몇 명인지 한눈에 보이게 한다.
 const MERC_KEEP := 4.0
+const MERC_SPREAD := 0.5
 const MERC_ROW := Vector2(1.2, -2.0)  # 입구 아치를 피해 북동쪽
-const MERC_GAP := 0.8
+const MERC_GAP := 1.2
 
 
 static func _merc(sim: FrostSim, worker: Worker) -> Dictionary:
+	var order := 0
+	var count := 0
+	var center := Vector2.ZERO  # 용병들의 가운데. 모두가 같은 기준 방향을 써야 부채꼴이 돌지 않는다.
+	for other in sim.workers:
+		if other.role == "merc" and not other.retired:
+			if other == worker:
+				order = count
+			count += 1
+			center += other.pos
+	center /= maxf(count, 1)
 	if sim.raid.state == Raid.State.ATTACKING:
 		var best: RaidBear = null
 		for bear in sim.raid.bears:
 			if bear.is_alive() and (best == null or worker.pos.distance_to(bear.pos) < worker.pos.distance_to(best.pos)):
 				best = bear
 		if best:
-			var away := (worker.pos - best.pos).normalized()
+			var away := (center - best.pos).normalized()
 			if away == Vector2.ZERO:
 				away = Vector2.DOWN
-			return _go("idle", best.pos + away * MERC_KEEP)
-	var order := 0
-	for other in sim.workers:
-		if other == worker:
-			break
-		if other.role == "merc" and not other.retired:
-			order += 1
+			return _go("idle", best.pos + away.rotated((order - (count - 1) / 2.0) * MERC_SPREAD) * MERC_KEEP)
 	return _go("idle", sim.boss_raid.portal_pos + MERC_ROW + Vector2(order * MERC_GAP, 0.0))
 
 

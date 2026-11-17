@@ -20,6 +20,8 @@ var _goal := Vector2.INF
 var _leaving := false
 ## 맞을 때 잠깐 덮는 붉은 색
 var _hit_overlay: StandardMaterial3D
+## 용병끼리 비켜 가도록 길찾기 회피가 계산해 준 속도
+var _safe_velocity := Vector3.ZERO
 
 @onready var _agent: NavigationAgent3D = $NavigationAgent3D
 @onready var _pivot: Node3D = $Pivot
@@ -53,6 +55,9 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	if worker.role == "fisher":
 		_model.set_tool("res://frost_camp/scenes/fishing_rod.tscn")
 	if worker.role == "merc":
+		# 용병은 우르르 함께 움직이므로 서로 비켜 가게 해 몇 명인지 보이게 한다.
+		_agent.avoidance_enabled = true
+		_agent.velocity_computed.connect(func(safe: Vector3) -> void: _safe_velocity = safe)
 		_model.set_tool(_model.GUN)
 		_model.set_holding(true)
 		sim.boss_raid.shot.connect(func(from: Vector2, _to: Vector2, weapon: String) -> void:
@@ -95,6 +100,10 @@ func _physics_process(_delta: float) -> void:
 		if direction.length() > 0.01:
 			velocity = direction.normalized() * sim.agent_speed(worker)
 			_pivot.rotation.y = atan2(-direction.x, -direction.z)
+	if _agent.avoidance_enabled:
+		_agent.velocity = velocity
+		if velocity != Vector3.ZERO:
+			velocity = _safe_velocity
 	move_and_slide()
 	worker.pos = Vector2(position.x, position.z)
 	_model.set_moving(velocity.length() > 0.1)
