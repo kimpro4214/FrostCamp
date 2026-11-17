@@ -10,6 +10,7 @@ const RegionScene := preload("res://frost_camp/scenes/region.tscn")
 const WorkerScene := preload("res://frost_camp/scenes/worker.tscn")
 const HeatScene := preload("res://frost_camp/scenes/heat.tscn")
 const StructureView := preload("res://frost_camp/scenes/structure_view.gd")
+const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
 const TowerView := preload("res://frost_camp/scenes/tower_view.gd")
 const WoodpileScene := preload("res://frost_camp/scenes/woodpile.tscn")
 const WallView := preload("res://frost_camp/scenes/wall_view.gd")
@@ -79,7 +80,7 @@ var _save_timer := 0.0
 @onready var _player: CharacterBody3D = $Player
 @onready var _camera: Camera3D = $Camera3D
 @onready var _hud: CanvasLayer = $HUD
-@onready var _coin_template: Node3D = $Coins/Template
+@onready var _coin_template: Node3D = ItemModel.make("coin", Vector3(0.28, 0.08, 0.28))
 
 
 func _ready() -> void:

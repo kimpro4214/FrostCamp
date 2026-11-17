@@ -7,6 +7,7 @@ const Juice := preload("res://frost_camp/scenes/juice.gd")
 const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
 ## 판매대에 놓이는 물건 하나의 크기
 const ITEM_SIZE := Vector3(0.5, 0.2, 0.3)
+const COIN_SIZE := Vector3(0.32, 0.1, 0.32)
 const MAX_SHOWN_STOCK := 12
 const MAX_SHOWN_CASH := 20
 const QUEUE_START := 1.5
@@ -36,6 +37,7 @@ var _spawned := 0
 var _exit_dir := Vector3.BACK
 ## 이 판매대가 파는 물건의 본(복제해서 쓴다)
 var _item_template: Node3D
+var _coin_template: Node3D
 
 @onready var _stock_root: Node3D = $Stock
 @onready var _cash_root: Node3D = $Cash
@@ -57,6 +59,7 @@ func setup(frost_sim: FrostSim, stall_index: int) -> void:
 	_set_disc_radius(_cash_zone, float(sim.balance.interact.cash_radius))
 	_last_served = stall.served
 	_item_template = ItemModel.make(stall.item, ITEM_SIZE)
+	_coin_template = ItemModel.make("coin", COIN_SIZE)
 	sim.premium_sold.connect(func(i: int, item: String) -> void:
 		if i == index:
 			Juice.float_text(self, global_position + Vector3(0.0, 2.6, 0.0), "+$%d" % int(sim.balance.items[item].price), Color(1.0, 0.8, 0.2), 96)
@@ -80,7 +83,7 @@ func _process(delta: float) -> void:
 	_rebuild(_stock_root, state.x, func(i: int) -> Vector3:
 		return Vector3(0.0, 1.1 + (i / 4) * 0.22, -0.6 + (i % 4) * 0.4), func(_i: int) -> Node3D: return _item_template.duplicate())
 	_rebuild(_cash_root, state.y, func(i: int) -> Vector3:
-		return Vector3(0.0, 0.08 + i * 0.12, 0.0), func(_i: int) -> Node3D: return $Templates/Coin.duplicate())
+		return Vector3(0.0, 0.08 + i * 0.12, 0.0), func(_i: int) -> Node3D: return _coin_template.duplicate())
 
 
 ## 팔린 만큼 맨 앞 손님을 내보내고, 줄 길이만큼 새 손님을 들이고, 모두 자기 자리로 걸어가게 한다.

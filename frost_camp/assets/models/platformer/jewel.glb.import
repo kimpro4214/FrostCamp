@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://clxet0jtg3bbn"
-path="res://.godot/imported/stone_smallA.glb-4f8e3e19ff9068f49f95a120c1b1ed10.scn"
+uid="uid://vnhl7uelqqqa"
+path="res://.godot/imported/jewel.glb-4ddfb9c81b9f04351ce650c21016a13d.scn"
 
 [deps]
 
-source_file="res://frost_camp/assets/models/nature/stone_smallA.glb"
-dest_files=["res://.godot/imported/stone_smallA.glb-4f8e3e19ff9068f49f95a120c1b1ed10.scn"]
+source_file="res://frost_camp/assets/models/platformer/jewel.glb"
+dest_files=["res://.godot/imported/jewel.glb-4ddfb9c81b9f04351ce650c21016a13d.scn"]
 
 [params]
 

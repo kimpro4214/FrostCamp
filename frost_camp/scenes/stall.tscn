@@ -28,15 +28,6 @@ top_radius = 1.0
 bottom_radius = 1.0
 height = 0.02
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_coin"]
-albedo_color = Color(1, 0.8, 0.15, 1)
-metallic = 0.6
-roughness = 0.4
-
-[sub_resource type="BoxMesh" id="BoxMesh_coin"]
-material = SubResource("StandardMaterial3D_coin")
-size = Vector3(0.5, 0.1, 0.3)
-
 [node name="Stall" type="Node3D"]
 script = ExtResource("1_script")
 
@@ -62,9 +53,3 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
 mesh = SubResource("CylinderMesh_cash_zone")
 
 [node name="Queue" type="Node3D" parent="."]
-
-[node name="Templates" type="Node3D" parent="."]
-
-[node name="Coin" type="MeshInstance3D" parent="Templates"]
-visible = false
-mesh = SubResource("BoxMesh_coin")
