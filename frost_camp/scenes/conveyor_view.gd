@@ -3,22 +3,23 @@ extends Node3D
 ## 사기 전에는 숨어 있고, 부서지면 살이 멈춘다(체력 표시가 기울이고 어둡게 만든다).
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
+const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
 const BELT_WIDTH := 0.8
 const BELT_HEIGHT := 0.16
 const SLAT_GAP := 0.5
 const BELT_COLOR := Color(0.22, 0.23, 0.27)
 const RAIL_COLOR := Color(0.95, 0.75, 0.2)
 const SLAT_COLOR := Color(0.38, 0.4, 0.45)
-## 라인 품목별 벨트 위 물건 색
-const ITEM_COLORS := {"log": Color(0.55, 0.36, 0.2), "salmon": Color(0.98, 0.55, 0.5), "meat": Color(0.85, 0.3, 0.32), "crystal": Color(0.55, 0.85, 1.0)}
+## 벨트 위 물건 하나의 크기(x가 벨트 폭 방향)
+const ITEM_SIZE := Vector3(0.6, 0.3, 0.32)
 
 var sim: FrostSim
 var belt: Conveyor
 ## 부서질 때 기울이고 어둡게 만들 모델(체력 표시가 쓴다)
 var model: Node3D
 var _slats: Array[MeshInstance3D] = []
-var _logs: Array[MeshInstance3D] = []
-var _log_mesh: CylinderMesh
+var _logs: Array[Node3D] = []
+var _item := ""
 var _scroll := 0.0
 var _shown_level := 0
 ## 모델 원점(시설 위치). 부서질 때 이 점을 중심으로 기운다.
@@ -42,11 +43,7 @@ func setup(frost_sim: FrostSim, item: String) -> void:
 		slat.mesh = slat_mesh
 		model.add_child(slat)
 		_slats.append(slat)
-	_log_mesh = CylinderMesh.new()
-	_log_mesh.top_radius = 0.16
-	_log_mesh.bottom_radius = 0.16
-	_log_mesh.height = 0.6
-	_log_mesh.material = _material(ITEM_COLORS[item])
+	_item = item
 	visible = false
 
 
@@ -62,15 +59,13 @@ func _process(delta: float) -> void:
 	for i in _slats.size():
 		_place(_slats[i], _scroll + i * SLAT_GAP, BELT_HEIGHT + 0.02)
 	while _logs.size() < belt.items.size():
-		var log_mesh := MeshInstance3D.new()
-		log_mesh.mesh = _log_mesh
+		var log_mesh := ItemModel.make(_item, ITEM_SIZE)
 		model.add_child(log_mesh)
 		_logs.append(log_mesh)
 	for i in _logs.size():
 		_logs[i].visible = i < belt.items.size()
 		if _logs[i].visible:
 			_place(_logs[i], belt.items[i], BELT_HEIGHT + 0.18)
-			_logs[i].rotate_object_local(Vector3.FORWARD, PI / 2.0)  # 통나무를 벨트 폭 방향으로 눕힌다
 
 
 ## 경로 위 dist 지점에 놓고 진행 방향을 보게 돌린다.

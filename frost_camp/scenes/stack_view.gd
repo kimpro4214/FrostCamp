@@ -1,7 +1,7 @@
 extends Node3D
 ## 등 뒤 스택 그리기. 플레이어와 일꾼이 같이 쓴다.
 
-const ITEM_COLORS := {"log": Color(0.55, 0.33, 0.18), "meat": Color(0.85, 0.3, 0.32), "salmon": Color(0.98, 0.55, 0.5), "crystal": Color(0.55, 0.85, 1.0), "gold_salmon": Color(1.0, 0.8, 0.2), "gem": Color(0.85, 0.35, 1.0)}
+const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
 const ITEM_SIZE := Vector3(0.5, 0.2, 0.3)
 
 ## 걸을 때 스택이 진행 반대쪽으로 휘는 정도
@@ -10,7 +10,6 @@ const SWAY_SMOOTHING := 8.0
 
 var _stack: BackStack
 var _shown: Array[String] = []
-var _materials := {}
 var _last_global := Vector3.INF
 var _lean := Vector3.ZERO
 
@@ -27,11 +26,7 @@ func _process(delta: float) -> void:
 	for child in get_children():
 		child.queue_free()
 	for i in _shown.size():
-		var box := MeshInstance3D.new()
-		var mesh := BoxMesh.new()
-		mesh.size = ITEM_SIZE
-		box.mesh = mesh
-		box.material_override = _material_for(_shown[i])
+		var box := ItemModel.make(_shown[i], ITEM_SIZE)
 		box.position.y = i * (ITEM_SIZE.y + 0.02)
 		add_child(box)
 
@@ -51,10 +46,3 @@ func _sway(delta: float) -> void:
 		box.position.x = _lean.x * t * t * count * 0.6
 		box.position.z = _lean.z * t * t * count * 0.6
 
-
-func _material_for(item: String) -> StandardMaterial3D:
-	if not _materials.has(item):
-		var material := StandardMaterial3D.new()
-		material.albedo_color = ITEM_COLORS.get(item, Color.MAGENTA)
-		_materials[item] = material
-	return _materials[item]

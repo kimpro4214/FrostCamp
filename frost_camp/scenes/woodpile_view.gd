@@ -2,15 +2,16 @@ extends Node3D
 ## 적치장(원목 또는 고기). 쌓인 개수만큼 상자를 쌓아 그린다. 고기 적치장은 서식지를 열기 전에는 숨는다.
 
 const MAX_SHOWN := 24
-## 품목별 상자 색(원목은 장면의 기본 색을 쓴다)
-const ITEM_COLORS := {"meat": Color(0.78, 0.3, 0.28), "salmon": Color(0.98, 0.55, 0.5), "crystal": Color(0.55, 0.85, 1.0)}
+const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
+## 쌓는 물건 하나의 크기(길이는 z)
+const ITEM_SIZE := Vector3(0.25, 0.2, 0.9)
 
 var sim: FrostSim
 var item := "log"
 var _shown := -1
+var _template: Node3D
 
 @onready var _logs: Node3D = $Logs
-@onready var _template: MeshInstance3D = $Template
 
 
 func setup(frost_sim: FrostSim, pile_item: String = "log") -> void:
@@ -20,10 +21,8 @@ func setup(frost_sim: FrostSim, pile_item: String = "log") -> void:
 	position = Vector3(pos.x, 0.0, pos.y)
 	var radius := float(sim.balance.interact.pile_radius)
 	$Zone.scale = Vector3(radius, 1.0, radius)
-	if ITEM_COLORS.has(item):
-		var material := StandardMaterial3D.new()
-		material.albedo_color = ITEM_COLORS[item]
-		_template.material_override = material
+	_template = ItemModel.make(item, Vector3(ITEM_SIZE.z, ITEM_SIZE.y, ITEM_SIZE.x))  # 길이를 x로 만든 뒤 돌려 z로 둔다
+	_template.rotation.y = PI / 2.0
 
 
 func _process(_delta: float) -> void:

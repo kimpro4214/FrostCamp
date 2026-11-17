@@ -8,7 +8,7 @@ const Juice := preload("res://frost_camp/scenes/juice.gd")
 const HOLE_RADIUS := 0.75
 const WATER_COLOR := Color(0.1, 0.28, 0.42)
 const RIM_COLOR := Color(0.88, 0.95, 1.0)
-const SALMON_COLOR := Color(0.98, 0.55, 0.5)
+const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
 const BUSY_COLOR := Color(1.0, 0.62, 0.25)
 const FLY_TIME := 0.4
 
@@ -90,11 +90,7 @@ func _on_fish_caught(hole: int, agent: SimAgent) -> void:
 	var body: Node3D = _find_body.call(agent)
 	if body == null:
 		return
-	var salmon := MeshInstance3D.new()
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(0.45, 0.16, 0.22)
-	mesh.material = _material(SALMON_COLOR)
-	salmon.mesh = mesh
+	var salmon := ItemModel.make("salmon", Vector3(0.45, 0.16, 0.22))
 	add_child(salmon)
 	var from := Vector3(sim.fishing_holes[hole].x, 0.2, sim.fishing_holes[hole].y)
 	salmon.global_position = from

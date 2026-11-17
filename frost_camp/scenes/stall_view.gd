@@ -4,6 +4,9 @@ extends Node3D
 ## 산 손님은 판매대마다 정한 쪽(layout의 exit, 다른 줄과 엇갈리지 않게) 옆으로 곧게 걸어 나가 사라진다(줄을 거슬러 가지 않는다). 뒤 손님은 한 칸씩 당겨진다.
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
+const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
+## 판매대에 놓이는 물건 하나의 크기
+const ITEM_SIZE := Vector3(0.5, 0.2, 0.3)
 const MAX_SHOWN_STOCK := 12
 const MAX_SHOWN_CASH := 20
 const QUEUE_START := 1.5
@@ -32,6 +35,8 @@ var _last_served := 0
 var _spawned := 0
 ## 산 손님이 나가는 방향
 var _exit_dir := Vector3.BACK
+## 이 판매대가 파는 물건의 본(복제해서 쓴다)
+var _item_template: Node3D
 
 @onready var _stock_root: Node3D = $Stock
 @onready var _cash_root: Node3D = $Cash
@@ -52,6 +57,7 @@ func setup(frost_sim: FrostSim, stall_index: int) -> void:
 	_set_disc_radius(_unload_zone, float(sim.balance.interact.stall_radius))
 	_set_disc_radius(_cash_zone, float(sim.balance.interact.cash_radius))
 	_last_served = stall.served
+	_item_template = ItemModel.make(stall.item, ITEM_SIZE)
 	sim.premium_sold.connect(func(i: int, item: String) -> void:
 		if i == index:
 			Juice.float_text(self, global_position + Vector3(0.0, 2.6, 0.0), "+$%d" % int(sim.balance.items[item].price), Color(1.0, 0.8, 0.2), 96)
@@ -72,9 +78,8 @@ func _process(delta: float) -> void:
 	if state == _shown:
 		return
 	_shown = state
-	var item_template: Node3D = $Templates.get_node(stall.item.capitalize())
 	_rebuild(_stock_root, state.x, func(i: int) -> Vector3:
-		return Vector3(0.0, 1.1 + (i / 4) * 0.22, -0.6 + (i % 4) * 0.4), func(_i: int) -> Node3D: return item_template.duplicate())
+		return Vector3(0.0, 1.1 + (i / 4) * 0.22, -0.6 + (i % 4) * 0.4), func(_i: int) -> Node3D: return _item_template.duplicate())
 	_rebuild(_cash_root, state.y, func(i: int) -> Vector3:
 		return Vector3(0.0, 0.08 + i * 0.12, 0.0), func(_i: int) -> Node3D: return $Templates/Coin.duplicate())
 
@@ -114,7 +119,7 @@ func _walk_toward(customer: Node3D, target: Vector3, delta: float) -> void:
 
 ## 산 물건을 머리 위로 들고 돈을 띄운 뒤, 줄 밖으로 걸어 나가며 작아져 사라진다.
 func _leave(customer: Node3D, stall: Stall) -> void:
-	var item: Node3D = $Templates.get_node(stall.item.capitalize()).duplicate()
+	var item: Node3D = _item_template.duplicate()
 	item.visible = true
 	item.position = Vector3(0.0, 0.5, 0.0)  # 머리 위(모델 비율 기준)
 	item.scale = Vector3.ONE / CUSTOMER_SCALE
