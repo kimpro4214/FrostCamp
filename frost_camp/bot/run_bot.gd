@@ -1,7 +1,7 @@
 extends SceneTree
 ## 탐욕 봇을 실제 데이터로 엔딩까지 여러 시드로 돌리고, 기획서 5장의 단계별 목표 시간과 비교해 playtest/에 남긴다.
-## 실행: godot --headless -s res://frost_camp/bot/run_bot.gd [-- 라벨 [ignore_cold]]
-## ignore_cold를 주면 봇이 추위를 무시한다.
+## 실행: godot --headless -s res://frost_camp/bot/run_bot.gd [-- 라벨 [ignore_cold] [stage=스테이지]]
+## ignore_cold를 주면 봇이 추위를 무시한다. stage=를 주면 그 스테이지 데이터로 돈다(기본 frost).
 ## 결과 파일 이름은 날짜(와 라벨)로 정한다. 같은 이름이면 덮어쓴다.
 
 const STEP := 0.05
@@ -29,6 +29,9 @@ const MILESTONES := [
 
 
 func _initialize() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("stage="):
+			GameData.stage = arg.trim_prefix("stage=")
 	var runs: Array = []
 	for seed_value in SEEDS:
 		runs.append(_run(seed_value))
@@ -47,7 +50,7 @@ func _initialize() -> void:
 
 ## 시드 하나로 엔딩(또는 시간 초과)까지 돌린다.
 func _run(seed_value: int) -> Dictionary:
-	var sim := FrostSim.new(GameData.load_json(GameData.BALANCE_PATH), GameData.load_json(GameData.LAYOUT_PATH), seed_value)
+	var sim := FrostSim.new(GameData.load_json(GameData.path("balance")), GameData.load_json(GameData.path("layout")), seed_value)
 	var bot := GreedyBot.new(sim)
 	bot.warm_up = not OS.get_cmdline_user_args().has("ignore_cold")
 	# 습격 피해 기록: 부서진 횟수, 수리 횟수와 비용, 시설이 멈춰 있던 시간(시설 수 × 초)

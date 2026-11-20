@@ -84,7 +84,7 @@ var _save_timer := 0.0
 
 
 func _ready() -> void:
-	sim = FrostSim.new(GameData.load_json(GameData.BALANCE_PATH), GameData.load_json(GameData.LAYOUT_PATH))
+	sim = FrostSim.new(GameData.load_json(GameData.path("balance")), GameData.load_json(GameData.path("layout")))
 	# 이어하기: 화면을 만들기 전에 sim을 되살린다. 화면은 되살린 상태를 보고 만들어진다.
 	if _continue_next:
 		_continue_next = false
@@ -109,7 +109,7 @@ func _ready() -> void:
 		var stall := StallScene.instantiate()
 		$Stalls.add_child(stall)
 		stall.setup(sim, i)
-	var zone_names: Dictionary = GameData.load_json(GameData.TEXT_PATH).zones
+	var zone_names: Dictionary = GameData.load_json(GameData.path("text")).zones
 	_zone_names = zone_names
 	for i in sim.zones.size():
 		var zone := ZoneScene.instantiate()
@@ -129,7 +129,7 @@ func _ready() -> void:
 		var heat := HeatScene.instantiate()
 		$Heat.add_child(heat)
 		heat.setup(sim, i)
-	_place_decor(GameData.load_json(GameData.LAYOUT_PATH).decor)
+	_place_decor(GameData.load_json(GameData.path("layout")).decor)
 	$Woodpile.setup(sim)
 	var meat_pile: Node3D = WoodpileScene.instantiate()
 	meat_pile.name = "MeatPile"
@@ -169,7 +169,7 @@ func _ready() -> void:
 	var walls := WallView.new()
 	walls.name = "Walls"
 	add_child(walls)
-	walls.setup(sim, GameData.load_json(GameData.LAYOUT_PATH).base.walls)
+	walls.setup(sim, GameData.load_json(GameData.path("layout")).base.walls)
 	_place_structures(zone_names.get("repair", "repair"))
 	# 소나무 가지는 비탈이 가팔라서 더 기울어진 면에도 눈을 얹는다.
 	SnowCap.apply($Trees, TREE_SNOW_FROM)

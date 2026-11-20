@@ -5,7 +5,7 @@ const Fixtures := preload("res://frost_camp/tests/fixtures.gd")
 
 
 func _real_sim() -> FrostSim:
-	return FrostSim.new(GameData.load_json(GameData.BALANCE_PATH), GameData.load_json(GameData.LAYOUT_PATH), 3)
+	return FrostSim.new(GameData.load_json(GameData.path("balance")), GameData.load_json(GameData.path("layout")), 3)
 
 
 ## 봇으로 seconds만큼 진행하고, 저장할 수 있는 때까지 조금 더 간다.

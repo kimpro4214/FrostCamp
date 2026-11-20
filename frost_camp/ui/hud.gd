@@ -49,7 +49,7 @@ const WEAPON_NAMES := {"harpoon": "1  작살총", "spread": "2  산탄 작살", 
 
 func setup(frost_sim: FrostSim) -> void:
 	sim = frost_sim
-	_zone_names = GameData.load_json(GameData.TEXT_PATH).zones
+	_zone_names = GameData.load_json(GameData.path("text")).zones
 	_build_chips()
 	_build_raid_banner()
 	_build_toast()

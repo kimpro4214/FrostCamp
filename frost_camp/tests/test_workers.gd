@@ -84,7 +84,7 @@ func test_stall_cashier_only_collects_own_stall() -> void:
 
 
 func test_mercs_spread_around_raid_bear() -> void:
-	var sim := FrostSim.new(GameData.load_json(GameData.BALANCE_PATH), GameData.load_json(GameData.LAYOUT_PATH), 3)
+	var sim := FrostSim.new(GameData.load_json(GameData.path("balance")), GameData.load_json(GameData.path("layout")), 3)
 	for k in 4:
 		sim._apply_effect({"hire": "merc"})
 	sim.raid.state = Raid.State.ATTACKING

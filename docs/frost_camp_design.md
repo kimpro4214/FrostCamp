@@ -32,7 +32,7 @@ flowchart LR
 
 ## 4. 시스템 요약
 
-수치(가격, 체력, 리스폰 시간, 해금 비용)는 모두 `frost_camp/data/balance.json`에 둔다. 이 문서에는 구조만 적는다.
+수치(가격, 체력, 리스폰 시간, 해금 비용)는 모두 `frost_camp/data/stages/frost/balance.json`에 둔다. 이 문서에는 구조만 적는다.
 
 | 시스템 | 내용 |
 |---|---|
@@ -82,7 +82,7 @@ flowchart LR
 | 경로 | 내용 |
 |---|---|
 | `frost_camp/sim/` | 경제, 인벤토리, 채집, 추위 규칙. 노드에 의존하지 않는 순수 GDScript라서 게임과 봇이 같은 규칙을 쓴다. |
-| `frost_camp/data/balance.json` | 모든 수치 |
+| `frost_camp/data/stages/frost/balance.json` | 모든 수치 |
 | `frost_camp/scenes/`, `frost_camp/ui/` | 화면과 연출 |
 | `playtest/` | 봇 결과: 엔딩까지 걸린 시간, 단계별 돈 곡선, 막히는 구간 |
 
