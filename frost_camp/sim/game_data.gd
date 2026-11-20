@@ -5,11 +5,21 @@ extends RefCounted
 
 ## 지금 판의 스테이지
 static var stage := "frost"
+static var _theme := {}
+static var _theme_stage := ""
 
 
-## 지금 스테이지의 데이터 파일 경로. file은 "balance", "layout", "text".
+## 지금 스테이지의 데이터 파일 경로. file은 "balance", "layout", "text", "theme".
 static func path(file: String) -> String:
 	return "res://frost_camp/data/stages/%s/%s.json" % [stage, file]
+
+
+## 지금 스테이지의 겉모습(theme.json): 주인공·일꾼·손님·나무·물건 모델 경로. 화면 쪽만 쓴다.
+static func theme() -> Dictionary:
+	if _theme_stage != stage:
+		_theme = load_json(path("theme"))
+		_theme_stage = stage
+	return _theme
 
 
 static func load_json(path: String) -> Dictionary:

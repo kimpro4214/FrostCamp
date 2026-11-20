@@ -1,0 +1,39 @@
+{
+	"player": [
+		"res://frost_camp/assets/models/winter/player-coat-0.glb",
+		"res://frost_camp/assets/models/winter/player-coat-1.glb",
+		"res://frost_camp/assets/models/winter/player-coat-2.glb"
+	],
+	"workers": {
+		"lumberjack": "res://frost_camp/assets/models/winter/worker-lumberjack.glb",
+		"porter": "res://frost_camp/assets/models/winter/worker-porter.glb",
+		"hunter": "res://frost_camp/assets/models/winter/worker-hunter.glb",
+		"fisher": "res://frost_camp/assets/models/winter/worker-fisher.glb",
+		"miner": "res://frost_camp/assets/models/winter/worker-miner.glb",
+		"cashier": "res://frost_camp/assets/models/winter/worker-cashier.glb",
+		"merc": "res://frost_camp/assets/models/winter/worker-merc.glb"
+	},
+	"customers": [
+		"res://frost_camp/assets/models/winter/customer-red.glb",
+		"res://frost_camp/assets/models/winter/customer-blue.glb",
+		"res://frost_camp/assets/models/winter/customer-yellow.glb"
+	],
+	"trees": [
+		"res://frost_camp/assets/models/nature/tree_pineDefaultA.glb",
+		"res://frost_camp/assets/models/nature/tree_pineRoundA.glb",
+		"res://frost_camp/assets/models/nature/tree_pineDefaultB.glb",
+		"res://frost_camp/assets/models/nature/tree_pineRoundB.glb",
+		"res://frost_camp/assets/models/nature/tree_pineTallA.glb",
+		"res://frost_camp/assets/models/nature/tree_pineRoundC.glb",
+		"res://frost_camp/assets/models/nature/tree_pineTallB.glb"
+	],
+	"items": {
+		"log": "res://frost_camp/assets/models/nature/log.glb",
+		"salmon": "res://frost_camp/assets/models/survival/fish.glb",
+		"gold_salmon": "res://frost_camp/assets/models/survival/fish.glb",
+		"meat": "res://frost_camp/assets/models/food/meat-raw.glb",
+		"crystal": "res://frost_camp/assets/models/platformer/jewel.glb",
+		"gem": "res://frost_camp/assets/models/platformer/jewel.glb",
+		"coin": "res://frost_camp/assets/models/platformer/coin-gold.glb"
+	}
+}

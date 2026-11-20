@@ -34,3 +34,11 @@ func test_crystal_sold_only_at_market() -> void:
 	check_eq(crystal_stalls.size(), 1, "빙결정 판매대는 하나다")
 	check_eq(crystal_stalls[0].get("unlock", ""), "expand_2", "장터 땅을 사야 열린다")
 	check_eq(int(layout.conveyors.crystal.stall), layout.stalls.find(crystal_stalls[0]), "빙결정 컨베이어는 장터로 간다")
+
+
+## 스테이지 겉모습(theme.json)에 적은 모델 파일이 모두 있어야 한다.
+func test_theme_models_exist() -> void:
+	var theme := GameData.theme()
+	var paths: Array = theme.player + theme.customers + theme.trees + theme.workers.values() + theme.items.values()
+	for model_path in paths:
+		check(ResourceLoader.exists(model_path), "모델 파일이 있다: %s" % model_path)

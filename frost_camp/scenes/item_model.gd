@@ -1,16 +1,7 @@
 extends RefCounted
-## 물건(원목, 연어, 동전 등) 하나의 겉모습. Kenney 모델을 쓴다.
+## 물건(원목, 연어, 동전 등) 하나의 겉모습. 모델은 스테이지 theme.json의 items에서 고른다.
 ## 크기 상자(size, 가운데가 원점)를 꽉 채우게 늘린다. 길쭉한 물건은 길이를 x로 눕힌다.
 
-const MODELS := {
-	"log": preload("res://frost_camp/assets/models/nature/log.glb"),
-	"salmon": preload("res://frost_camp/assets/models/survival/fish.glb"),
-	"gold_salmon": preload("res://frost_camp/assets/models/survival/fish.glb"),
-	"meat": preload("res://frost_camp/assets/models/food/meat-raw.glb"),
-	"crystal": preload("res://frost_camp/assets/models/platformer/jewel.glb"),
-	"gem": preload("res://frost_camp/assets/models/platformer/jewel.glb"),
-	"coin": preload("res://frost_camp/assets/models/platformer/coin-gold.glb"),
-}
 ## 모델을 눕히는 회전(라디안). 원목과 고기는 길이가 z, 물고기와 동전은 서 있다.
 const TURNS := {"log": Vector3(0.0, PI / 2.0, 0.0), "meat": Vector3(0.0, PI / 2.0, 0.0), "salmon": Vector3(PI / 2.0, 0.0, 0.0), "gold_salmon": Vector3(PI / 2.0, 0.0, 0.0), "coin": Vector3(PI / 2.0, 0.0, 0.0)}
 ## 모델 색에 곱할 색
@@ -26,7 +17,7 @@ static var _tinted := {}
 static func make(item: String, size: Vector3) -> Node3D:
 	# 크기 맞춤(fit)과 눕히기(model.rotation)를 다른 노드에 둔다. 한 노드에 두면 늘이기가 돌기 전 축에 걸린다.
 	var fit := Node3D.new()
-	var model: Node3D = MODELS[item].instantiate()
+	var model: Node3D = load(GameData.theme().items[item]).instantiate()
 	model.rotation = TURNS.get(item, Vector3.ZERO)
 	fit.add_child(model)
 	var bounds := _bounds(model)

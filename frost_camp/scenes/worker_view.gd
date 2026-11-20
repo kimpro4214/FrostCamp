@@ -1,16 +1,6 @@
 extends CharacterBody3D
 ## 일꾼 몸. sim의 worker_brain이 정한 목표까지 NavigationAgent3D로 길을 찾아 걷고, 위치를 sim에 넘긴다.
 
-## 역할마다 다른 캐릭터를 써서 한눈에 구분되게 한다.
-const ROLE_MODELS := {
-	"lumberjack": "res://frost_camp/assets/models/winter/worker-lumberjack.glb",
-	"porter": "res://frost_camp/assets/models/winter/worker-porter.glb",
-	"hunter": "res://frost_camp/assets/models/winter/worker-hunter.glb",
-	"fisher": "res://frost_camp/assets/models/winter/worker-fisher.glb",
-	"miner": "res://frost_camp/assets/models/winter/worker-miner.glb",
-	"cashier": "res://frost_camp/assets/models/winter/worker-cashier.glb",
-	"merc": "res://frost_camp/assets/models/winter/worker-merc.glb",
-}
 ## 몸과 sim 위치가 이만큼 넘게 벌어지면 sim이 순간이동시킨 것으로 본다
 const TELEPORT_DISTANCE := 3.0
 
@@ -34,7 +24,8 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	var worker := sim.workers[index]
 	position = Vector3(worker.pos.x, 0.0, worker.pos.y)
 	$Pivot/StackAnchor.setup(worker.stack)
-	_model.setup(ROLE_MODELS[worker.role])
+	# 역할마다 다른 캐릭터를 써서 한눈에 구분되게 한다(스테이지 theme.json의 workers).
+	_model.setup(GameData.theme().workers[worker.role])
 	_hit_overlay = StandardMaterial3D.new()
 	_hit_overlay.albedo_color = Color(1.0, 0.2, 0.2, 0.6)
 	_hit_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA

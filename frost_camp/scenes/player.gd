@@ -1,12 +1,6 @@
 extends CharacterBody3D
 ## 플레이어 몸. 입력으로 움직이고, 위치를 sim에 넘긴다. 등 뒤 스택은 StackAnchor가 그린다.
 
-## 방한복 레벨별 몸 모델(Meshy로 만들고 tools/meshy_to_kenney_rig.py로 Kenney 뼈대를 붙였다)
-const COAT_MODELS := [
-	"res://frost_camp/assets/models/winter/player-coat-0.glb",
-	"res://frost_camp/assets/models/winter/player-coat-1.glb",
-	"res://frost_camp/assets/models/winter/player-coat-2.glb",
-]
 ## 배낭 레벨별로 등에 메는 가방 [모델, 키]. 0레벨은 가방이 없다.
 const BACKPACKS := [
 	["", 0.0],
@@ -56,7 +50,9 @@ func setup(frost_sim: FrostSim, virtual_joystick: Node) -> void:
 
 
 func _coat_model() -> String:
-	return COAT_MODELS[mini(sim.find_zone("coat").level, COAT_MODELS.size() - 1)]
+	# 방한복 레벨별 몸 모델(스테이지 theme.json의 player). Meshy로 만들고 tools/meshy_to_kenney_rig.py로 Kenney 뼈대를 붙였다.
+	var models: Array = GameData.theme().player
+	return models[mini(sim.find_zone("coat").level, models.size() - 1)]
 
 
 func _wear_backpack() -> void:

@@ -5,15 +5,6 @@ extends Node3D
 ## 빛나는 바위(플레이어만 캐는 보석)는 금빛으로 빛나고 위에 별이 떠서 오르내린다.
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
-const MODELS := [
-	preload("res://frost_camp/assets/models/nature/tree_pineDefaultA.glb"),
-	preload("res://frost_camp/assets/models/nature/tree_pineRoundA.glb"),
-	preload("res://frost_camp/assets/models/nature/tree_pineDefaultB.glb"),
-	preload("res://frost_camp/assets/models/nature/tree_pineRoundB.glb"),
-	preload("res://frost_camp/assets/models/nature/tree_pineTallA.glb"),
-	preload("res://frost_camp/assets/models/nature/tree_pineRoundC.glb"),
-	preload("res://frost_camp/assets/models/nature/tree_pineTallB.glb"),
-]
 const MODEL_SCALE := 2.6
 const CHIP_COLOR := Color(0.55, 0.36, 0.2)
 const SNOW_COLOR := Color(0.92, 0.95, 1.0)
@@ -48,7 +39,8 @@ func setup(frost_sim: FrostSim, tree_index: int) -> void:
 	var tree := sim.trees[index]
 	position = Vector3(tree.pos.x, 0.0, tree.pos.y)
 	var crystal := tree.item == "crystal"
-	var model: Node3D = _make_crystal() if crystal else MODELS[index % MODELS.size()].instantiate()
+	var models: Array = GameData.theme().trees
+	var model: Node3D = _make_crystal() if crystal else load(models[index % models.size()]).instantiate()
 	if not crystal:
 		model.scale = Vector3.ONE * MODEL_SCALE
 	else:

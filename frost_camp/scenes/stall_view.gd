@@ -15,11 +15,6 @@ const MAX_SHOWN_STOCK := 12
 const MAX_SHOWN_CASH := 20
 const QUEUE_START := 1.5
 const QUEUE_GAP := 1.1
-const CUSTOMER_MODELS := [
-	preload("res://frost_camp/assets/models/winter/customer-red.glb"),
-	preload("res://frost_camp/assets/models/winter/customer-blue.glb"),
-	preload("res://frost_camp/assets/models/winter/customer-yellow.glb"),
-]
 const CUSTOMER_SCALE := 2.3
 const WALK_SPEED := 3.5
 ## 새 손님이 나타나는 곳: 줄 맨 끝 자리에서 이만큼 더 뒤
@@ -159,7 +154,8 @@ func _rebuild(root: Node3D, count: int, place: Callable, make: Callable) -> void
 
 ## 손님 한 명. 모델은 들어온 순서대로 돌려 쓴다.
 func _make_customer() -> Node3D:
-	var customer: Node3D = CUSTOMER_MODELS[_spawned % CUSTOMER_MODELS.size()].instantiate()
+	var models: Array = GameData.theme().customers
+	var customer: Node3D = load(models[_spawned % models.size()]).instantiate()
 	_spawned += 1
 	customer.scale = Vector3.ONE * CUSTOMER_SCALE
 	var anim: AnimationPlayer = customer.find_children("*", "AnimationPlayer", true, false)[0]
