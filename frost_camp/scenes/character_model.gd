@@ -4,6 +4,7 @@ extends Node3D
 
 const SCALE := 2.3
 const FrozenOverlay := preload("res://frost_camp/scenes/frozen_overlay.tres")
+const ArmDrop := preload("res://frost_camp/scenes/arm_drop.gd")
 const ACTION := "attack-melee-right"
 ## 총을 쏠 때와 총을 든 채 서 있을 때의 애니메이션
 const SHOOT := "holding-right-shoot"
@@ -25,6 +26,9 @@ const BACKPACK_Y := 0.31
 const BACKPACK_THICKNESS := 0.42
 
 var _player: AnimationPlayer
+## 서기·걷기 때 팔을 몸 쪽으로 내리는 뼈 보정. 도구 동작 중에는 끈다.
+var _arm_drop: SkeletonModifier3D
+var _arm_tween: Tween
 var _meshes: Array[Node] = []
 var _moving := false
 var _acting := false
@@ -68,8 +72,10 @@ func set_body(model_path: String) -> void:
 	for anim_name in ["idle", "walk", HOLD]:
 		_player.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
 	_player.animation_finished.connect(_on_animation_finished)
-	_player.play(_rest_animation())
 	var skeleton: Skeleton3D = model.find_children("*", "Skeleton3D", true, false)[0]
+	_arm_drop = ArmDrop.new()
+	skeleton.add_child(_arm_drop)
+	_play(_rest_animation(), 0.0)
 	_hand = BoneAttachment3D.new()
 	_hand.bone_name = "arm-right"
 	skeleton.add_child(_hand)
@@ -103,7 +109,7 @@ func set_moving(moving: bool) -> void:
 		return
 	_moving = moving
 	if not _acting:
-		_player.play(_rest_animation(), 0.15)
+		_play(_rest_animation(), 0.15)
 
 
 ## 총을 든 자세인지. 든 채 서 있으면 총 드는 자세, 걸으면 걷는다.
@@ -112,13 +118,13 @@ func set_holding(holding: bool) -> void:
 		return
 	_holding = holding
 	if not _acting:
-		_player.play(_rest_animation(), 0.15)
+		_play(_rest_animation(), 0.15)
 
 
 ## 한 번 휘두르거나(기본) 쏜다(SHOOT). 하는 중에 다시 부르면 처음부터 다시 한다.
 func play_action(anim_name: String = ACTION) -> void:
 	_acting = true
-	_player.play(anim_name, 0.05)
+	_play(anim_name, 0.05)
 	_player.seek(0.0, true)
 
 
@@ -188,4 +194,17 @@ func _rest_animation() -> String:
 func _on_animation_finished(anim_name: StringName) -> void:
 	if anim_name == ACTION or anim_name == SHOOT:
 		_acting = false
-		_player.play(_rest_animation(), 0.1)
+		_play(_rest_animation(), 0.1)
+
+
+## 애니메이션을 바꾸고, 서기·걷기일 때만 팔 내리기를 같은 시간에 걸쳐 켠다.
+func _play(anim_name: String, blend: float) -> void:
+	_player.play(anim_name, blend)
+	var drop := 1.0 if anim_name == "idle" or anim_name == "walk" else 0.0
+	if _arm_tween:
+		_arm_tween.kill()
+	if blend <= 0.0:
+		_arm_drop.influence = drop
+		return
+	_arm_tween = create_tween()
+	_arm_tween.tween_property(_arm_drop, "influence", drop, blend)

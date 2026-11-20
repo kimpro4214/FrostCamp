@@ -4,6 +4,7 @@ extends Node3D
 ## 산 손님은 판매대마다 정한 쪽(layout의 exit, 다른 줄과 엇갈리지 않게) 옆으로 곧게 걸어 나가 사라진다(줄을 거슬러 가지 않는다). 뒤 손님은 한 칸씩 당겨진다.
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
+const ArmDrop := preload("res://frost_camp/scenes/arm_drop.gd")
 const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
 ## 판매대에 놓이는 물건 하나의 크기
 const ITEM_SIZE := Vector3(0.5, 0.2, 0.3)
@@ -166,6 +167,8 @@ func _make_customer() -> Node3D:
 		anim.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
 	anim.play("walk")
 	customer.set_meta("anim", anim)
+	# 손님은 서기·걷기만 하므로 팔은 늘 내린다(scenes/arm_drop.gd).
+	customer.find_children("*", "Skeleton3D", true, false)[0].add_child(ArmDrop.new())
 	return customer
 
 
