@@ -1,20 +1,21 @@
 extends CanvasLayer
-## 탈출 컷신. 영화 비율 띠가 내려오고, 플레이어가 부두 끝에서 널빤지 발판을 밟고 배 옆으로 올라타고, 뱃고동과 함께
+## 탈출 컷신. 영화 비율 띠가 내려오고, 플레이어가 부두 끝에서 널빤지 발판을 밟고 배 뒤쪽으로 올라타고, 뱃고동과 함께
 ## 카메라가 배 옆으로 돌아간 뒤, 배가 얼음을 밀어내며 바다로 나아간다. 제목이 뜨고 흰색으로 덮이면 결과 화면을 띄운다.
 
 const BAR_HEIGHT := 90.0
 const DOCK_START := Vector3(26.0, 0.0, -3.0)
 ## 처음 카메라 자리(발판과 부두가 벽에 가리지 않게 조금 안쪽, 낮게)
 const CAMERA_START := Vector3(25.0, 5.5, 5.0)
-## 배 기준 자리들. 선체는 x -3.5~3.5, z -1.3~1.3, 갑판 높이 1.0이다(ship.tscn).
-## 고물(뒤쪽) 옆 갑판 가장자리에서 기관실(x -3.7~-1.1, z -0.6~0.6)을 비켜 올라탄다.
+## 배 기준 자리들(ship.tscn의 범선 모델). 고물 선루 지붕은 x -3.9~-2.3, 높이 1.84이고,
+## 가운데 갑판은 x -2.0~0.5, 높이 1.0이다. 선루 위 기관실(z -1.1~-0.2)과 뒤 돛대(z 0)를 비켜 z 0.6으로 지난다.
 ## 부두(pirate/structure-platform-dock)는 x -6.95~-4.45에 있고 바닥 높이는 0.7이다.
-const DOCK_EDGE := Vector3(-7.3, 0.0, 0.9)  # 얼음 끝, 부두 앞
-const DOCK_STEP := Vector3(-6.6, 0.7, 0.9)  # 부두에 올라선 자리
-const PLANK_FOOT := Vector3(-4.6, 0.7, 0.9)  # 부두 끝, 발판 아래 끝
-const PLANK_TOP := Vector3(-3.2, 1.0, 0.9)  # 갑판 가장자리, 발판 위 끝
-const DECK_PASS := Vector3(-1.0, 1.0, 1.05)  # 연료통(x -1, z 0.6) 바깥쪽으로 지나는 자리
-const DECK_SPOT := Vector3(0.1, 1.0, 0.0)  # 돛대와 연료통 사이, 갑판 위 설 자리
+const DOCK_EDGE := Vector3(-7.3, 0.0, 0.6)  # 얼음 끝, 부두 앞
+const DOCK_STEP := Vector3(-6.6, 0.7, 0.6)  # 부두에 올라선 자리
+const PLANK_FOOT := Vector3(-5.6, 0.7, 0.6)  # 부두 위, 발판 아래 끝
+const PLANK_TOP := Vector3(-3.6, 1.84, 0.6)  # 선루 지붕 뒤끝, 발판 위 끝
+const CASTLE_EDGE := Vector3(-2.4, 1.84, 0.6)  # 선루 지붕 앞끝
+const DECK_PASS := Vector3(-1.8, 1.0, 0.6)  # 가운데 갑판으로 내려선 자리
+const DECK_SPOT := Vector3(-0.6, 1.0, 0.0)  # 큰 돛대 뒤, 갑판 위 설 자리
 const PLANK_WIDTH := 0.8
 const PLANK_COLOR := Color(0.55, 0.38, 0.22)
 const BOARD_TIME := 2.2
@@ -70,13 +71,13 @@ func play(main: Node3D, sim: FrostSim) -> void:
 		if region.region_name == "port":
 			region.call("_sink_walls")
 
-	# 2. 플레이어가 부두 끝까지 걷고, 발판을 밟아 갑판 가장자리로 오른 뒤 갑판 가운데로 걸어간다.
+	# 2. 플레이어가 부두를 걷고, 발판을 밟아 고물 선루 지붕에 오른 뒤 가운데 갑판으로 내려선다.
 	var plank := _make_plank(_ship.global_position + PLANK_FOOT, _ship.global_position + PLANK_TOP)
 	main.add_child(plank)
 	player.global_position = DOCK_START
 	model.set_moving(true)
 	var walk := create_tween()
-	var legs := [[DOCK_EDGE, 0.25], [DOCK_STEP, 0.08], [PLANK_FOOT, 0.25], [PLANK_TOP, 0.2], [DECK_PASS, 0.14], [DECK_SPOT, 0.1]]
+	var legs := [[DOCK_EDGE, 0.25], [DOCK_STEP, 0.08], [PLANK_FOOT, 0.15], [PLANK_TOP, 0.2], [CASTLE_EDGE, 0.1], [DECK_PASS, 0.08], [DECK_SPOT, 0.12]]
 	for leg in legs:
 		leg[0] = _ship.global_position + leg[0]
 		walk.tween_callback(_face.bind(pivot, player, leg[0]))
