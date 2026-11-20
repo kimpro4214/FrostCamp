@@ -4,7 +4,6 @@ extends RefCounted
 ## 시설·판매대·컨베이어를 잇는 참조는 생성 때 만들어지니 저장하지 않는다.
 ## 곰왕 레이드 중, 기지 습격이 쳐들어온 중, 엔딩 뒤에는 저장하지 않는다(그 상태의 화면을 되살리기 어렵다).
 
-const PATH := "user://frost_save.dat"
 ## 저장 형식이 바뀌면 올린다. 다른 버전의 저장은 버린다.
 const VERSION := 1
 
@@ -112,9 +111,9 @@ static func has_save() -> bool:
 
 ## 저장이 없거나 버전이 다르면 빈 Dictionary
 static func read() -> Dictionary:
-	if not FileAccess.file_exists(PATH):
+	if not FileAccess.file_exists(_path()):
 		return {}
-	var file := FileAccess.open(PATH, FileAccess.READ)
+	var file := FileAccess.open(_path(), FileAccess.READ)
 	if file == null:
 		return {}
 	var data: Variant = file.get_var()
@@ -126,7 +125,7 @@ static func read() -> Dictionary:
 static func write(sim: FrostSim) -> bool:
 	if not can_save(sim):
 		return false
-	var file := FileAccess.open(PATH, FileAccess.WRITE)
+	var file := FileAccess.open(_path(), FileAccess.WRITE)
 	if file == null:
 		return false
 	file.store_var(capture(sim))
@@ -134,8 +133,8 @@ static func write(sim: FrostSim) -> bool:
 
 
 static func delete() -> void:
-	if FileAccess.file_exists(PATH):
-		DirAccess.remove_absolute(PATH)
+	if FileAccess.file_exists(_path()):
+		DirAccess.remove_absolute(_path())
 
 
 static func _agent(agent: SimAgent) -> Dictionary:
@@ -178,3 +177,8 @@ static func _put(object: Object, d: Dictionary, fields: Array = []) -> void:
 			object.set(field, value.duplicate(true))
 		else:
 			object.set(field, value)
+
+
+## 스테이지마다 저장 파일을 따로 둔다(프로스트는 예전 이름 그대로 user://frost_save.dat).
+static func _path() -> String:
+	return "user://%s_save.dat" % GameData.stage
