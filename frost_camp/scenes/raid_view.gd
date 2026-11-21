@@ -9,6 +9,7 @@ extends Node3D
 
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const BearScene := preload("res://frost_camp/scenes/bear.tscn")
+const BearView := preload("res://frost_camp/scenes/bear_view.gd")
 const BOSS_SCALE := 2.5
 const MINION_SCALE := 0.7
 const BOSS_FUR := Color(0.2, 0.26, 0.38)
@@ -312,10 +313,7 @@ func _on_minion_killed(index: int) -> void:
 func _make_bear(size: float, fur: Color) -> Node3D:
 	var bear: Node3D = BearScene.instantiate()
 	bear.set_script(null)
-	var material := _material(fur, false)
-	for part in bear.get_node("Body").get_children():
-		if not part.name in ["Nose", "EyeL", "EyeR"]:
-			part.material_override = material
+	BearView.add_model(bear.get_node("Body"), fur)
 	bear.get_node("Body").scale = Vector3.ONE * size
 	bear.get_node("HpBar").visible = size >= BOSS_SCALE
 	add_child(bear)
@@ -331,10 +329,7 @@ func _sync_bear(bear: Node3D, body: Node3D, pos: Vector2, delta: float) -> void:
 	bear.position = target
 	_walk = _walk + delta * 7.0 if moving else 0.0
 	var swing := sin(_walk) * 0.45 if moving else 0.0
-	for leg in ["LegFL", "LegBR"]:
-		body.get_node(leg).rotation.x = swing
-	for leg in ["LegFR", "LegBL"]:
-		body.get_node(leg).rotation.x = -swing
+	BearView.swing_legs(body, swing)
 
 
 func _add_crown(body: Node3D) -> void:
@@ -349,7 +344,7 @@ func _add_crown(body: Node3D) -> void:
 		mesh.height = 0.3 + 0.12 * (2 - absi(k - 2))
 		mesh.material = material
 		spike.mesh = mesh
-		spike.position = Vector3(-0.24 + k * 0.12, 1.38, -1.28)
+		spike.position = Vector3(-0.24 + k * 0.12, 1.5, -1.0)  # 곰 모델 머리 꼭대기(높이 1.37, 앞 0.96) 위
 		body.add_child(spike)
 
 
