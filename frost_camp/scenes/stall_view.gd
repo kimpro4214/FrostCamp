@@ -6,6 +6,7 @@ extends Node3D
 const Juice := preload("res://frost_camp/scenes/juice.gd")
 const ArmDrop := preload("res://frost_camp/scenes/arm_drop.gd")
 const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
+const ItemMulti := preload("res://frost_camp/scenes/item_multi.gd")
 ## 판매대에 놓이는 물건 하나의 크기
 const ITEM_SIZE := Vector3(0.5, 0.2, 0.3)
 const COIN_SIZE := Vector3(0.32, 0.1, 0.32)
@@ -35,7 +36,9 @@ var _spawned := 0
 var _exit_dir := Vector3.BACK
 ## 이 판매대가 파는 물건의 본(복제해서 쓴다)
 var _item_template: Node3D
-var _coin_template: Node3D
+## 판매대 위 재고와 돈 더미(MultiMesh)
+var _stock: ItemMulti
+var _cash: ItemMulti
 ## 떠난 손님을 버리지 않고 모아 두었다가 다음 손님으로 다시 쓴다(트리 밖에 둔다).
 var _customer_pool: Array[Node3D] = []
 
@@ -59,7 +62,14 @@ func setup(frost_sim: FrostSim, stall_index: int) -> void:
 	_set_disc_radius(_cash_zone, float(sim.balance.interact.cash_radius))
 	_last_served = stall.served
 	_item_template = ItemModel.make(stall.item, ITEM_SIZE)
-	_coin_template = ItemModel.make("coin", COIN_SIZE)
+	_stock = ItemMulti.new()
+	_stock.setup(stall.item, ITEM_SIZE, Transform3D(), MAX_SHOWN_STOCK, func(i: int) -> Vector3:
+		return Vector3(0.0, 1.1 + (i / 4) * 0.22, -0.6 + (i % 4) * 0.4))
+	_stock_root.add_child(_stock)
+	_cash = ItemMulti.new()
+	_cash.setup("coin", COIN_SIZE, Transform3D(), MAX_SHOWN_CASH, func(i: int) -> Vector3:
+		return Vector3(0.0, 0.08 + i * 0.12, 0.0))
+	_cash_root.add_child(_cash)
 	sim.premium_sold.connect(func(i: int, item: String) -> void:
 		if i == index:
 			Juice.float_text(self, global_position + Vector3(0.0, 2.6, 0.0), "+$%d" % int(sim.balance.items[item].price), Color(1.0, 0.8, 0.2), 96)
@@ -80,10 +90,8 @@ func _process(delta: float) -> void:
 	if state == _shown:
 		return
 	_shown = state
-	_rebuild(_stock_root, state.x, func(i: int) -> Vector3:
-		return Vector3(0.0, 1.1 + (i / 4) * 0.22, -0.6 + (i % 4) * 0.4), func(_i: int) -> Node3D: return _item_template.duplicate())
-	_rebuild(_cash_root, state.y, func(i: int) -> Vector3:
-		return Vector3(0.0, 0.08 + i * 0.12, 0.0), func(_i: int) -> Node3D: return _coin_template.duplicate())
+	_stock.show_count(state.x)
+	_cash.show_count(state.y)
 
 
 ## 팔린 만큼 맨 앞 손님을 내보내고, 줄 길이만큼 새 손님을 들이고, 모두 자기 자리로 걸어가게 한다.
@@ -157,18 +165,6 @@ func _play(customer: Node3D, anim_name: String) -> void:
 	var anim: AnimationPlayer = customer.get_meta("anim")
 	if anim.current_animation != anim_name:
 		anim.play(anim_name, 0.15)
-
-
-## 물건은 한 번 만들면 두고, 개수만큼만 보인다.
-func _rebuild(root: Node3D, count: int, place: Callable, make: Callable) -> void:
-	var nodes := root.get_children().filter(func(child: Node) -> bool: return child != _cash_zone)
-	for i in range(nodes.size(), count):
-		var node: Node3D = make.call(i)
-		node.position = place.call(i)
-		root.add_child(node)
-		nodes.append(node)
-	for i in nodes.size():
-		nodes[i].visible = i < count
 
 
 ## 손님 한 명. 모델은 들어온 순서대로 돌려 쓴다.
