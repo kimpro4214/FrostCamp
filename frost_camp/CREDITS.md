@@ -5,7 +5,7 @@
 | 에셋 | 쓰는 곳 | 출처 | 라이선스 |
 |---|---|---|---|
 | Jua (Copyright 2018 The Jua Project Authors) | 기본 UI 폰트 `assets/fonts/Jua-Regular.ttf` | Google Fonts, `github.com/google/fonts` 의 `ofl/jua` | SIL Open Font License 1.1 (`assets/fonts/OFL.txt`) |
-| Mini Characters (Kenney) | 플레이어·일꾼·손님·용병(character-soldier), 작살총(weapon-shooter) `assets/models/characters/` | kenney.nl/assets/mini-characters | CC0 1.0 |
+| Mini Characters (Kenney) | 캐릭터 뼈대와 애니메이션 `assets/models/characters/` | kenney.nl/assets/mini-characters | CC0 1.0 |
 | Nature Kit (Kenney) | 나무·그루터기 `assets/models/nature/` | kenney.nl/assets/nature-kit | CC0 1.0 |
 | Survival Kit (Kenney) | 모닥불·판매대 상자·텐트·통·울타리·철벽·도끼·곡괭이 `assets/models/survival/` | kenney.nl/assets/survival-kit | CC0 1.0 |
 | Pirate Kit (Kenney) | 쇄빙선 선체·돛(ship-large), 연료통·항구 상자·통·부두 `assets/models/pirate/` | kenney.nl/assets/pirate-kit | CC0 1.0 |
@@ -18,8 +18,8 @@
 
 각 Kenney 팩의 라이선스 원문은 모델·소리·아이콘 폴더마다 `License.txt`로 들어 있다. CC0이라 표기 의무는 없지만 감사의 뜻으로 적는다.
 
-북극곰(몸통·혹·주둥이·귀를 박스로 조합), 쇄빙선의 엔진·굴뚝·쇄빙날, 돌담, 빙결정 바위, 낚싯대, 컨베이어, 구매 존, 등 뒤 스택, HUD의 동전·하트·눈송이 아이콘은 Godot 기본 도형(박스·캡슐·실린더)으로 직접 만들었다.
+쇄빙선의 엔진·굴뚝·쇄빙날, 돌담, 빙결정 바위, 낚싯대, 컨베이어, 구매 존, 등 뒤 스택, HUD의 동전·하트·눈송이 아이콘은 Godot 기본 도형(박스·캡슐·실린더)으로 직접 만들었다.
 
-주인공·일꾼·손님 캐릭터, 가방, 포탑 받침대·발사대(`assets/models/winter/`)는 제작자가 Meshy AI로 만들었다. 캐릭터에는 Kenney Mini Characters의 뼈대와 애니메이션을 붙였다. 그래픽 "중·하"는 이름 끝이 `-low`인 저폴리 모델을 쓴다.
+주인공·일꾼·손님 캐릭터, 가방, 포탑 받침대·발사대, 북극곰, 작살총(`assets/models/winter/`)는 제작자가 Meshy AI로 만들었다. 캐릭터에는 Kenney Mini Characters의 뼈대와 애니메이션을 붙였다. 그래픽 "중·하"는 이름 끝이 `-low`인 저폴리 모델을 쓴다.
 
 엔진: Godot Engine 4.7 (MIT License, godotengine.org).
