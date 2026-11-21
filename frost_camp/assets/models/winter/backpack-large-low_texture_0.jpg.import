@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dg5tr0g3s18sh"
-path="res://.godot/imported/backpack-large-low_texture_0.jpg-4c04bdbb9164d3d36598a3c394bfecaa.ctex"
+path.s3tc="res://.godot/imported/backpack-large-low_texture_0.jpg-4c04bdbb9164d3d36598a3c394bfecaa.s3tc.ctex"
+path.etc2="res://.godot/imported/backpack-large-low_texture_0.jpg-4c04bdbb9164d3d36598a3c394bfecaa.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "98d8548d774032c6f85bc30c00397b0b"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://frost_camp/assets/models/winter/backpack-large-low_texture_0.jpg"
-dest_files=["res://.godot/imported/backpack-large-low_texture_0.jpg-4c04bdbb9164d3d36598a3c394bfecaa.ctex"]
+dest_files=["res://.godot/imported/backpack-large-low_texture_0.jpg-4c04bdbb9164d3d36598a3c394bfecaa.s3tc.ctex", "res://.godot/imported/backpack-large-low_texture_0.jpg-4c04bdbb9164d3d36598a3c394bfecaa.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
-detect_3d/compress_to=1
+process/size_limit=512
+detect_3d/compress_to=0

@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://xpqn6w6qt5u"
-path="res://.godot/imported/polar-bear_texture_0.jpg-303d989fe5cabe815550edd4a2303b74.ctex"
+path.s3tc="res://.godot/imported/polar-bear_texture_0.jpg-303d989fe5cabe815550edd4a2303b74.s3tc.ctex"
+path.etc2="res://.godot/imported/polar-bear_texture_0.jpg-303d989fe5cabe815550edd4a2303b74.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "903b8ec10ea3e31d1a65398609fd5f95"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://frost_camp/assets/models/winter/polar-bear_texture_0.jpg"
-dest_files=["res://.godot/imported/polar-bear_texture_0.jpg-303d989fe5cabe815550edd4a2303b74.ctex"]
+dest_files=["res://.godot/imported/polar-bear_texture_0.jpg-303d989fe5cabe815550edd4a2303b74.s3tc.ctex", "res://.godot/imported/polar-bear_texture_0.jpg-303d989fe5cabe815550edd4a2303b74.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
-detect_3d/compress_to=1
+process/size_limit=512
+detect_3d/compress_to=0
