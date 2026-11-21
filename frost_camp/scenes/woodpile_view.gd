@@ -32,10 +32,10 @@ func _process(_delta: float) -> void:
 	if count == _shown:
 		return
 	_shown = count
-	for child in _logs.get_children():
-		child.queue_free()
-	for i in count:
+	# 상자는 한 번 만들면 두고, 개수만큼만 보인다.
+	for i in range(_logs.get_child_count(), count):
 		var box: Node3D = _template.duplicate()
-		box.visible = true
 		box.position = Vector3(-0.3 + (i % 3) * 0.3, 0.1 + (i / 3) * 0.22, 0.0)
 		_logs.add_child(box)
+	for i in _logs.get_child_count():
+		_logs.get_child(i).visible = i < count

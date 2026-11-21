@@ -36,6 +36,8 @@ var _exit_dir := Vector3.BACK
 ## 이 판매대가 파는 물건의 본(복제해서 쓴다)
 var _item_template: Node3D
 var _coin_template: Node3D
+## 떠난 손님을 버리지 않고 모아 두었다가 다음 손님으로 다시 쓴다(트리 밖에 둔다).
+var _customer_pool: Array[Node3D] = []
 
 @onready var _stock_root: Node3D = $Stock
 @onready var _cash_root: Node3D = $Cash
@@ -96,7 +98,7 @@ func _update_customers(stall: Stall, delta: float) -> void:
 		_queue_root.add_child(customer)
 		_customers.append(customer)
 	while _customers.size() > stall.queue:
-		_customers.pop_back().queue_free()
+		_recycle(_customers.pop_back())
 	for i in _customers.size():
 		_walk_toward(_customers[i], _slot(i), delta)
 
@@ -120,6 +122,7 @@ func _walk_toward(customer: Node3D, target: Vector3, delta: float) -> void:
 ## 산 물건을 머리 위로 들고 돈을 띄운 뒤, 줄 밖으로 걸어 나가며 작아져 사라진다.
 func _leave(customer: Node3D, stall: Stall) -> void:
 	var item: Node3D = _item_template.duplicate()
+	item.name = "Carried"
 	item.visible = true
 	item.position = Vector3(0.0, CARRY_HEIGHT, 0.0)
 	item.scale = Vector3.ONE / CUSTOMER_SCALE
@@ -132,7 +135,22 @@ func _leave(customer: Node3D, stall: Stall) -> void:
 	var tween := customer.create_tween()
 	tween.tween_property(customer, "position", exit, EXIT_TIME)
 	tween.tween_property(customer, "scale", Vector3.ONE * 0.01, 0.25).set_ease(Tween.EASE_IN)
-	tween.tween_callback(customer.queue_free)
+	tween.tween_callback(_recycle.bind(customer))
+
+
+## 손님을 줄에서 빼서 모아 둔다. 들고 있던 물건은 버린다.
+func _recycle(customer: Node3D) -> void:
+	var item := customer.get_node_or_null("Carried")
+	if item:
+		item.free()
+	customer.get_parent().remove_child(customer)
+	_customer_pool.append(customer)
+
+
+func _exit_tree() -> void:
+	for customer in _customer_pool:
+		customer.free()
+	_customer_pool.clear()
 
 
 func _play(customer: Node3D, anim_name: String) -> void:
@@ -141,19 +159,24 @@ func _play(customer: Node3D, anim_name: String) -> void:
 		anim.play(anim_name, 0.15)
 
 
+## 물건은 한 번 만들면 두고, 개수만큼만 보인다.
 func _rebuild(root: Node3D, count: int, place: Callable, make: Callable) -> void:
-	for child in root.get_children():
-		if child != _cash_zone:
-			child.queue_free()
-	for i in count:
+	var nodes := root.get_children().filter(func(child: Node) -> bool: return child != _cash_zone)
+	for i in range(nodes.size(), count):
 		var node: Node3D = make.call(i)
-		node.visible = true
 		node.position = place.call(i)
 		root.add_child(node)
+		nodes.append(node)
+	for i in nodes.size():
+		nodes[i].visible = i < count
 
 
 ## 손님 한 명. 모델은 들어온 순서대로 돌려 쓴다.
 func _make_customer() -> Node3D:
+	if not _customer_pool.is_empty():
+		var reused: Node3D = _customer_pool.pop_back()
+		reused.scale = Vector3.ONE * CUSTOMER_SCALE
+		return reused
 	var models: Array = GameData.theme().customers
 	var customer: Node3D = load(models[_spawned % models.size()]).instantiate()
 	_spawned += 1
