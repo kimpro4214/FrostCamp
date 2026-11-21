@@ -9,15 +9,16 @@ const ACTION := "attack-melee-right"
 ## 총을 쏠 때와 총을 든 채 서 있을 때의 애니메이션
 const SHOOT := "holding-right-shoot"
 const HOLD := "holding-right"
-const GUN := "res://frost_camp/assets/models/characters/weapon-shooter.glb"
+const GUN := "res://frost_camp/assets/models/winter/harpoon-gun.glb"
 ## 오른손 뼈(어깨) 기준으로 도구를 쥐는 위치와 방향. 이 모델의 팔은 뼈의 -X 쪽으로 뻗어 있어서 손은 어깨에서 -X로 약 0.3이다.
 const TOOL_ROTATION := Vector3(PI / 2.0 - 0.6, 0.0, 0.0)  # 손잡이를 앞으로, 조금 위로 세운다
 const TOOL_POSITION := Vector3(-0.3, 0.0, 0.0)
 const TOOL_SCALE := 1.4
-## 총은 손잡이가 원점이고 총구가 +Z라 따로 맞춘다(같은 팩의 모델이라 크기는 그대로).
-const GUN_ROTATION := Vector3(0.0, -PI / 2.0, 0.0)  # 총구(+Z)를 팔 방향(뼈의 -X)으로
-const GUN_POSITION := Vector3(-0.3, 0.0, 0.0)
-const GUN_SCALE := 1.0
+## 작살총(Meshy, tools/meshy_prop.py)은 키 1, 가운데가 원점이고 총구가 -X(팔 방향)를 본다.
+## 길이(3.24)를 0.44로 줄이고, 방아쇠 손잡이(가운데에서 총 뒤쪽·아래쪽)가 손에 오게 옮긴다.
+const GUN_ROTATION := Vector3.ZERO
+const GUN_POSITION := Vector3(-0.32, 0.034, 0.0)
+const GUN_SCALE := 0.135
 ## 위 도구 위치를 맞춘 Kenney 모델의 어깨~손끝 길이. 팔 길이가 다른 모델은 이 비율로 도구 위치를 늘이거나 줄인다.
 const KENNEY_REACH := 0.284
 ## 등에 멘 가방의 높이(모델 좌표, 발=0)와, 등 표면에서 가방 앞면까지 거리(가방 크기에 곱한다).
