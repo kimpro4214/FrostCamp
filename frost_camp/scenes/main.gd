@@ -92,6 +92,11 @@ func _ready() -> void:
 		if not data.is_empty():
 			SaveGame.restore(sim, data)
 			_resuming = true
+	# 그래픽 단계를 먼저 읽어, 화면들이 처음부터 그 단계의 모델로 만들어지게 한다.
+	var graphics := Graphics.new()
+	add_child(graphics)
+	graphics.setup(self)
+	graphics.auto_lowered.connect(func() -> void: _hud.show_toast("화면이 느려 그래픽을 낮췄다"))
 	_player.setup(sim, _hud.joystick)
 	_sfx = Sfx.new()
 	add_child(_sfx)
@@ -199,10 +204,6 @@ func _ready() -> void:
 	sim.boss_raid.shot.connect(func(_f: Vector2, _t: Vector2, weapon: String) -> void:
 		if weapon != "merc":
 			_sfx.play("shoot"))
-	var graphics := Graphics.new()
-	add_child(graphics)
-	graphics.setup(self)
-	graphics.auto_lowered.connect(func() -> void: _hud.show_toast("화면이 느려 그래픽을 낮췄다"))
 	_pause = PauseMenu.new()
 	add_child(_pause)
 	_pause.setup_graphics(graphics)

@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## 게임 중 오른쪽 위 일시정지 버튼(또는 Esc). 누르면 게임이 멈추고 패널이 뜬다: 계속하기, 처음으로, 종료.
-## 웹에서는 창을 닫을 수 없으니 종료 버튼을 숨긴다. "그래픽" 버튼으로 보통/낮음을 바꾼다.
+## 웹에서는 창을 닫을 수 없으니 종료 버튼을 숨긴다. "그래픽" 버튼으로 상/중/하를 바꾼다.
 
 ## 메뉴가 열렸다(main이 이때 저장한다)
 signal opened
@@ -86,7 +86,7 @@ func _build_overlay() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 	box.add_child(_menu_button("계속하기", "Resume", close))
-	_graphics_button = _menu_button("그래픽: 보통", "Graphics", func() -> void: pass)
+	_graphics_button = _menu_button("그래픽: 중", "Graphics", func() -> void: pass)
 	_graphics_button.visible = false
 	box.add_child(_graphics_button)
 	box.add_child(_menu_button("처음으로", "Restart", func() -> void:
@@ -106,11 +106,11 @@ func _menu_button(text: String, node_name: String, action: Callable) -> Button:
 	return button
 
 
-## 그래픽 품질 버튼을 잇는다(누를 때마다 보통 ↔ 낮음).
+## 그래픽 품질 버튼을 잇는다(누를 때마다 상 → 중 → 하 → 상).
 func setup_graphics(graphics: Node) -> void:
 	_graphics_button.visible = true
-	var update_text := func(low: bool) -> void: _graphics_button.text = "그래픽: 낮음" if low else "그래픽: 보통"
-	update_text.call(graphics.low)
+	var update_text := func(level: int) -> void: _graphics_button.text = "그래픽: " + graphics.NAMES[level]
+	update_text.call(graphics.level)
 	graphics.changed.connect(update_text)
-	_graphics_button.pressed.connect(func() -> void: graphics.set_low(not graphics.low))
+	_graphics_button.pressed.connect(func() -> void: graphics.set_level((graphics.level + 2) % 3))
 
