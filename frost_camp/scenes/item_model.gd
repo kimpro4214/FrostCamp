@@ -1,6 +1,7 @@
 extends RefCounted
 ## 물건(원목, 연어, 동전 등) 하나의 겉모습. 모델은 스테이지 theme.json의 items에서 고른다.
 ## 크기 상자(size, 가운데가 원점)를 꽉 채우게 늘린다. 길쭉한 물건은 길이를 x로 눕힌다.
+## 물건은 작고 많아서 그림자를 그리지 않는다(그림자 패스의 그리기 호출을 줄인다).
 
 ## 모델을 눕히는 회전(라디안). 원목과 고기는 길이가 z, 물고기와 동전은 서 있다.
 const TURNS := {"log": Vector3(0.0, PI / 2.0, 0.0), "meat": Vector3(0.0, PI / 2.0, 0.0), "salmon": Vector3(PI / 2.0, 0.0, 0.0), "gold_salmon": Vector3(PI / 2.0, 0.0, 0.0), "coin": Vector3(PI / 2.0, 0.0, 0.0)}
@@ -25,8 +26,9 @@ static func make(item: String, size: Vector3) -> Node3D:
 	fit.position = -bounds.get_center() * fit.scale
 	var holder := Node3D.new()
 	holder.add_child(fit)
-	if TINTS.has(item):
-		for mesh in model.find_children("*", "MeshInstance3D", true, false):
+	for mesh: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if TINTS.has(item):
 			mesh.material_override = _tint(item, mesh.get_active_material(0))
 	return holder
 
