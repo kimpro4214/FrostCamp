@@ -40,5 +40,8 @@ func test_crystal_sold_only_at_market() -> void:
 func test_theme_models_exist() -> void:
 	var theme := GameData.theme()
 	var paths: Array = theme.player + theme.customers + theme.trees + theme.workers.values() + theme.items.values()
+	for look: Dictionary in theme.towers:
+		paths += [look.base, look.launcher]
+	paths += theme.low.keys() + theme.low.values()
 	for model_path in paths:
 		check(ResourceLoader.exists(model_path), "모델 파일이 있다: %s" % model_path)

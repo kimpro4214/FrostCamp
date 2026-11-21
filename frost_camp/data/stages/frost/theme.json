@@ -35,5 +35,27 @@
 		"crystal": "res://frost_camp/assets/models/platformer/jewel.glb",
 		"gem": "res://frost_camp/assets/models/platformer/jewel.glb",
 		"coin": "res://frost_camp/assets/models/platformer/coin-gold.glb"
+	},
+	"towers": [
+		{ "base": "res://frost_camp/assets/models/winter/tower-wood-base.glb", "base_height": 1.5, "top": 1.5, "launcher": "res://frost_camp/assets/models/winter/tower-ballista.glb", "launcher_height": 1.0 },
+		{ "base": "res://frost_camp/assets/models/winter/tower-stone-base.glb", "base_height": 2.4, "top": 1.6, "launcher": "res://frost_camp/assets/models/winter/tower-cannon.glb", "launcher_height": 1.0 }
+	],
+	"low": {
+		"res://frost_camp/assets/models/winter/player-coat-2.glb": "res://frost_camp/assets/models/winter/player-coat-2-low.glb",
+		"res://frost_camp/assets/models/winter/customer-red.glb": "res://frost_camp/assets/models/winter/customer-red-low.glb",
+		"res://frost_camp/assets/models/winter/customer-blue.glb": "res://frost_camp/assets/models/winter/customer-blue-low.glb",
+		"res://frost_camp/assets/models/winter/customer-yellow.glb": "res://frost_camp/assets/models/winter/customer-yellow-low.glb",
+		"res://frost_camp/assets/models/winter/worker-cashier.glb": "res://frost_camp/assets/models/winter/worker-cashier-low.glb",
+		"res://frost_camp/assets/models/winter/worker-porter.glb": "res://frost_camp/assets/models/winter/worker-porter-low.glb",
+		"res://frost_camp/assets/models/winter/worker-lumberjack.glb": "res://frost_camp/assets/models/winter/worker-lumberjack-low.glb",
+		"res://frost_camp/assets/models/winter/worker-hunter.glb": "res://frost_camp/assets/models/winter/worker-hunter-low.glb",
+		"res://frost_camp/assets/models/winter/worker-fisher.glb": "res://frost_camp/assets/models/winter/worker-fisher-low.glb",
+		"res://frost_camp/assets/models/winter/worker-miner.glb": "res://frost_camp/assets/models/winter/worker-miner-low.glb",
+		"res://frost_camp/assets/models/winter/worker-merc.glb": "res://frost_camp/assets/models/winter/worker-merc-low.glb",
+		"res://frost_camp/assets/models/winter/backpack-large.glb": "res://frost_camp/assets/models/winter/backpack-large-low.glb",
+		"res://frost_camp/assets/models/winter/tower-wood-base.glb": "res://frost_camp/assets/models/winter/tower-wood-base-low.glb",
+		"res://frost_camp/assets/models/winter/tower-ballista.glb": "res://frost_camp/assets/models/winter/tower-ballista-low.glb",
+		"res://frost_camp/assets/models/winter/tower-stone-base.glb": "res://frost_camp/assets/models/winter/tower-stone-base-low.glb",
+		"res://frost_camp/assets/models/winter/tower-cannon.glb": "res://frost_camp/assets/models/winter/tower-cannon-low.glb"
 	}
 }

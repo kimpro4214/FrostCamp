@@ -9,6 +9,7 @@ const BACKPACKS := [
 	["res://frost_camp/assets/models/winter/backpack-large.glb", 0.27],
 ]
 const Juice := preload("res://frost_camp/scenes/juice.gd")
+const Graphics := preload("res://frost_camp/scenes/graphics.gd")
 ## 도끼 레벨별로 손에 드는 모델. 0레벨은 맨주먹이다.
 const ROD := "res://frost_camp/scenes/fishing_rod.tscn"
 const PICKAXE := "res://frost_camp/assets/models/survival/tool-pickaxe.glb"
@@ -35,6 +36,7 @@ func setup(frost_sim: FrostSim, virtual_joystick: Node) -> void:
 	position = Vector3(sim.player.pos.x, 0.0, sim.player.pos.y)
 	$Pivot/StackAnchor.setup(sim.player.stack)
 	_model.setup(_coat_model())
+	add_to_group(Graphics.GROUP)
 	_wear_backpack()
 	sim.zone_purchased.connect(func(id: String, _level: int) -> void:
 		if id == "coat":
@@ -52,12 +54,18 @@ func setup(frost_sim: FrostSim, virtual_joystick: Node) -> void:
 func _coat_model() -> String:
 	# 방한복 레벨별 몸 모델(스테이지 theme.json의 player). Meshy로 만들고 tools/meshy_to_kenney_rig.py로 Kenney 뼈대를 붙였다.
 	var models: Array = GameData.theme().player
-	return models[mini(sim.find_zone("coat").level, models.size() - 1)]
+	return Graphics.model(models[mini(sim.find_zone("coat").level, models.size() - 1)], true)
 
 
 func _wear_backpack() -> void:
 	var backpack: Array = BACKPACKS[mini(sim.find_zone("backpack").level, BACKPACKS.size() - 1)]
-	_model.set_backpack(backpack[0], backpack[1])
+	_model.set_backpack(Graphics.model(backpack[0], true), backpack[1])
+
+
+## 그래픽 단계가 바뀌면 몸과 가방 모델을 다시 고른다(graphics.gd가 부른다).
+func refresh_models() -> void:
+	_model.set_body(_coat_model())
+	_wear_backpack()
 
 
 func _physics_process(delta: float) -> void:

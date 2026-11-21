@@ -7,6 +7,7 @@ const Juice := preload("res://frost_camp/scenes/juice.gd")
 const ArmDrop := preload("res://frost_camp/scenes/arm_drop.gd")
 const ItemModel := preload("res://frost_camp/scenes/item_model.gd")
 const ItemMulti := preload("res://frost_camp/scenes/item_multi.gd")
+const Graphics := preload("res://frost_camp/scenes/graphics.gd")
 ## 판매대에 놓이는 물건 하나의 크기
 const ITEM_SIZE := Vector3(0.5, 0.2, 0.3)
 const COIN_SIZE := Vector3(0.32, 0.1, 0.32)
@@ -61,6 +62,7 @@ func setup(frost_sim: FrostSim, stall_index: int) -> void:
 	_set_disc_radius(_unload_zone, float(sim.balance.interact.stall_radius))
 	_set_disc_radius(_cash_zone, float(sim.balance.interact.cash_radius))
 	_last_served = stall.served
+	add_to_group(Graphics.GROUP)
 	_item_template = ItemModel.make(stall.item, ITEM_SIZE)
 	_stock = ItemMulti.new()
 	_stock.setup(stall.item, ITEM_SIZE, Transform3D(), MAX_SHOWN_STOCK, func(i: int) -> Vector3:
@@ -156,6 +158,15 @@ func _recycle(customer: Node3D) -> void:
 
 
 func _exit_tree() -> void:
+	_clear_pool()
+
+
+## 그래픽 단계가 바뀌면 모아 둔 손님을 버려, 다음 손님부터 새 단계의 모델로 만든다(graphics.gd가 부른다).
+func refresh_models() -> void:
+	_clear_pool()
+
+
+func _clear_pool() -> void:
 	for customer in _customer_pool:
 		customer.free()
 	_customer_pool.clear()
@@ -174,7 +185,7 @@ func _make_customer() -> Node3D:
 		reused.scale = Vector3.ONE * CUSTOMER_SCALE
 		return reused
 	var models: Array = GameData.theme().customers
-	var customer: Node3D = load(models[_spawned % models.size()]).instantiate()
+	var customer: Node3D = load(Graphics.model(models[_spawned % models.size()])).instantiate()
 	_spawned += 1
 	customer.scale = Vector3.ONE * CUSTOMER_SCALE
 	var anim: AnimationPlayer = customer.find_children("*", "AnimationPlayer", true, false)[0]

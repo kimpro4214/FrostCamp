@@ -3,6 +3,7 @@ extends CharacterBody3D
 
 ## 몸과 sim 위치가 이만큼 넘게 벌어지면 sim이 순간이동시킨 것으로 본다
 const TELEPORT_DISTANCE := 3.0
+const Graphics := preload("res://frost_camp/scenes/graphics.gd")
 
 var sim: FrostSim
 var index: int
@@ -18,6 +19,11 @@ var _safe_velocity := Vector3.ZERO
 @onready var _model: Node3D = $Pivot/Model
 
 
+## 그래픽 단계가 바뀌면 몸 모델을 다시 고른다(graphics.gd가 부른다).
+func refresh_models() -> void:
+	_model.set_body(Graphics.model(GameData.theme().workers[sim.workers[index].role]))
+
+
 func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	sim = frost_sim
 	index = worker_index
@@ -25,7 +31,8 @@ func setup(frost_sim: FrostSim, worker_index: int) -> void:
 	position = Vector3(worker.pos.x, 0.0, worker.pos.y)
 	$Pivot/StackAnchor.setup(worker.stack)
 	# 역할마다 다른 캐릭터를 써서 한눈에 구분되게 한다(스테이지 theme.json의 workers).
-	_model.setup(GameData.theme().workers[worker.role])
+	_model.setup(Graphics.model(GameData.theme().workers[worker.role]))
+	add_to_group(Graphics.GROUP)
 	_hit_overlay = StandardMaterial3D.new()
 	_hit_overlay.albedo_color = Color(1.0, 0.2, 0.2, 0.6)
 	_hit_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
