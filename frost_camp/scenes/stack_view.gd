@@ -12,6 +12,8 @@ var _stack: BackStack
 var _shown: Array[String] = []
 var _last_global := Vector3.INF
 var _lean := Vector3.ZERO
+## 내려놓은 물건 상자를 버리지 않고 물건 이름별로 모아 두었다가 다시 쓴다(트리 밖에 둔다).
+var _pool := {}
 
 
 func setup(stack: BackStack) -> void:
@@ -22,13 +24,36 @@ func _process(delta: float) -> void:
 	_sway(delta)
 	if _stack == null or _stack.items == _shown:
 		return
-	_shown = _stack.items.duplicate()
-	for child in get_children():
-		child.queue_free()
-	for i in _shown.size():
-		var box := ItemModel.make(_shown[i], ITEM_SIZE)
-		box.position.y = i * (ITEM_SIZE.y + 0.02)
+	# 아래부터 같은 물건은 그대로 두고, 처음 달라진 칸부터 위만 바꾼다(보통 맨 위 하나만 바뀐다).
+	var items := _stack.items
+	var boxes := get_children()
+	var keep := 0
+	while keep < boxes.size() and keep < items.size() and boxes[keep].get_meta("item") == items[keep]:
+		keep += 1
+	for i in range(boxes.size() - 1, keep - 1, -1):
+		remove_child(boxes[i])
+		_pool.get_or_add(boxes[i].get_meta("item"), []).append(boxes[i])
+	for i in range(keep, items.size()):
+		var box := _take(items[i])
+		box.position = Vector3(0.0, i * (ITEM_SIZE.y + 0.02), 0.0)
 		add_child(box)
+	_shown = items.duplicate()
+
+
+func _take(item: String) -> Node3D:
+	var free: Array = _pool.get(item, [])
+	if not free.is_empty():
+		return free.pop_back()
+	var box := ItemModel.make(item, ITEM_SIZE)
+	box.set_meta("item", item)
+	return box
+
+
+func _exit_tree() -> void:
+	for free: Array in _pool.values():
+		for box: Node in free:
+			box.free()
+	_pool.clear()
 
 
 ## 움직인 방향 반대로 위쪽 상자일수록 더 밀려나 탑이 휘어 보이게 한다.
